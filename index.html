@@ -132,7 +132,8 @@
                     <div class="flex justify-between items-center border-t border-white/20 pt-4">
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">出勤次數</p><p class="text-lg font-bold">{{ userData['出勤次數'] || 0 }} <span class="text-xs font-normal opacity-80">次</span></p></div>
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">救出人數</p><p class="text-lg font-bold">{{ cleanValue(userData['救出人數']) }} <span class="text-xs font-normal opacity-80">人</span></p></div>
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">服務年資</p><p class="text-lg font-bold">10<span class="text-xs font-normal opacity-80">年</span>3<span class="text-xs font-normal opacity-80">月</span></p></div>
+                        <!-- 🌟 服務年資從資料庫讀取 -->
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">服務年資</p><p class="text-base font-bold">{{ userData['seniority'] || '資料未建檔' }}</p></div>
                     </div>
                 </div>
 
@@ -148,11 +149,13 @@
                         </div>
                         <div>
                             <h3 class="text-2xl font-black tracking-wide">有效志工</h3>
-                            <p class="text-xs text-white/70 mt-1 font-mono tracking-widest">ID: NTC-804810</p>
+                            <!-- 🌟 自動顯示該隊員的職稱 -->
+                            <p class="text-xs text-white/70 mt-1 font-bold tracking-widest">{{ userData['duty_title'] || '隊員' }}</p>
                         </div>
                     </div>
                     <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">入隊日期</p><p class="text-sm font-bold font-mono">2013-12-01</p></div>
+                        <!-- 🌟 加入日期從資料庫讀取 -->
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">入隊日期</p><p class="text-sm font-bold font-mono">{{ userData['join_date'] || '----/--/--' }}</p></div>
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">志工時數</p><p class="text-sm font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }} <span class="text-[10px] font-normal opacity-80">小時</span></p></div>
                     </div>
                 </div>
@@ -164,12 +167,14 @@
                         <i class="fa-solid fa-file-medical text-white/50 text-xl"></i>
                     </div>
                     <div class="flex items-center gap-3 mb-6 mt-3">
+                        <!-- 預設顯示 EMT-2，可視未來需求動態調整 -->
                         <h3 class="text-4xl font-black tracking-tighter">EMT-2</h3>
                         <span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">有效</span>
                     </div>
                     <div class="flex justify-between items-center border-t border-white/20 pt-4">
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">發證單位</p><p class="text-sm font-bold">新北市消防局</p></div>
-                        <div class="text-right"><p class="text-[10px] text-white/60 font-bold uppercase mb-1">有效期限至</p><p class="text-lg font-bold font-mono">{{ userData['到期日'] || '2026-12-31' }}</p></div>
+                        <!-- 🌟 EMT 到期日從資料庫讀取 -->
+                        <div class="text-right"><p class="text-[10px] text-white/60 font-bold uppercase mb-1">有效期限至</p><p class="text-lg font-bold font-mono">{{ userData['emt_expiry'] || '----/--/--' }}</p></div>
                     </div>
                 </div>
             </div>
