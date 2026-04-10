@@ -121,47 +121,57 @@
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">服務年資</p><p class="text-base font-bold">{{ userData['seniority'] || '--' }}</p></div>
                     </div>
                 </div>
+<!-- 卡片 2：志工榮譽卡 (綠色) -->
+<div class="bank-card bg-card-emerald">
+    <div class="flex justify-between items-start mb-2">
+        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">志工榮譽卡</p>
+        <i class="fa-solid fa-id-badge text-white/50 text-xl"></i>
+    </div>
+    <div class="flex items-center gap-4 mb-6 mt-2">
+        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
+            <i class="fa-solid fa-user-shield text-2xl text-white"></i>
+        </div>
+        <div>
+            <!-- 中間大字改成姓名 -->
+            <h3 class="text-3xl font-black tracking-wide">{{ userData['姓名'] }}</h3>
+            <!-- 下方顯示剩餘天數 -->
+            <p class="text-[11px] text-white font-bold mt-1 tracking-widest bg-black/20 px-2 py-0.5 rounded-full inline-block">
+                剩餘 {{ calculateDays(userData['honor_expiry']) }} 天到期
+            </p>
+        </div>
+    </div>
+    <div class="flex justify-between items-center border-t border-white/20 pt-4">
+        <div>
+            <p class="text-[10px] text-white/60 font-bold uppercase mb-1">到期日期</p>
+            <p class="text-base font-bold font-mono">{{ userData['honor_expiry'] || '----/--/--' }}</p>
+        </div>
+        <div>
+            <p class="text-[10px] text-white/60 font-bold uppercase mb-1">榮譽狀態</p>
+            <p class="text-sm font-bold">有效志工</p>
+        </div>
+    </div>
+</div>
 
-                <!-- 卡片 2：志工榮譽卡 (綠色) - 依照需求更新 -->
-                <div class="bank-card bg-card-emerald">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">志工榮譽卡</p>
-                        <i class="fa-solid fa-id-badge text-white/50 text-xl"></i>
-                    </div>
-                    <div class="flex items-center gap-4 mb-6 mt-2">
-                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
-                            <i class="fa-solid fa-user-shield text-2xl text-white"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-2xl font-black tracking-wide">{{ userData['姓名'] }}</h3>
-                            <p class="text-xs text-white font-bold mt-1 tracking-widest bg-black/20 px-2 py-0.5 rounded-full inline-block">
-                                剩餘 {{ calculateDays(userData['honor_expiry']) }} 天到期
-                            </p>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">到期日期</p><p class="text-sm font-bold font-mono">{{ userData['honor_expiry'] || '----/--/--' }}</p></div>
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">志工時數</p><p class="text-sm font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }} <span class="text-[10px] font-normal opacity-80">小時</span></p></div>
-                    </div>
-                </div>
-
-                <!-- 卡片 3：EMT 救護技術員證照 (紅色) - 依照需求更新 -->
-                <div class="bank-card bg-card-rose mr-6">
-                    <div class="flex justify-between items-start mb-2">
-                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">EMT 救護證照</p>
-                        <i class="fa-solid fa-file-medical text-white/50 text-xl"></i>
-                    </div>
-                    <div class="flex items-center gap-3 mb-6 mt-3">
-                        <!-- 顯示初級或中級 -->
-                        <h3 class="text-3xl font-black tracking-tighter">{{ userData['emt_level'] || '中級救護技術員' }}</h3>
-                        <span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">有效</span>
-                    </div>
-                    <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">發證單位</p><p class="text-sm font-bold">新北市消防局</p></div>
-                        <div class="text-right"><p class="text-[10px] text-white/60 font-bold uppercase mb-1">證照到期日</p><p class="text-lg font-bold font-mono">{{ userData['emt_expiry'] || '----/--/--' }}</p></div>
-                    </div>
-                </div>
-            </div>
+<!-- 卡片 3：EMT 救護技術員證照 (紅色) -->
+<div class="bank-card bg-card-rose mr-6">
+    <div class="flex justify-between items-start mb-2">
+        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">EMT 救護證照</p>
+        <i class="fa-solid fa-file-medical text-white/50 text-xl"></i>
+    </div>
+    <div class="flex items-center gap-3 mb-6 mt-3">
+        <!-- 中間字改成每個人自己的證照等級 -->
+        <h3 class="text-2xl font-black tracking-tighter">{{ userData['emt_level'] || '救護技術員' }}</h3>
+        <span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">有效</span>
+    </div>
+    <div class="flex justify-between items-center border-t border-white/20 pt-4">
+        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">發證單位</p><p class="text-sm font-bold">新北市消防局</p></div>
+        <!-- 右下角顯示證照到期日期 -->
+        <div class="text-right">
+            <p class="text-[10px] text-white/60 font-bold uppercase mb-1">證照到期日</p>
+            <p class="text-lg font-bold font-mono">{{ userData['emt_expiry'] || '----/--/--' }}</p>
+        </div>
+    </div>
+</div>
 
             <!-- B. 快捷選單 -->
             <div class="horizontal-scroll px-6 gap-3 mb-2 pt-2">
