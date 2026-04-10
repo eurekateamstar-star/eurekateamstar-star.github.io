@@ -35,7 +35,6 @@
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
 
         .dashboard-wrapper { flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0; }
-
         .cards-section { flex-shrink:0; overflow:hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease, padding .3s ease; }
         .cards-section.expanded  { max-height:260px; opacity:1; padding:8px 0 4px; }
         .cards-section.collapsed { max-height:0;     opacity:0; padding:0; }
@@ -183,38 +182,65 @@
                         </div>
                     </div>
 
-                    <!-- 頁3: 獎章榮譽 (強化模糊搜尋與名字顯示) -->
-                    <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
-                        <div v-for="medal in medalList" :key="medal.id" 
-                             class="list-card p-4 flex flex-col items-center text-center transition-all duration-300 min-h-[140px] justify-center" 
-                             :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md opacity-100' : 'opacity-20 grayscale bg-slate-50 border-slate-200'">
-                            
-                            <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-2 text-2xl">
-                                <i :class="medal.icon"></i>
+                    <!-- 頁3: 獎章榮譽 (全新升級版：統計橫幅 + 3欄小圖) -->
+                    <div class="slide-page space-y-3 pt-2">
+                        <!-- 榮譽統計橫幅 -->
+                        <div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <div>
+                                    <p class="text-[10px] opacity-80 font-bold tracking-wider uppercase">Member Achievement</p>
+                                    <h3 class="text-xl font-black">榮譽勳章統計</h3>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-3xl font-black">{{ medalCount }}</span>
+                                    <span class="text-xs opacity-80 ml-1">/ 12</span>
+                                </div>
                             </div>
-                            
-                            <p class="text-[12px] font-black text-slate-800 leading-tight mb-1">{{ medal.name }}</p>
-                            
-                            <p class="text-[10px] font-bold" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
-                                {{ hasMedal(medal.id) ? findMedalValue(medal.id) : '尚未獲得' }}
-                            </p>
+                            <div class="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
+                                <div class="h-full bg-white transition-all duration-1000" :style="{ width: (medalCount / 12 * 100) + '%' }"></div>
+                            </div>
+                        </div>
+
+                        <!-- 三欄獎章牆 -->
+                        <div class="grid grid-cols-3 gap-2 pb-10">
+                            <div v-for="medal in medalList" :key="medal.id" 
+                                 class="list-card p-2 flex flex-col items-center text-center transition-all duration-500 relative" 
+                                 :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm' : 'opacity-20 grayscale bg-slate-50'">
+                                
+                                <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] text-white shadow-sm z-10">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+
+                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-inner mb-1.5 text-xl">
+                                    <i :class="medal.icon"></i>
+                                </div>
+                                
+                                <p class="text-[10px] font-black text-slate-700 leading-tight h-6 flex items-center justify-center">{{ medal.name }}</p>
+                                
+                                <p class="text-[8px] font-bold mt-0.5" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
+                                    {{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
                     <!-- 頁4: 協勤時數 -->
-                    <div class="slide-page pt-2">
-                        <div class="list-card p-8 text-center bg-indigo-50/30 mt-2">
-                            <div class="w-24 h-24 mx-auto border-[10px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-4 bg-white shadow-sm"><span class="text-2xl font-black text-indigo-600">{{ cleanValue(userData['協勤時數']) }}</span><span class="text-[9px] font-bold text-indigo-300">TOTAL HR</span></div>
-                            <h4 class="text-lg font-black text-slate-800">級別：{{ getHourLevel() }}</h4>
+                    <div class="slide-page pt-2 text-center">
+                        <div class="list-card p-10 bg-indigo-50/30 mt-2">
+                            <div class="w-32 h-32 mx-auto border-[12px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-6 bg-white shadow-lg">
+                                <span class="text-3xl font-black text-indigo-600">{{ cleanValue(userData['協勤時數']) }}</span>
+                                <span class="text-[10px] font-bold text-indigo-300 uppercase">Total Hours</span>
+                            </div>
+                            <h4 class="text-xl font-black text-slate-800 tracking-tight">救護級別：{{ getHourLevel() }}</h4>
                         </div>
                     </div>
 
                     <!-- 頁5: 零用金 -->
                     <div class="slide-page pt-2">
-                        <div class="list-card p-6 text-center bg-emerald-50/20 mt-2">
+                        <div class="list-card p-8 text-center bg-emerald-50/20 mt-2">
                             <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black">預估零用金</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div>
-                            <div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-lg"><h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3></div>
-                            <p class="mt-6 text-[11px] font-bold text-slate-400 italic">實際以正式核發清冊為準</p>
+                            <div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-xl"><h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3></div>
+                            <p class="mt-8 text-[11px] font-bold text-slate-400 italic">※ 此金額為系統自動試算，實際請以分隊公告核發清冊為準</p>
                         </div>
                     </div>
 
@@ -254,13 +280,20 @@
             const slider = ref(null);
             let touchStartY = 0;
 
-            const onHandleTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
-            const onHandleTouchEnd = (e) => {
-                const dy = e.changedTouches[0].clientY - touchStartY;
-                if (dy < -18) cardsExpanded.value = false;
-                else if (dy > 18) cardsExpanded.value = true;
-            };
-            const toggleCards = () => { cardsExpanded.value = !cardsExpanded.value; };
+            const medalList = [
+    { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
+    { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
+    { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
+    { name: '衛福部-金-8000H', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
+    { name: '衛福部-銀-5000H', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
+    { name: '衛福部-銅-3000H', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
+    { name: '內政部-金-2500H', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
+    { name: '內政部-銀-2000H', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
+    { name: '內政部-銅-1500H', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
+    { name: '新北市-金-1800H', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
+    { name: '新北市-銀-1200H', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
+    { name: '新北市-銅-600小時', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
+];
 
             const dashboardTabs = [
                 { id:'stats',  name:'年度統計', icon:'fa-solid fa-chart-pie', activeClass:'bg-blue-600 text-white shadow-md', textColor:'text-blue-600' },
@@ -269,30 +302,55 @@
                 { id:'hours',  name:'協勤時數', icon:'fa-solid fa-clock', activeClass:'bg-indigo-600 text-white shadow-md', textColor:'text-indigo-600' },
                 { id:'money',  name:'零用金',   icon:'fa-solid fa-dollar-sign', activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' }
             ];
-            const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯','救出人數'];
-            
-            const medalList = [
-                { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
-                { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
-                { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
-                { name: '衛福部-金', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
-                { name: '衛福部-銀', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
-                { name: '衛福部-銅', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
-                { name: '內政部-金', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
-                { name: '內政部-銀', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
-                { name: '內政部-銅', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
-                { name: '新北市-金', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
-                { name: '新北市-銀', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
-                { name: '新北市-銅', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
-            ];
 
-            const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
+            const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯','救出人數'];
+
+            const userData = computed(() => {
+                if (!loginUserName.value) return {};
+                return members.value.find(m => m.姓名 === loginUserName.value) || {};
+            });
+
+            // 統計拿到了幾枚獎章
+            const medalCount = computed(() => {
+                if (!userData.value || Object.keys(userData.value).length === 0) return 0;
+                return medalList.filter(m => hasMedal(m.id)).length;
+            });
 
             onMounted(() => {
                 onSnapshot(collection(db, "members"), (snap) => {
                     members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => a.姓名.localeCompare(b.姓名,'zh-Hant'));
                 });
             });
+
+            const findMedalValue = (id) => {
+                if (!userData.value || Object.keys(userData.value).length === 0) return null;
+                const keys = Object.keys(userData.value);
+                const cleanId = id.replace(/\s+/g, '');
+                const foundKey = keys.find(k => k.startsWith('medal_') && k.replace(/\s+/g, '').includes(cleanId));
+                return foundKey ? userData.value[foundKey] : null;
+            };
+
+            const hasMedal = (medalId) => {
+                const val = findMedalValue(medalId);
+                return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
+            };
+
+            const handleLogin = () => {
+                const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
+                if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; }
+                else { errMsg.value = "安全密碼錯誤"; }
+            };
+
+            const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
+            const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
+            const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; return Math.max(0,Math.ceil((new Date(s)-new Date())/864e5)); };
+            const toggleCards = () => { cardsExpanded.value = !cardsExpanded.value; };
+            const onHandleTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
+            const onHandleTouchEnd = (e) => {
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                if (dy < -20) cardsExpanded.value = false;
+                else if (dy > 20) cardsExpanded.value = true;
+            };
 
             const onSliderScroll = () => {
                 if (!slider.value) return;
@@ -308,38 +366,16 @@
                 activeDashboardTab.value = dashboardTabs[index].id;
             };
 
-            const handleLogin = () => {
-                const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-                if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; }
-                else { errMsg.value = "安全密碼錯誤"; }
+            const filterByGroup = (g) => {
+                const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7};
+                return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99));
             };
-
-            const calculateDays  = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; return Math.max(0,Math.ceil((new Date(s)-new Date())/864e5)); };
-            const cleanValue     = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
-            const logout         = () => { currPage.value='login'; loginUserName.value=''; };
-            const filterByGroup  = (g) => { const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7}; return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99)); };
-            const getGroupTotal  = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
-            
-            // 模糊搜尋與獎章判斷邏輯
-            const findMedalValue = (id) => {
-                if (!userData.value || Object.keys(userData.value).length === 0) return null;
-                const keys = Object.keys(userData.value);
-                // 移除所有空格後比對關鍵字
-                const cleanId = id.replace(/\s+/g, '');
-                const foundKey = keys.find(k => k.startsWith('medal_') && k.replace(/\s+/g, '').includes(cleanId));
-                return foundKey ? userData.value[foundKey] : null;
-            };
-
-            const hasMedal = (medalId) => {
-                const val = findMedalValue(medalId);
-                return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
-            };
-
-            const getHourLevel   = () => { const h=Number(cleanValue(userData.value['協勤時數'])); return h>1000?'資深隊員':h>500?'中堅隊員':'救護先鋒'; };
+            const getGroupTotal = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
+            const getHourLevel = () => { const h=Number(cleanValue(userData.value['協勤時數'])); return h>1000?'資深隊員':h>500?'中堅隊員':'救護先鋒'; };
             const calculateMoney = () => Number(userData.value['出勤次數']||0)*200;
 
             return {
-                currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider,
+                currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, medalCount,
                 handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, hasMedal, findMedalValue, getHourLevel, calculateMoney, onSliderScroll, scrollToPage, toggleCards, onHandleTouchStart, onHandleTouchEnd
             };
         }
