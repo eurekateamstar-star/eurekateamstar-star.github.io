@@ -12,7 +12,6 @@
         html, body { margin: 0; padding: 0; background: #f8fafc; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; height: 100%; width: 100%; overflow: hidden; overscroll-behavior: none; -webkit-font-smoothing: antialiased; }
         #app { width: 100%; height: 100dvh; max-width: 450px; margin: 0 auto; display: flex; flex-direction: column; position: relative; background: #f1f5f9; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08); }
 
-        /* 🚨 呼吸燈 */
         @keyframes siren-breath-red { 0%, 100% { background: #ef4444; opacity: 0.3; } 50% { background: #ff0000; opacity: 1; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); } }
         @keyframes siren-breath-blue { 0%, 100% { background: #3b82f6; opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); } 50% { background: #2563eb; opacity: 0.3; } }
         .siren-bar { height: 6px; width: 100%; display: flex; position: absolute; top: 0; left: 0; z-index: 20; }
@@ -23,16 +22,7 @@
         .med-input { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; outline: none; border-radius: 16px; font-size: 15px; font-weight: 600; }
         .med-btn { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 16px; font-weight: 800; border: 1px solid #1d4ed8; }
 
-        /* 📱 主捲動容器 */
-        .main-scroll-view { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
-        .main-scroll-view::-webkit-scrollbar { display: none; }
-
-        /* 📱 水平分頁容器 */
-        .content-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; width: 100%; }
-        .content-slider::-webkit-scrollbar { display: none; }
-        .slide-page { flex: 0 0 100%; width: 100%; padding: 0 24px 140px 24px; min-height: 400px; }
-
-        .horizontal-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .horizontal-scroll { display: flex; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .horizontal-scroll::-webkit-scrollbar { display: none; }
 
         .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; min-height: 190px; }
@@ -44,6 +34,58 @@
         .list-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); overflow: hidden; }
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── 核心修正：固定上層結構 ── */
+        .dashboard-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* 禁止整體捲動 */
+            min-height: 0;
+        }
+
+        /* 卡片區：固定不動 */
+        .cards-section {
+            flex-shrink: 0;
+            padding: 8px 0 0 0;
+        }
+
+        /* Tab 選單：固定不動 */
+        .tabs-section {
+            flex-shrink: 0;
+            background: #f1f5f9;
+            padding: 8px 0;
+            z-index: 30;
+        }
+
+        /* 滑動內容區：只有這層捲動 */
+        .slides-section {
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        /* 水平滑動頁面 */
+        .content-slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            height: 100%;
+        }
+        .content-slider::-webkit-scrollbar { display: none; }
+
+        .slide-page {
+            flex: 0 0 100%;
+            width: 100%;
+            scroll-snap-align: start;
+            padding: 0 24px 100px 24px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .slide-page::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
@@ -53,53 +95,36 @@
         <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20">
             <div class="login-card rounded-[32px] w-full text-center mx-auto max-w-[360px]">
                 <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
-                <div class="p-10 pt-12 pb-12 text-center">
-                    <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center shadow-lg border border-blue-200 mb-6">
-                        <i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i>
-                    </div>
-                    <div class="mb-10">
-                        <h1 class="text-3xl font-black tracking-tight text-slate-800">HAISHAN EMS</h1>
-                        <p class="text-[10px] text-blue-600 font-bold tracking-[0.25em] uppercase mt-1">Volunteer Platform</p>
-                    </div>
+                <div class="p-10 pt-12 pb-12">
+                    <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center shadow-lg border border-blue-200 mb-6"><i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i></div>
+                    <div class="mb-10"><h1 class="text-3xl font-black tracking-tight text-slate-800">HAISHAN EMS</h1><p class="text-[10px] text-blue-600 font-bold tracking-[0.25em] uppercase mt-1">Volunteer Platform</p></div>
                     <div class="space-y-5 text-left">
-                        <div class="relative">
-                            <i class="fa-solid fa-user-nurse absolute left-4 top-4 text-slate-400"></i>
-                            <select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none text-slate-700">
-                                <option value="" disabled>請選擇救護人員</option>
-                                <option v-for="m in members" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option>
-                            </select>
-                        </div>
-                        <div class="relative">
-                            <i class="fa-solid fa-shield-halved absolute left-4 top-4 text-slate-400"></i>
-                            <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12 font-bold">
-                        </div>
+                        <div class="relative"><i class="fa-solid fa-user-nurse absolute left-4 top-4 text-slate-400"></i><select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none text-slate-700"><option value="" disabled>請選擇救護人員</option><option v-for="m in members" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option></select></div>
+                        <div class="relative"><i class="fa-solid fa-shield-halved absolute left-4 top-4 text-slate-400"></i><input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12 font-bold"></div>
                         <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all uppercase">Secure Login</button>
-                        <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black"><i class="fa-solid fa-circle-exclamation"></i> {{ errMsg }}</p>
+                        <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black fade-in"><i class="fa-solid fa-circle-exclamation"></i> {{ errMsg }}</p>
                     </div>
                 </div>
             </div>
             <div class="mt-8 text-center text-[10px] text-slate-400 font-medium tracking-widest uppercase">海山救護義消智慧平台 © 2024</div>
         </div>
 
-        <!-- 2. 登入後架構 -->
+        <!-- 2. 登入後內容 -->
         <template v-else>
             <header :style="{ paddingTop: 'calc(2.5rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">{{ userData.姓名?.charAt(0) }}</div>
-                    <div>
-                        <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
-                        <h2 class="text-lg font-black text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">{{ userData['duty_title'] || '隊員' }}</span></h2>
-                    </div>
+                    <div><p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p><h2 class="text-lg font-black text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">{{ userData['duty_title'] || '隊員' }}</span></h2></div>
                 </div>
                 <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-200"><i class="fa-solid fa-power-off text-sm"></i></button>
             </header>
 
-            <main class="main-scroll-view" ref="mainScroll">
-                
-                <!-- 儀表板分頁 (currPage === 'dashboard') -->
-                <div v-if="currPage === 'dashboard'" class="fade-in">
-                    <!-- 1. 卡片區 -->
-                    <div class="horizontal-scroll px-6 mt-2 mb-4 shrink-0">
+            <!-- 首頁：完全獨立的 flex 佈局，卡片固定、滑動區獨立捲動 -->
+            <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
+
+                <!-- A. 卡片區（固定，不隨分頁移動） -->
+                <div class="cards-section">
+                    <div class="horizontal-scroll px-6 mb-2">
                         <div class="bank-card bg-card-blue">
                             <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div>
                             <div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div>
@@ -132,86 +157,61 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 2. 選單 (Sticky)：此為捲動定位點 -->
-                    <div id="tab-anchor" class="horizontal-scroll px-6 gap-3 mb-6 shrink-0 sticky top-0 bg-[#f1f5f9] py-3 z-30">
+                <!-- B. 分頁選單（固定在卡片下方） -->
+                <div class="tabs-section">
+                    <div class="horizontal-scroll px-6 gap-3">
                         <div v-for="(tab, index) in dashboardTabs" :key="tab.id" @click="scrollToPage(index)" class="flex flex-col items-center shrink-0">
-                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 transition-all shadow-sm" 
+                            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 transition-all shadow-sm"
                                  :class="activeDashboardTab === tab.id ? tab.activeClass : 'bg-white text-slate-300 border border-slate-100'">
                                 <i :class="tab.icon" class="text-xl"></i>
                             </div>
                             <span class="text-[11px] font-black" :class="activeDashboardTab === tab.id ? tab.textColor : 'text-slate-400'">{{ tab.name }}</span>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 3. 水平滑動分頁 -->
+                <!-- C. 滑動內容區（獨立捲動，卡片與選單完全不受影響） -->
+                <div class="slides-section">
                     <div class="content-slider" ref="slider" @scroll="onSliderScroll">
-                        <!-- 分頁：統計 -->
-                        <div class="slide-page"><div class="list-card">
-                            <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300" :class="userData[type] > 0 ? 'text-blue-500 bg-blue-50' : ''"><i class="fa-solid fa-kit-medical text-xs"></i></div>
-                                    <p class="text-sm font-bold text-slate-600">{{ type }}</p>
-                                </div>
-                                <p class="text-lg font-black" :class="userData[type] > 0 ? 'text-blue-600' : 'text-slate-200'">{{ userData[type] || 0 }} <span v-if="type === '救出人數' && userData[type] > 0" class="text-xs">人</span></p>
-                            </div>
-                        </div></div>
-                        <!-- 分頁：名單 -->
+
+                        <!-- 1. 統計 -->
+                        <div class="slide-page">
+                            <div class="list-card mt-2"><div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50"><div class="flex items-center gap-4"><div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-300" :class="userData[type] > 0 ? 'text-blue-500 bg-blue-50' : ''"><i class="fa-solid fa-kit-medical text-xs"></i></div><p class="text-sm font-bold text-slate-600">{{ type }}</p></div><p class="text-lg font-black" :class="userData[type] > 0 ? 'text-blue-600' : 'text-slate-200'">{{ userData[type] || 0 }} <span v-if="type === '救出人數' && userData[type] > 0" class="text-xs">人</span></p></div></div>
+                        </div>
+
+                        <!-- 2. 名單 -->
                         <div class="slide-page space-y-4">
-                            <div v-for="group in [{n:'幹部', i:'fa-crown', c:'text-purple-600 bg-purple-50'}, {n:'第一小隊', i:'fa-1', c:'text-orange-600 bg-orange-50'}, {n:'第二小隊', i:'fa-2', c:'text-red-600 bg-red-50'}, {n:'第三小隊', i:'fa-3', c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card">
-                                <div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c"><span><i :class="['fa-solid', group.i]" class="mr-2"></i>{{ group.n }}</span><span>{{ getGroupTotal(group.n) }}</span></div>
-                                <div class="p-2 grid grid-cols-2 gap-1">
-                                    <div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl" :class="m.姓名 === userData.姓名 ? 'bg-cyan-50 border border-cyan-100' : ''">
-                                        <div class="flex flex-col"><span class="text-sm font-bold">{{ m.姓名 }}</span><span class="text-[9px] font-bold opacity-40">{{ m.duty_title || '隊員' }}</span></div>
-                                        <span class="text-sm font-black text-slate-700">{{ m.duty_count || 0 }}</span>
-                                    </div>
-                                </div>
-                            </div>
+                            <div v-for="group in [{n:'幹部', i:'fa-crown', c:'text-purple-600 bg-purple-50'}, {n:'第一小隊', i:'fa-1', c:'text-orange-600 bg-orange-50'}, {n:'第二小隊', i:'fa-2', c:'text-red-600 bg-red-50'}, {n:'第三小隊', i:'fa-3', c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card mt-2"><div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c"><span><i :class="['fa-solid', group.i]" class="mr-2"></i>{{ group.n }}</span><span>{{ getGroupTotal(group.n) }}</span></div><div class="p-2 grid grid-cols-2 gap-1"><div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl" :class="m.姓名 === userData.姓名 ? 'bg-cyan-50 border border-cyan-100' : ''"><div class="flex flex-col"><span class="text-sm font-bold">{{ m.姓名 }}</span><span class="text-[9px] font-bold opacity-40">{{ m.duty_title || '隊員' }}</span></div><span class="text-sm font-black text-slate-700">{{ m.duty_count || 0 }}</span></div></div></div>
                         </div>
-                        <!-- 分頁：獎章 -->
-                        <div class="slide-page grid grid-cols-2 gap-3">
-                            <div v-for="medal in medalList" :key="medal.name" class="list-card p-5 flex flex-col items-center text-center" :class="hasMedal(medal.target) ? 'bg-amber-50 border-amber-100' : 'opacity-30 grayscale'">
-                                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 text-2xl"><i :class="medal.icon"></i></div>
-                                <p class="text-xs font-black">{{ medal.name }}</p>
-                                <p class="text-[10px] font-bold text-amber-600 mt-1">{{ medal.target }} HRS</p>
-                            </div>
+
+                        <!-- 3. 獎章 -->
+                        <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
+                            <div v-for="medal in medalList" :key="medal.name" class="list-card p-5 flex flex-col items-center text-center" :class="hasMedal(medal.target) ? 'bg-amber-50 border-amber-100' : 'opacity-30 grayscale'"><div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 text-2xl"><i :class="medal.icon"></i></div><p class="text-xs font-black">{{ medal.name }}</p><p class="text-[10px] font-bold text-amber-600 mt-1">{{ medal.target }} HRS</p></div>
                         </div>
-                        <!-- 分頁：時數 -->
-                        <div class="slide-page"><div class="list-card p-8 text-center bg-indigo-50/30">
-                            <div class="w-24 h-24 mx-auto border-[10px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-4 bg-white shadow-sm">
-                                <span class="text-2xl font-black text-indigo-600">{{ cleanValue(userData['協勤時數']) }}</span>
-                                <span class="text-[9px] font-bold text-indigo-300">TOTAL HR</span>
-                            </div>
-                            <h4 class="text-lg font-black text-slate-800">級別：{{ getHourLevel() }}</h4>
-                            <div class="mt-8 space-y-4 text-left px-4">
-                                <div class="flex justify-between text-xs font-bold text-slate-400"><span>年度進度</span><span>{{ cleanValue(userData['協勤時數']) }} / 250 HRS</span></div>
-                                <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner"><div class="h-full bg-indigo-500" :style="{ width: Math.min(100, (Number(cleanValue(userData['協勤時數']))/250)*100) + '%' }"></div></div>
-                            </div>
-                        </div></div>
-                        <!-- 分頁：零用金 -->
-                        <div class="slide-page"><div class="list-card p-6 text-center bg-emerald-50/20">
-                            <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black">預估零用金</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div>
-                            <div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-lg"><p class="text-[11px] text-emerald-100 font-bold uppercase mb-1 tracking-widest">Accumulated</p><h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3></div>
-                            <p class="mt-6 text-[11px] font-bold text-slate-400 italic">依出勤次數估算，以正式核發清冊為準</p>
-                        </div></div>
+
+                        <!-- 4. 時數 -->
+                        <div class="slide-page pt-2">
+                            <div class="list-card p-8 text-center bg-indigo-50/30 mt-2"><div class="w-24 h-24 mx-auto border-[10px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-4 bg-white shadow-sm"><span class="text-2xl font-black text-indigo-600">{{ cleanValue(userData['協勤時數']) }}</span><span class="text-[9px] font-bold text-indigo-300">TOTAL HR</span></div><h4 class="text-lg font-black text-slate-800">級別：{{ getHourLevel() }}</h4><div class="mt-8 space-y-4 text-left px-4"><div class="flex justify-between text-xs font-bold text-slate-400"><span>年度進度</span><span>{{ cleanValue(userData['協勤時數']) }} / 250 HRS</span></div><div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner"><div class="h-full bg-indigo-500" :style="{ width: Math.min(100, (Number(cleanValue(userData['協勤時數']))/250)*100) + '%' }"></div></div></div></div>
+                        </div>
+
+                        <!-- 5. 零用金 -->
+                        <div class="slide-page pt-2">
+                            <div class="list-card p-6 text-center bg-emerald-50/20 mt-2"><div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black">預估零用金</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div><div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-lg"><p class="text-[11px] text-emerald-100 font-bold uppercase mb-1 tracking-widest">Accumulated</p><h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3></div><p class="mt-6 text-[11px] font-bold text-slate-400 italic px-4">根據出勤次數估算，實際以正式核發清冊為準</p></div>
+                        </div>
+
                     </div>
                 </div>
+            </div>
 
-                <!-- 獨立公差中心頁面 (currPage === 'duty') -->
-                <div v-if="currPage === 'duty'" class="fade-in px-6">
-                    <div class="flex justify-between items-end mb-6">
-                        <h2 class="text-2xl font-black text-slate-800">公差中心</h2>
-                        <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">任務派遣</span>
-                    </div>
-                    <div class="list-card p-12 text-center text-slate-300">
-                        <i class="fa-solid fa-clipboard-check text-6xl mb-4 opacity-10"></i>
-                        <p class="text-sm font-bold">目前尚無派遣任務</p>
-                    </div>
-                </div>
+            <!-- 公差中心 -->
+            <div v-if="currPage === 'duty'" class="flex-1 overflow-y-auto fade-in px-6 pt-4">
+                <div class="flex justify-between items-end mb-6"><h2 class="text-2xl font-black text-slate-800">公差中心</h2><span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">任務中心</span></div>
+                <div class="list-card p-12 text-center text-slate-300"><i class="fa-solid fa-clipboard-check text-6xl mb-4 opacity-10"></i><p class="text-sm font-bold">目前尚無派遣任務</p></div>
+            </div>
 
-            </main>
-
-            <!-- 📱 五鍵底部導航欄 -->
+            <!-- 導航欄 -->
             <nav :style="{ paddingBottom: 'var(--safe-bottom)', height: 'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around items-center px-2 z-50">
                 <div @click="currPage = 'dashboard'; scrollToPage(0)" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1">
                     <i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span>
@@ -232,23 +232,28 @@
 
         const firebaseConfig = { apiKey: "AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q", authDomain: "star-c5e91.firebaseapp.com", projectId: "star-c5e91", storageBucket: "star-c5e91.firebasestorage.app", messagingSenderId: "804810488246", appId: "1:804810488246:web:477340ff049b90ed68e917" };
         const app = initializeApp(firebaseConfig); const db = getFirestore(app);
-        const { createApp, ref, computed, onMounted, nextTick } = Vue;
+        const { createApp, ref, computed, onMounted } = Vue;
 
         createApp({
             setup() {
-                const currPage = ref('login'); const activeDashboardTab = ref('stats'); 
+                const currPage = ref('login'); const activeDashboardTab = ref('stats');
                 const members = ref([]); const loginForm = ref({ name: '', pass: '' }); const loginUserName = ref(''); const errMsg = ref('');
-                const slider = ref(null); const mainScroll = ref(null); let scrollTimeout = null;
-                
+                const slider = ref(null);
+
                 const dashboardTabs = [
-                    { id: 'stats', name: '年度統計', icon: 'fa-solid fa-chart-pie', activeClass: 'bg-blue-600 text-white shadow-md', textColor: 'text-blue-600' },
-                    { id: 'duty', name: '公差名單', icon: 'fa-solid fa-clipboard-user', activeClass: 'bg-cyan-600 text-white shadow-md', textColor: 'text-cyan-600' },
-                    { id: 'medals', name: '獎章榮譽', icon: 'fa-solid fa-medal', activeClass: 'bg-amber-500 text-white shadow-md', textColor: 'text-amber-600' },
-                    { id: 'hours', name: '協勤時數', icon: 'fa-solid fa-clock', activeClass: 'bg-indigo-600 text-white shadow-md', textColor: 'text-indigo-600' },
-                    { id: 'money', name: '零用金', icon: 'fa-solid fa-dollar-sign', activeClass: 'bg-emerald-600 text-white shadow-md', textColor: 'text-emerald-600' }
+                    { id: 'stats',  name: '年度統計', icon: 'fa-solid fa-chart-pie',      activeClass: 'bg-blue-600 text-white shadow-md',    textColor: 'text-blue-600' },
+                    { id: 'duty',   name: '公差名單', icon: 'fa-solid fa-clipboard-user',  activeClass: 'bg-cyan-600 text-white shadow-md',     textColor: 'text-cyan-600' },
+                    { id: 'medals', name: '獎章榮譽', icon: 'fa-solid fa-medal',            activeClass: 'bg-amber-500 text-white shadow-md',    textColor: 'text-amber-600' },
+                    { id: 'hours',  name: '協勤時數', icon: 'fa-solid fa-clock',            activeClass: 'bg-indigo-600 text-white shadow-md',   textColor: 'text-indigo-600' },
+                    { id: 'money',  name: '零用金',   icon: 'fa-solid fa-dollar-sign',      activeClass: 'bg-emerald-600 text-white shadow-md',  textColor: 'text-emerald-600' }
                 ];
                 const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯','救出人數'];
-                const medalList = [ { name: '志願服務獎章', target: 500, icon: 'fa-solid fa-award text-amber-500' }, { name: '內政部銅質獎', target: 1000, icon: 'fa-solid fa-certificate text-slate-400' }, { name: '內政部銀質獎', target: 2000, icon: 'fa-solid fa-shield-halved text-yellow-300' }, { name: '內政部金質獎', target: 3000, icon: 'fa-solid fa-crown text-yellow-500' } ];
+                const medalList = [
+                    { name: '志願服務獎章', target: 500,  icon: 'fa-solid fa-award text-amber-500' },
+                    { name: '內政部銅質獎', target: 1000, icon: 'fa-solid fa-certificate text-slate-400' },
+                    { name: '內政部銀質獎', target: 2000, icon: 'fa-solid fa-shield-halved text-yellow-300' },
+                    { name: '內政部金質獎', target: 3000, icon: 'fa-solid fa-crown text-yellow-500' }
+                ];
 
                 const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
@@ -258,40 +263,31 @@
                     });
                 });
 
-                // 📱 核心功能：精準捲動定位
-                const snapToTabs = () => {
-                    if (!mainScroll.value) return;
-                    const anchor = document.getElementById('tab-anchor');
-                    if (anchor) {
-                        // 如果目前捲動位置已經滑過選單，就吸附到選單起點
-                        if (mainScroll.value.scrollTop > anchor.offsetTop) {
-                            mainScroll.value.scrollTo({ top: anchor.offsetTop, behavior: 'smooth' });
-                        }
-                    }
-                };
-
+                // 切換分頁：每頁獨立捲動，切換時自動回頂
                 const onSliderScroll = () => {
                     if (!slider.value) return;
                     const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth);
                     if (dashboardTabs[index] && activeDashboardTab.value !== dashboardTabs[index].id) {
                         activeDashboardTab.value = dashboardTabs[index].id;
-                        // 滑動停止後觸發吸附
-                        clearTimeout(scrollTimeout);
-                        scrollTimeout = setTimeout(snapToTabs, 100);
+                        // 將目標頁面的垂直捲動回頂
+                        const pages = slider.value.querySelectorAll('.slide-page');
+                        if (pages[index]) pages[index].scrollTop = 0;
                     }
                 };
 
                 const scrollToPage = (index) => {
                     if (!slider.value) return;
                     slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior: 'smooth' });
-                    // 點擊選單立即觸發吸附
-                    nextTick(() => snapToTabs());
+                    activeDashboardTab.value = dashboardTabs[index].id;
+                    // 回到目標頁頂部
+                    const pages = slider.value.querySelectorAll('.slide-page');
+                    if (pages[index]) pages[index].scrollTop = 0;
                 };
 
                 const handleLogin = () => {
                     const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
                     if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; }
-                    else { errMsg.value = "密碼錯誤，請重新輸入"; }
+                    else { errMsg.value = "安全密碼錯誤，請重新輸入"; }
                 };
                 const calculateDays = (dateStr) => { if (!dateStr || dateStr === '----/--/--') return '--'; const diff = new Date(dateStr) - new Date(); return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24))); };
                 const cleanValue = (val) => val ? String(val).replace(/[^0-9.]/g, '') : '0';
@@ -306,7 +302,7 @@
                 const getHourLevel = () => { const h = Number(cleanValue(userData.value['協勤時數'])); return h > 1000 ? '資深隊員' : h > 500 ? '中堅隊員' : '救護先鋒'; };
                 const calculateMoney = () => Number(userData.value['出勤次數'] || 0) * 200;
 
-                return { currPage, activeDashboardTab, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, medalList, hasMedal, getHourLevel, calculateMoney, slider, mainScroll, onSliderScroll, scrollToPage };
+                return { currPage, activeDashboardTab, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, medalList, hasMedal, getHourLevel, calculateMoney, slider, onSliderScroll, scrollToPage };
             }
         }).mount('#app');
     </script>
