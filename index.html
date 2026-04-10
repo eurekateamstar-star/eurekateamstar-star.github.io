@@ -36,18 +36,20 @@
         .med-btn { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255,255,255,0.2); color: white; border-radius: 16px; font-weight: 800; border: 1px solid #1d4ed8; }
         .med-btn:active { transform: scale(0.97); }
 
-        /* 🌟 橫向滑動容器 (支援卡片與按鈕) */
+        /* 🌟 橫向滑動容器 */
         .horizontal-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 12px; scrollbar-width: none; }
         .horizontal-scroll::-webkit-scrollbar { display: none; }
         
         /* 頂部大卡片樣式 */
         .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; }
         .bank-card::after { content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent); transform: rotate(30deg); pointer-events: none; }
+        
+        /* 💡 新增卡片漸層顏色 */
         .bg-card-blue { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.4); }
-        .bg-card-purple { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); box-shadow: 0 15px 30px -5px rgba(139, 92, 246, 0.4); }
-        .bg-card-emerald { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4); }
+        .bg-card-emerald { background: linear-gradient(135deg, #065f46 0%, #10b981 100%); box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4); } /* 綠色志工卡 */
+        .bg-card-rose { background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); box-shadow: 0 15px 30px -5px rgba(244, 63, 94, 0.4); } /* 紅色 EMT 證照 */
 
-        /* 中間快捷按鈕樣式 */
+        /* 快捷按鈕樣式 */
         .scroll-item { flex: 0 0 auto; width: 76px; scroll-snap-align: start; }
         
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -57,7 +59,9 @@
 <body>
     <div id="app">
 
-        <!-- 1. 登入頁面 (維持專業白與上方 LED) -->
+        <!-- ==========================================
+             1. 登入頁面
+        ========================================== -->
         <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20">
             <div class="login-card rounded-[32px] w-full text-center relative z-10 mx-auto max-w-[360px]">
                 <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
@@ -86,9 +90,12 @@
                     </div>
                 </div>
             </div>
+            <div class="mt-8 text-center text-[10px] text-slate-400 font-medium tracking-widest uppercase">海山救護義消智慧平台 © 2024</div>
         </div>
 
-        <!-- 登入後頂部 (精簡網銀風) -->
+        <!-- ==========================================
+             登入後頂部
+        ========================================== -->
         <header v-if="currPage !== 'login'" class="pt-12 pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] z-50">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">
@@ -96,7 +103,7 @@
                 </div>
                 <div>
                     <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
-                    <h2 class="text-lg font-black tracking-tight text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">隊員</span></h2>
+                    <h2 class="text-lg font-black tracking-tight text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">幹部</span></h2>
                 </div>
             </div>
             <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-red-500 transition shadow-sm border border-slate-200">
@@ -104,17 +111,19 @@
             </button>
         </header>
 
-        <!-- 2. 主儀表板 (網銀首頁風) -->
+        <!-- ==========================================
+             2. 主儀表板
+        ========================================== -->
         <main v-if="currPage === 'dashboard'" class="flex-1 overflow-y-auto no-scrollbar pb-32 fade-in">
             
-            <!-- A. 頂部橫向滑動資產卡片區 (Card Carousel) -->
+            <!-- A. 頂部橫向滑動資產卡片區 -->
             <div class="horizontal-scroll px-6 mt-2 mb-4">
                 
                 <!-- 卡片 1：年度出勤總覽 (藍色) -->
                 <div class="bank-card bg-card-blue">
                     <div class="flex justify-between items-start mb-2">
                         <p class="text-white/80 text-xs font-bold tracking-widest uppercase">年度累計協勤</p>
-                        <i class="fa-brands fa-nfc-symbol text-white/50 text-xl"></i>
+                        <i class="fa-solid fa-chart-line text-white/50 text-xl"></i>
                     </div>
                     <div class="flex items-baseline gap-1 mb-6">
                         <h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3>
@@ -127,42 +136,46 @@
                     </div>
                 </div>
 
-                <!-- 卡片 2：歷年協勤時數 (紫色) -->
-                <div class="bank-card bg-card-purple">
+                <!-- 卡片 2：新北志工榮譽卡 (綠色) -->
+                <div class="bank-card bg-card-emerald">
                     <div class="flex justify-between items-start mb-2">
-                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">歷年總協勤時數</p>
-                        <i class="fa-solid fa-clock-rotate-left text-white/50 text-xl"></i>
+                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">新北救護志工卡</p>
+                        <i class="fa-solid fa-id-badge text-white/50 text-xl"></i>
                     </div>
-                    <div class="flex items-baseline gap-1 mb-6">
-                        <h3 class="text-5xl font-black tracking-tighter">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</h3>
-                        <span class="text-sm font-bold text-white/80">小時</span>
+                    <div class="flex items-center gap-4 mb-6 mt-2">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
+                            <i class="fa-solid fa-user-shield text-2xl text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black tracking-wide">有效志工</h3>
+                            <p class="text-xs text-white/70 mt-1 font-mono tracking-widest">ID: NTC-804810</p>
+                        </div>
                     </div>
                     <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">初階 EMT</p><p class="text-lg font-bold">500 <span class="text-xs font-normal opacity-80">小時</span></p></div>
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">中階 EMT2</p><p class="text-lg font-bold">2000 <span class="text-xs font-normal opacity-80">小時</span></p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">入隊日期</p><p class="text-sm font-bold font-mono">2013-12-01</p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">志工時數</p><p class="text-sm font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }} <span class="text-[10px] font-normal opacity-80">小時</span></p></div>
                     </div>
                 </div>
 
-                <!-- 卡片 3：零用金帳戶 (綠色) -->
-                <div class="bank-card bg-card-emerald mr-6">
+                <!-- 卡片 3：EMT 救護技術員證照 (紅色) -->
+                <div class="bank-card bg-card-rose mr-6">
                     <div class="flex justify-between items-start mb-2">
-                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">零用金結餘</p>
-                        <i class="fa-solid fa-wallet text-white/50 text-xl"></i>
+                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">EMT 救護證照</p>
+                        <i class="fa-solid fa-file-medical text-white/50 text-xl"></i>
                     </div>
-                    <div class="flex items-baseline gap-1 mb-6">
-                        <span class="text-2xl font-bold text-white/80 mb-1">NT$</span>
-                        <h3 class="text-5xl font-black tracking-tighter">4,500</h3>
+                    <div class="flex items-center gap-3 mb-6 mt-3">
+                        <h3 class="text-4xl font-black tracking-tighter">EMT-2</h3>
+                        <span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">有效</span>
                     </div>
                     <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">本月入帳</p><p class="text-lg font-bold">+1,200</p></div>
-                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">本月扣款</p><p class="text-lg font-bold">-300</p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">發證單位</p><p class="text-sm font-bold">新北市消防局</p></div>
+                        <div class="text-right"><p class="text-[10px] text-white/60 font-bold uppercase mb-1">有效期限至</p><p class="text-lg font-bold font-mono">{{ userData['到期日'] || '2026-12-31' }}</p></div>
                     </div>
                 </div>
             </div>
 
-            <!-- B. 橫向滑動選單 (Quick Actions - 點擊切換下方內容) -->
+            <!-- B. 橫向滑動選單 (Quick Actions) -->
             <div class="horizontal-scroll px-6 gap-3 mb-2 pt-2">
-                <!-- 按鈕：年度統計 -->
                 <div @click="activeTab = 'stats'" class="scroll-item flex flex-col items-center cursor-pointer transition">
                     <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border flex items-center justify-center mb-2 transition-all" 
                          :class="activeTab === 'stats' ? 'border-blue-500 text-blue-600 bg-blue-50/50 shadow-blue-500/20' : 'border-slate-200 text-slate-400'">
@@ -170,7 +183,6 @@
                     </div>
                     <span class="text-[11px] font-bold" :class="activeTab === 'stats' ? 'text-blue-600' : 'text-slate-500'">年度統計</span>
                 </div>
-                <!-- 按鈕：公差統計 -->
                 <div @click="activeTab = 'duty'" class="scroll-item flex flex-col items-center cursor-pointer transition">
                     <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border flex items-center justify-center mb-2 transition-all" 
                          :class="activeTab === 'duty' ? 'border-cyan-500 text-cyan-600 bg-cyan-50/50 shadow-cyan-500/20' : 'border-slate-200 text-slate-400'">
@@ -178,7 +190,6 @@
                     </div>
                     <span class="text-[11px] font-bold" :class="activeTab === 'duty' ? 'text-cyan-600' : 'text-slate-500'">公差名單</span>
                 </div>
-                <!-- 其他未啟用按鈕 -->
                 <div v-for="item in menuList" :key="item.name" class="scroll-item flex flex-col items-center opacity-50">
                     <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-400 mb-2">
                         <i :class="item.icon" class="text-2xl"></i>
@@ -202,11 +213,11 @@
                         <div v-for="(type, index) in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500" :class="userData[type] > 0 ? 'bg-blue-50 text-blue-500' : ''">
-                                    <i class="fa-solid fa-file-medical"></i>
+                                    <i class="fa-solid fa-kit-medical"></i>
                                 </div>
                                 <div>
                                     <p class="text-sm font-bold text-slate-700">{{ type }}</p>
-                                    <p class="text-[10px] text-slate-400 font-medium">救護勤務</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">救護勤務分類</p>
                                 </div>
                             </div>
                             <p class="text-lg font-black" :class="userData[type] > 0 ? 'text-blue-600' : 'text-slate-300'">{{ userData[type] || 0 }}</p>
@@ -214,16 +225,17 @@
                     </div>
                 </div>
 
-                <!-- Tab 2: 公差統計 (分組清單) -->
+                <!-- Tab 2: 公差統計 (分組清單附圖示) -->
                 <div v-if="activeTab === 'duty'" class="fade-in space-y-4">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-base font-black text-slate-800">全隊公差總覽</h3>
                         <span class="text-[10px] font-bold text-cyan-600 bg-cyan-100 px-2 py-1 rounded-md border border-cyan-200">總計 {{ totalPublicDuty }} 次</span>
                     </div>
                     
-                    <div v-for="group in [{n:'幹部', c:'bg-purple-50 text-purple-700 border-purple-200'}, {n:'第一小隊', c:'bg-orange-50 text-orange-700 border-orange-200'}, {n:'第二小隊', c:'bg-red-50 text-red-700 border-red-200'}, {n:'第三小隊', c:'bg-blue-50 text-blue-700 border-blue-200'}]" :key="group.n" class="list-card">
+                    <div v-for="group in [{n:'幹部', c:'bg-purple-50 text-purple-700 border-purple-200', i:'fa-crown'}, {n:'第一小隊', c:'bg-orange-50 text-orange-700 border-orange-200', i:'fa-1'}, {n:'第二小隊', c:'bg-red-50 text-red-700 border-red-200', i:'fa-2'}, {n:'第三小隊', c:'bg-blue-50 text-blue-700 border-blue-200', i:'fa-3'}]" :key="group.n" class="list-card">
+                        <!-- 群組標頭加上專屬圖示 -->
                         <div class="p-3 px-4 flex justify-between items-center border-b border-slate-100" :class="group.c">
-                            <span class="text-sm font-black">{{ group.n }}組</span>
+                            <span class="text-sm font-black flex items-center gap-2"><i :class="['fa-solid', group.i]"></i> {{ group.n }}組</span>
                             <span class="bg-white/80 px-2 py-0.5 rounded-full text-xs font-black shadow-sm">{{ getGroupTotal(group.n) }}</span>
                         </div>
                         <div class="p-1">
@@ -232,7 +244,10 @@
                                     <span class="text-[10px] font-bold text-slate-400 w-10 truncate">{{ m.duty_title || '隊員' }}</span>
                                     <span class="font-bold" :class="m.姓名 === loginForm.name ? 'text-cyan-600' : 'text-slate-700'">{{ m.姓名 }}</span>
                                 </div>
-                                <span class="font-black" :class="m.duty_count > 0 ? 'text-slate-800' : 'text-slate-300'">{{ m.duty_count || 0 }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] text-slate-400" v-if="m.duty_count > 0">已執行</span>
+                                    <span class="font-black" :class="m.duty_count > 0 ? 'text-slate-800' : 'text-slate-300'">{{ m.duty_count || 0 }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -241,14 +256,16 @@
             </div>
         </main>
 
-        <!-- 5. 底部固定導覽列 (純淨白) -->
+        <!-- 5. 底部固定導覽列 -->
         <nav v-if="currPage !== 'login'" class="absolute bottom-0 left-0 right-0 h-20 bg-white/95 backdrop-blur-xl border-t border-slate-200 flex justify-around items-center px-8 pb-4 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
             <div @click="currPage = 'dashboard'" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-400'" class="flex flex-col items-center cursor-pointer transition">
                 <i class="fa-solid fa-house-chimney text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">首頁</span>
             </div>
+            <div @click="activeTab = 'duty'" :class="activeTab === 'duty' ? 'text-blue-600' : 'text-slate-400'" class="flex flex-col items-center cursor-pointer transition">
+                <i class="fa-solid fa-clipboard-user text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">公差</span>
+            </div>
             <div class="flex flex-col items-center text-slate-400 opacity-50"><i class="fa-solid fa-calendar-check text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">排班</span></div>
             <div class="flex flex-col items-center text-slate-400 opacity-50"><i class="fa-solid fa-user-nurse text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">我的</span></div>
-            <div class="flex flex-col items-center text-slate-400 opacity-50"><i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">設定</span></div>
         </nav>
     </div>
 
@@ -280,8 +297,7 @@
 
                 const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯'];
                 const menuList = [
-                    { name: '志工卡', icon: 'fa-solid fa-id-badge' },
-                    { name: 'EMT證照', icon: 'fa-solid fa-file-medical' },
+                    { name: '歷史紀錄', icon: 'fa-solid fa-clock-rotate-left' },
                     { name: '獎章榮譽', icon: 'fa-solid fa-medal' }
                 ];
 
