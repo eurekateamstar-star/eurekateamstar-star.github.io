@@ -3,15 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- 讓網頁看起來像原生 App 的關鍵標籤 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#f1f5f9">
+    <meta name="format-detection" content="telephone=no">
+
     <title>海山救護義消平台</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <style>
-        :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
-        html, body { margin:0;padding:0;background:#f8fafc;color:#1e293b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;height:100%;width:100%;overflow:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased; }
-        #app { width:100%;height:100dvh;max-width:450px;margin:0 auto;display:flex;flex-direction:column;position:relative;background:#f1f5f9;box-shadow:0 0 50px rgba(0,0,0,.08); }
+        :root { 
+            --safe-top: env(safe-area-inset-top); 
+            --safe-bottom: env(safe-area-inset-bottom); 
+            --header-bg: #f1f5f9;
+        }
+        
+        /* 讓整個 body 預設背景與 header 一致，瀏海才不會有白邊 */
+        html, body { 
+            margin:0;padding:0;
+            background: var(--header-bg); 
+            color:#1e293b;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+            height:100%;width:100%;
+            overflow:hidden;
+            overscroll-behavior:none;
+            -webkit-font-smoothing:antialiased; 
+        }
 
+        #app { 
+            width:100%;
+            height:100dvh;
+            max-width:450px;
+            margin:0 auto;
+            display:flex;
+            flex-direction:column;
+            position:relative;
+            background:#f1f5f9;
+            box-shadow:0 0 50px rgba(0,0,0,.08); 
+        }
+
+        /* 警報列動畫 */
         @keyframes siren-breath-red  { 0%,100%{background:#ef4444;opacity:.3}50%{background:#f00;opacity:1;box-shadow:0 0 15px rgba(239,68,68,.5)} }
         @keyframes siren-breath-blue { 0%,100%{background:#3b82f6;opacity:1;box-shadow:0 0 15px rgba(59,130,246,.5)}50%{background:#2563eb;opacity:.3} }
         .siren-bar  { height:6px;width:100%;display:flex;position:absolute;top:0;left:0;z-index:20; }
@@ -25,38 +60,44 @@
         .horizontal-scroll { display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none; }
         .horizontal-scroll::-webkit-scrollbar { display:none; }
 
-        .bank-card { flex:0 0 88%;scroll-snap-align:center;margin-right:12px;border-radius:24px;color:white;position:relative;overflow:hidden;padding:24px;min-height:190px; }
-        .bg-card-blue    { background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%); }
-        .bg-card-emerald { background:linear-gradient(135deg,#065f46 0%,#10b981 100%); }
-        .bg-card-rose    { background:linear-gradient(135deg,#be123c 0%,#f43f5e 100%); }
+        /* --- 修正後的大卡片底色與質感 --- */
+        .bank-card { flex:0 0 88%;scroll-snap-align:center;margin-right:12px;border-radius:28px;color:white;position:relative;overflow:hidden;padding:24px;min-height:190px; box-shadow: 0 15px 30px -10px rgba(0,0,0,0.3); }
+        .bank-card::after { content:'';position:absolute;top:0;left:-50%;width:200%;height:100%;background:linear-gradient(to right,transparent,rgba(255,255,255,0.15),transparent);transform:rotate(30deg);pointer-events:none; }
+        .bg-card-blue    { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important; }
+        .bg-card-emerald { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%) !important; }
+        .bg-card-rose    { background: linear-gradient(135deg, #9f1239 0%, #f43f5e 100%) !important; }
 
         .list-card { background:#fff;border:1px solid #e2e8f0;border-radius:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.02);overflow:hidden; }
         .fade-in { animation:fadeIn .4s cubic-bezier(.16,1,.3,1); }
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
 
         .dashboard-wrapper { flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0; }
+        
+        /* 核心修改：讓卡片區頂部留白配合瀏海 */
         .cards-section { flex-shrink:0; overflow:hidden; transition: max-height .38s cubic-bezier(.4,0,.2,1), opacity .3s ease, padding .3s ease; }
-        .cards-section.expanded  { max-height:260px; opacity:1; padding:8px 0 4px; }
+        .cards-section.expanded  { max-height:280px; opacity:1; padding:8px 0 8px; }
         .cards-section.collapsed { max-height:0;     opacity:0; padding:0; }
 
         .tabs-section { flex-shrink:0;background:#f1f5f9;z-index:30;transition:padding .3s ease; }
         .drag-handle { display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 2px;cursor:pointer; touch-action:none; }
         .drag-handle-bar { width:36px;height:4px;border-radius:99px;background:#cbd5e1; }
-        .collapse-arrow { font-size:10px;color:#94a3b8;font-weight:800;transition:transform .35s; }
-        .collapse-arrow.up   { transform:rotate(0deg); }
-        .collapse-arrow.down { transform:rotate(180deg); }
-
+        
         .slides-section { flex:1;overflow:hidden;min-height:0; }
         .content-slider { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;width:100%;height:100%; }
         .content-slider::-webkit-scrollbar { display:none; }
         .slide-page { flex:0 0 100%;width:100%;scroll-snap-align:start;padding:0 24px 100px 24px;box-sizing:border-box;overflow-y:auto; }
+
+        /* 導航列底色 */
+        nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
 <div id="app">
 
-    <!-- 登入頁 -->
-    <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20">
+    <!-- 登入頁 (瀏海填充處理) -->
+    <div v-if="currPage === 'login'" 
+         class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20"
+         :style="{ paddingTop: 'var(--safe-top)' }">
         <div class="login-card rounded-[32px] w-full text-center mx-auto max-w-[360px]">
             <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
             <div class="p-10 pt-12 pb-12">
@@ -73,9 +114,10 @@
         <div class="mt-8 text-center text-[10px] text-slate-400 font-medium tracking-widest uppercase">海山救護義消智慧平台 © 2024</div>
     </div>
 
-    <!-- 登入後 -->
+    <!-- 登入後 (瀏海完全填充) -->
     <template v-else>
-        <header :style="{ paddingTop:'calc(2.5rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
+        <!-- 頂部 Header：背景色會自動延伸至瀏海區域 -->
+        <header :style="{ paddingTop:'calc(1rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">{{ userData.姓名?.charAt(0) }}</div>
                 <div><p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p><h2 class="text-lg font-black text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">{{ userData['duty_title'] || '隊員' }}</span></h2></div>
@@ -85,32 +127,32 @@
 
         <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
 
-            <!-- A. 卡片區 -->
+            <!-- A. 大卡片區 -->
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
                     <div class="bank-card bg-card-blue">
-                        <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div>
+                        <div class="flex justify-between items-start mb-2 opacity-80 text-[10px] font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div>
                         <div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div>
-                        <div class="grid grid-cols-3 border-t border-white/20 pt-4">
-                            <div class="border-r border-white/10"><p class="text-[10px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-base font-bold">{{ userData['出勤次數'] || 0 }} <span class="text-[10px] font-normal">次</span></p></div>
-                            <div class="pl-4 border-r border-white/10"><p class="text-[10px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-base font-bold">{{ cleanValue(userData['救出人數']) }} <span class="text-[10px] font-normal">人</span></p></div>
-                            <div class="pl-4"><p class="text-[10px] opacity-60 font-bold uppercase mb-1">年資</p><p class="text-base font-bold">{{ userData['seniority'] || '--' }}</p></div>
+                        <div class="grid grid-cols-[0.8fr_0.8fr_1.4fr] border-t border-white/20 pt-4">
+                            <div class="border-r border-white/10"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-[15px] font-bold">{{ userData['出勤次數'] || 0 }} <span class="text-[9px] font-normal">次</span></p></div>
+                            <div class="pl-3 border-r border-white/10"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-[15px] font-bold">{{ cleanValue(userData['救出人數']) }} <span class="text-[9px] font-normal">人</span></p></div>
+                            <div class="pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">服務年資</p><p class="text-[15px] font-bold whitespace-nowrap">{{ userData['seniority'] || '--' }}</p></div>
                         </div>
                     </div>
                     <div class="bank-card bg-card-emerald">
-                        <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div>
+                        <div class="flex justify-between items-start mb-2 opacity-80 text-[10px] font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div>
                         <div class="mb-6 mt-2"><h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 {{ calculateDays(userData['honor_expiry']) }} 天</p></div>
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4">
-                            <div class="border-r border-white/10"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">到期日</p><p class="text-base font-bold font-mono">{{ userData['honor_expiry'] || '無' }}</p></div>
-                            <div class="pl-6"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">累計總時數</p><p class="text-base font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</p></div>
+                            <div class="border-r border-white/10"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p><p class="text-[15px] font-bold font-mono">{{ userData['honor_expiry'] || '無' }}</p></div>
+                            <div class="pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">累計總時數</p><p class="text-[15px] font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</p></div>
                         </div>
                     </div>
                     <div class="bank-card bg-card-rose mr-6">
-                        <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">EMT 證照 <i class="fa-solid fa-file-medical text-lg"></i></div>
+                        <div class="flex justify-between items-start mb-2 opacity-80 text-[10px] font-bold uppercase tracking-widest">EMT 證照 <i class="fa-solid fa-file-medical text-lg"></i></div>
                         <div class="mb-6 mt-3"><h3 class="text-2xl font-black tracking-tighter">{{ userData['emt_level'] || '技術員' }}</h3><span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">有效</span></div>
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4">
-                            <div class="border-r border-white/10"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">發照單位</p><p class="text-base font-bold">消防局</p></div>
-                            <div class="pl-6"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">有效到期日</p><p class="text-base font-bold font-mono">{{ userData['emt_expiry'] || '無' }}</p></div>
+                            <div class="border-r border-white/10"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">發照單位</p><p class="text-[15px] font-bold">消防局</p></div>
+                            <div class="pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">有效到期日</p><p class="text-[15px] font-bold font-mono">{{ userData['emt_expiry'] || '無' }}</p></div>
                         </div>
                     </div>
                 </div>
@@ -137,7 +179,6 @@
             <div class="slides-section">
                 <div class="content-slider" ref="slider" @scroll="onSliderScroll">
 
-                    <!-- 頁1: 年度統計 -->
                     <div class="slide-page">
                         <div class="list-card mt-2">
                             <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0">
@@ -150,81 +191,44 @@
                         </div>
                     </div>
 
-                    <!-- 頁2: 公差名單 -->
                     <div class="slide-page space-y-4">
-                        <div v-for="group in [
-                            {n:'幹部', i:'fa-solid fa-crown', c:'text-purple-600 bg-purple-50'},
-                            {n:'第一小隊', i:'fa-solid fa-shield-heart', c:'text-orange-600 bg-orange-50'},
-                            {n:'第二小隊', i:'fa-solid fa-kit-medical', c:'text-red-600 bg-red-50'},
-                            {n:'第三小隊', i:'fa-solid fa-ambulance', c:'text-blue-600 bg-blue-50'}
-                        ]" :key="group.n" class="list-card mt-2">
+                        <div v-for="group in [{n:'幹部',i:'fa-crown',c:'text-purple-600 bg-purple-50'},{n:'第一小隊',i:'fa-shield-heart',c:'text-orange-600 bg-orange-50'},{n:'第二小隊',i:'fa-kit-medical',c:'text-red-600 bg-red-50'},{n:'第三小隊',i:'fa-ambulance',c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card mt-2">
                             <div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c">
-                                <span class="flex items-center">
-                                    <div class="mr-3 w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
-                                        <i :class="group.i" class="text-xs"></i>
-                                    </div>
-                                    {{ group.n }}
-                                </span>
+                                <span class="flex items-center"><div class="mr-3 w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm"><i :class="['fa-solid',group.i]" class="text-xs"></i></div>{{ group.n }}</span>
                                 <span class="bg-white/60 px-3 py-1 rounded-full text-[11px] shadow-sm">{{ getGroupTotal(group.n) }} 次</span>
                             </div>
                             <div class="p-2 grid grid-cols-2 gap-1">
                                 <div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl transition-colors" :class="m.姓名===userData.姓名?'bg-blue-50 border border-blue-100':'bg-white'">
-                                    <div class="flex flex-col">
-                                        <div class="flex items-center gap-1.5">
-                                            <i class="fa-solid fa-user-doctor text-[10px] text-slate-400"></i>
-                                            <span class="text-sm font-bold text-slate-700">{{ m.姓名 }}</span>
-                                        </div>
-                                        <span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span>
-                                    </div>
-                                    <span class="text-sm font-black text-slate-600">{{ m.duty_count||0 }} <span class="text-[10px] font-bold opacity-30">次</span></span>
+                                    <div class="flex flex-col"><div class="flex items-center gap-1.5"><i class="fa-solid fa-user-doctor text-[10px] text-slate-400"></i><span class="text-sm font-bold text-slate-700">{{ m.姓名 }}</span></div><span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span></div>
+                                    <span class="text-sm font-black text-slate-600">{{ m.duty_count||0 }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 頁3: 獎章榮譽 (全新升級版：統計橫幅 + 3欄小圖) -->
                     <div class="slide-page space-y-3 pt-2">
-                        <!-- 榮譽統計橫幅 -->
                         <div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
                             <div class="flex justify-between items-center mb-2">
-                                <div>
-                                    <p class="text-[10px] opacity-80 font-bold tracking-wider uppercase">Member Achievement</p>
-                                    <h3 class="text-xl font-black">榮譽勳章統計</h3>
-                                </div>
-                                <div class="text-right">
-                                    <span class="text-3xl font-black">{{ medalCount }}</span>
-                                    <span class="text-xs opacity-80 ml-1">/ 12</span>
-                                </div>
+                                <div><p class="text-[10px] opacity-80 font-bold tracking-wider uppercase">Member Achievement</p><h3 class="text-xl font-black">榮譽勳章統計</h3></div>
+                                <div class="text-right"><span class="text-3xl font-black">{{ medalCount }}</span><span class="text-xs opacity-80 ml-1">/ 12</span></div>
                             </div>
                             <div class="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
                                 <div class="h-full bg-white transition-all duration-1000" :style="{ width: (medalCount / 12 * 100) + '%' }"></div>
                             </div>
                         </div>
 
-                        <!-- 三欄獎章牆 -->
                         <div class="grid grid-cols-3 gap-2 pb-10">
                             <div v-for="medal in medalList" :key="medal.id" 
                                  class="list-card p-2 flex flex-col items-center text-center transition-all duration-500 relative" 
-                                 :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm' : 'opacity-20 grayscale bg-slate-50'">
-                                
-                                <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] text-white shadow-sm z-10">
-                                    <i class="fa-solid fa-check"></i>
-                                </div>
-
-                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-inner mb-1.5 text-xl">
-                                    <i :class="medal.icon"></i>
-                                </div>
-                                
+                                 :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm opacity-100' : 'opacity-20 grayscale bg-slate-50'">
+                                <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] text-white shadow-sm z-10"><i class="fa-solid fa-check"></i></div>
+                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-inner mb-1.5 text-xl"><i :class="medal.icon"></i></div>
                                 <p class="text-[10px] font-black text-slate-700 leading-tight h-6 flex items-center justify-center">{{ medal.name }}</p>
-                                
-                                <p class="text-[8px] font-bold mt-0.5" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
-                                    {{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}
-                                </p>
+                                <p class="text-[8px] font-bold mt-0.5" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 頁4: 協勤時數 -->
                     <div class="slide-page pt-2 text-center">
                         <div class="list-card p-10 bg-indigo-50/30 mt-2">
                             <div class="w-32 h-32 mx-auto border-[12px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-6 bg-white shadow-lg">
@@ -235,12 +239,10 @@
                         </div>
                     </div>
 
-                    <!-- 頁5: 零用金 -->
                     <div class="slide-page pt-2">
                         <div class="list-card p-8 text-center bg-emerald-50/20 mt-2">
                             <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black">預估零用金</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div>
                             <div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-xl"><h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3></div>
-                            <p class="mt-8 text-[11px] font-bold text-slate-400 italic">※ 此金額為系統自動試算，實際請以分隊公告核發清冊為準</p>
                         </div>
                     </div>
 
@@ -248,8 +250,8 @@
             </div>
         </div>
 
-        <!-- 導覽列 -->
-        <nav :style="{paddingBottom:'var(--safe-bottom)',height:'calc(75px + var(--safe-bottom))'}" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around items-center px-2 z-50">
+        <!-- 導航列 (iOS 底部安全區域處理) -->
+        <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 flex justify-around items-center px-2 z-50">
             <div @click="currPage='dashboard';scrollToPage(0)" :class="currPage==='dashboard'?'text-blue-600':'text-slate-300'" class="flex flex-col items-center flex-1"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
             <div class="flex flex-col items-center flex-1 text-slate-200"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
             <div @click="currPage='duty'" :class="currPage==='duty'?'text-blue-600':'text-slate-300'" class="flex flex-col items-center flex-1"><i class="fa-solid fa-clipboard-check text-xl"></i><span class="text-[13px] font-black mt-1">公差</span></div>
@@ -280,20 +282,20 @@
             const slider = ref(null);
             let touchStartY = 0;
 
-        const medalList = [
-    { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
-    { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
-    { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
-    { name: '衛福部-金-8000小時', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
-    { name: '衛福部-銀-5000小時', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
-    { name: '衛福部-銅-3000小時', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
-    { name: '內政部-金-2500小時', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
-    { name: '內政部-銀-2000小時', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
-    { name: '內政部-銅-1500小時', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
-    { name: '新北市-金-1800小時', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
-    { name: '新北市-銀-1200小時', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
-    { name: '新北市-銅-600小時', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
-];
+            const medalList = [
+                { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
+                { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
+                { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
+                { name: '衛福部-金-8000小時', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
+                { name: '衛福部-銀-5000小時', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
+                { name: '衛福部-銅-3000小時', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
+                { name: '內政部-金-2500小時', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
+                { name: '內政部-銀-2000小時', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
+                { name: '內政部-銅-1500小時', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
+                { name: '新北市-金-1800小時', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
+                { name: '新北市-銀-1200小時', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
+                { name: '新北市-銅-600小時', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
+            ];
 
             const dashboardTabs = [
                 { id:'stats',  name:'年度統計', icon:'fa-solid fa-chart-pie', activeClass:'bg-blue-600 text-white shadow-md', textColor:'text-blue-600' },
@@ -310,18 +312,6 @@
                 return members.value.find(m => m.姓名 === loginUserName.value) || {};
             });
 
-            // 統計拿到了幾枚獎章
-            const medalCount = computed(() => {
-                if (!userData.value || Object.keys(userData.value).length === 0) return 0;
-                return medalList.filter(m => hasMedal(m.id)).length;
-            });
-
-            onMounted(() => {
-                onSnapshot(collection(db, "members"), (snap) => {
-                    members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => a.姓名.localeCompare(b.姓名,'zh-Hant'));
-                });
-            });
-
             const findMedalValue = (id) => {
                 if (!userData.value || Object.keys(userData.value).length === 0) return null;
                 const keys = Object.keys(userData.value);
@@ -334,6 +324,14 @@
                 const val = findMedalValue(medalId);
                 return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
             };
+
+            const medalCount = computed(() => medalList.filter(m => hasMedal(m.id)).length);
+
+            onMounted(() => {
+                onSnapshot(collection(db, "members"), (snap) => {
+                    members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b) => a.姓名.localeCompare(b.姓名,'zh-Hant'));
+                });
+            });
 
             const handleLogin = () => {
                 const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
