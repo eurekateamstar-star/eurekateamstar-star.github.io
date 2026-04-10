@@ -325,14 +325,7 @@ const medalList = [
             const logout         = () => { currPage.value='login'; loginUserName.value=''; };
             const filterByGroup  = (g) => { const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7}; return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99)); };
             const getGroupTotal  = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
-          // 2. 核心邏輯：模糊搜尋資料庫欄位
-const findMedalValue = (id) => {
-    // 在所有欄位中尋找包含 medal_ 且包含 id (如 "內政部 銀") 的 key
-    const keys = Object.keys(userData.value);
-    const foundKey = keys.find(k => k.startsWith('medal_') && k.replace(/\s+/g, '').includes(id.replace(/\s+/g, '')));
-    return foundKey ? userData.value[foundKey] : null;
-};
-
+          
 const hasMedal = (medalId) => {
     const val = findMedalValue(medalId);
     return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
