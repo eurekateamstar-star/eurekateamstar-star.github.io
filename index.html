@@ -212,7 +212,7 @@
 
             <!-- 頁籤列：固定，不滾動 -->
             <div class="tabs-section">
-                <div class="tabs-scroll-container">
+                <div class="tabs-scroll-container" ref="tabsScrollRef">
                     <div v-for="(tab, index) in dashboardTabs" :key="tab.id" @click="scrollToTab(index)" class="tab-item">
                         <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeDashboardTab === tab.id ? tab.activeClass : 'bg-white text-slate-300 border border-slate-100'"><i :class="tab.icon" class="text-xl"></i></div>
                         <span class="text-[11px] font-black" :class="activeDashboardTab === tab.id ? tab.textColor : 'text-slate-400'">{{ tab.name }}</span>
@@ -479,6 +479,7 @@
                 resetPageTop(index);
                 slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:'smooth' });
                 activeDashboardTab.value = dashboardTabs[index].id;
+                syncTabScroll(index);
             };
 
             // 保留給底部導覽使用
@@ -486,16 +487,27 @@
                 scrollToTab(index);
             };
 
-            // 水平手勢換頁：debounce 後更新 tab + 置頂新頁
+            // 水平手勢換頁：即時更新 tab + 置頂新頁（debounce 只用於 resetPageTop）
             let hScrollTimer = null;
+            const tabsScrollRef = ref(null);
+            const syncTabScroll = (index) => {
+                nextTick(() => {
+                    const container = tabsScrollRef.value;
+                    if (!container) return;
+                    const tabEls = container.querySelectorAll('.tab-item');
+                    if (!tabEls[index]) return;
+                    tabEls[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                });
+            };
             const onSliderScroll = () => { 
                 if (!slider.value) return;
+                const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth);
+                if (dashboardTabs[index]) {
+                    activeDashboardTab.value = dashboardTabs[index].id;
+                    syncTabScroll(index);
+                }
                 clearTimeout(hScrollTimer);
-                hScrollTimer = setTimeout(() => {
-                    const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth);
-                    if (dashboardTabs[index]) activeDashboardTab.value = dashboardTabs[index].id;
-                    resetPageTop(index);
-                }, 80);
+                hScrollTimer = setTimeout(() => { resetPageTop(index); }, 80);
             };
 
             // 各頁面垂直滾動：往下收起、手動滑回頂部展開
@@ -518,7 +530,7 @@
             const parseJson = (s) => { try { return s ? JSON.parse(s) : []; } catch(e) { return []; } };
 
             return {
-                currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, medalCount, totalYearlyHours, rotationDuty, sortedTeams, sortedMembersList, sortedLoginMembers, sortedCashHistory,
+                currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, tabsScrollRef, medalCount, totalYearlyHours, rotationDuty, sortedTeams, sortedMembersList, sortedLoginMembers, sortedCashHistory,
                 handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, hasMedal, findMedalValue, onSliderScroll, scrollToPage, scrollToTab, onPageScroll, formatNumber, parseJson, isUnderHours
             };
         }
