@@ -1,3 +1,5 @@
+--- START OF FILE Paste April 11, 2026 - 10:46PM ---
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -26,26 +28,32 @@
         
         .font-num { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
 
-        /* --- 修正：更真實的卡片斜向光線背景 --- */
+        /* --- 優化：卡片斜向強光效果 --- */
         .bank-card { 
             flex:0 0 88%; scroll-snap-align:center; margin-right:12px; border-radius:28px; color:white; position:relative; overflow:hidden;
             padding:24px; min-height:205px; display:flex; flex-direction:column; justify-content:space-between;
             box-shadow: 0 12px 30px -10px rgba(0,0,0,0.3); z-index: 1;
         }
-        /* 優化後的光束效果 */
-        .bank-card::after {
-            content: ""; position: absolute; top: -100%; left: -100%; width: 300%; height: 300%;
+        /* 更加明顯的掃光效果 */
+        .bank-card::before {
+            content: ""; position: absolute; top: -50%; left: -100%; width: 200%; height: 200%;
             background: linear-gradient(
-                135deg, 
-                rgba(255,255,255,0) 0%, 
-                rgba(255,255,255,0) 45%, 
-                rgba(255,255,255,0.08) 48%, 
-                rgba(255,255,255,0.22) 50%, 
-                rgba(255,255,255,0.08) 52%, 
-                rgba(255,255,255,0) 55%, 
-                rgba(255,255,255,0) 100%
+                120deg, 
+                rgba(255,255,255,0) 30%, 
+                rgba(255,255,255,0.15) 38%, 
+                rgba(255,255,255,0.4) 40%, 
+                rgba(255,255,255,0.15) 42%, 
+                rgba(255,255,255,0) 50%
             );
-            transform: rotate(-10deg); pointer-events: none; z-index: 2;
+            transform: rotate(-15deg);
+            animation: shine 4s infinite ease-in-out;
+            pointer-events: none; z-index: 2;
+        }
+        @keyframes shine {
+            0% { left: -150%; opacity: 0; }
+            20% { opacity: 1; }
+            40% { left: 100%; opacity: 0; }
+            100% { left: 100%; opacity: 0; }
         }
 
         .bg-card-blue    { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important; }
@@ -96,7 +104,6 @@
             flex:0 0 100%; width:100%; scroll-snap-align:start; padding:0 20px 100px 20px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch;
         }
         .slide-page::-webkit-scrollbar { display:none; }
-        .slide-page { scrollbar-width:none; }
 
         /* 月曆專屬樣式 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
@@ -273,6 +280,7 @@
             <div class="slides-section">
                 <div class="content-slider" ref="scheduleSlider" @scroll="onScheduleSliderScroll">
                     <div class="slide-page" @scroll="onPageScroll($event, 0)">
+                        <!-- 原有：登記排班內容 -->
                         <div class="pt-4 pb-10">
                             <div class="flex justify-between items-center mb-4 px-1">
                                 <button @click="changeWeek(-1)" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><i class="fa-solid fa-chevron-left"></i></button>
@@ -321,7 +329,6 @@
                         </div>
                     </div>
                     
-                    <!-- --- 排班總覽 (月曆模式) --- -->
                     <div class="slide-page" @scroll="onPageScroll($event, 1)">
                         <div class="pt-4 pb-10">
                             <!-- 月曆導航 -->
@@ -350,64 +357,125 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-4 p-4 bg-white border border-slate-100 rounded-2xl">
-                                <h5 class="text-xs font-black text-slate-400 uppercase mb-3 flex items-center gap-2"><i class="fa-solid fa-circle-info text-blue-500"></i> 月曆使用說明</h5>
-                                <p class="text-xs font-bold text-slate-500 leading-relaxed">此表同步顯示所有隊員已登記之時段。右上角數字代表該日協勤人數。您可以切換月份查看過去或未來預排狀況。</p>
+                        </div>
+                    </div>
+
+                    <!-- --- 公差登記頁面 --- -->
+                    <div class="slide-page" @scroll="onPageScroll($event, 2)">
+                        <div class="pt-4 pb-10">
+                            <div class="flex justify-between items-center mb-6 px-1">
+                                <div><h3 class="text-xl font-black text-slate-800">公差任務登記</h3><p class="text-[10px] text-orange-500 font-bold uppercase tracking-widest">OFFICIAL DUTY MISSIONS</p></div>
+                                <button v-if="isAdmin" @click="openPostTaskModal('duty')" class="h-10 px-4 rounded-xl bg-orange-500 text-white font-black text-xs shadow-sm active:scale-95 transition-all"><i class="fa-solid fa-plus mr-1"></i> 發佈任務</button>
+                            </div>
+                            <div class="space-y-4">
+                                <div v-for="t in officialTasks" :key="t.id" class="list-card p-5 border-l-4 border-l-orange-500 shadow-sm relative">
+                                    <!-- 刪除按鈕 (僅管理員) -->
+                                    <button v-if="isAdmin" @click="handleDeleteTask(t, 'duty')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
+                                    
+                                    <div class="flex justify-between items-start mb-3 mr-8">
+                                        <div><span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-black mr-2">{{ t.date }}</span><h4 class="text-lg font-black text-slate-800 mt-1">{{ t.title }}</h4></div>
+                                        <div class="text-right"><p class="text-[10px] font-bold text-slate-400 uppercase">需支援人數</p><p class="text-lg font-num text-orange-500">{{ getTaskRegCount(t.id) }} / {{ t.quota }}</p></div>
+                                    </div>
+                                    <div class="space-y-1.5 mb-4">
+                                        <p class="text-xs font-bold text-slate-500 flex items-center gap-2"><i class="fa-solid fa-clock w-4 text-slate-300"></i> {{ t.startTime }} - {{ t.endTime }}</p>
+                                        <p class="text-xs font-bold text-slate-500 flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-slate-300"></i> {{ t.location }}</p>
+                                        <p v-if="t.note" class="text-xs font-bold text-slate-400 flex items-start gap-2 bg-slate-50 p-2 rounded-lg mt-2"><i class="fa-solid fa-note-sticky w-4 text-slate-300 mt-0.5"></i> {{ t.note }}</p>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5 mb-4">
+                                        <span v-for="name in getTaskParticipants(t.id)" :key="name" class="text-[10px] font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded-lg">{{ name }}</span>
+                                    </div>
+                                    <button v-if="!isUserSignedUp(t.id)" 
+                                            @click="toggleRegistration(t, 'duty')" 
+                                            :disabled="getTaskRegCount(t.id) >= t.quota"
+                                            class="w-full py-3 rounded-xl bg-orange-500 text-white font-black text-sm shadow-md active:scale-95 transition-all disabled:opacity-30">
+                                        {{ getTaskRegCount(t.id) >= t.quota ? '名額已滿' : '立即登記公差' }}
+                                    </button>
+                                    <button v-else 
+                                            @click="toggleRegistration(t, 'duty')" 
+                                            class="w-full py-3 rounded-xl bg-slate-100 text-slate-500 font-black text-sm active:scale-95 transition-all">
+                                        取消登記
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="slide-page" @scroll="onPageScroll($event, 2)"><div class="pt-10 flex flex-col items-center opacity-30"><i class="fa-solid fa-clipboard-check text-5xl mb-4"></i><p class="font-black">公差登記建置中</p></div></div>
-                    <div class="slide-page" @scroll="onPageScroll($event, 3)"><div class="pt-10 flex flex-col items-center opacity-30"><i class="fa-solid fa-users-rectangle text-5xl mb-4"></i><p class="font-black">會議登記建置中</p></div></div>
+                    <!-- --- 會議登記頁面 --- -->
+                    <div class="slide-page" @scroll="onPageScroll($event, 3)">
+                        <div class="pt-4 pb-10">
+                            <div class="flex justify-between items-center mb-6 px-1">
+                                <div><h3 class="text-xl font-black text-slate-800">會議出席登記</h3><p class="text-[10px] text-purple-500 font-bold uppercase tracking-widest">MEETING ATTENDANCE</p></div>
+                                <button v-if="isAdmin" @click="openPostTaskModal('meeting')" class="h-10 px-4 rounded-xl bg-purple-500 text-white font-black text-xs shadow-sm active:scale-95 transition-all"><i class="fa-solid fa-plus mr-1"></i> 發佈會議</button>
+                            </div>
+                            <div class="space-y-4">
+                                <div v-for="t in meetingTasks" :key="t.id" class="list-card p-5 border-l-4 border-l-purple-500 shadow-sm relative">
+                                    <!-- 刪除按鈕 (僅管理員) -->
+                                    <button v-if="isAdmin" @click="handleDeleteTask(t, 'meeting')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 transition-colors p-2"><i class="fa-solid fa-trash-can"></i></button>
+
+                                    <div class="flex justify-between items-start mb-3 mr-8">
+                                        <div><span class="text-[10px] bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full font-black mr-2">{{ t.date }}</span><h4 class="text-lg font-black text-slate-800 mt-1">{{ t.title }}</h4></div>
+                                        <div class="text-right"><p class="text-[10px] font-bold text-slate-400 uppercase">目前出席</p><p class="text-lg font-num text-purple-600">{{ getTaskRegCount(t.id) }} / {{ members.length }}</p></div>
+                                    </div>
+                                    <div class="space-y-1.5 mb-4 text-xs font-bold text-slate-500">
+                                        <p class="flex items-center gap-2"><i class="fa-solid fa-clock w-4 text-slate-300"></i> {{ t.startTime }} - {{ t.endTime }}</p>
+                                        <p class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-slate-300"></i> {{ t.location }}</p>
+                                    </div>
+                                    
+                                    <!-- 會議出席詳情名單 -->
+                                    <div class="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-slate-50">
+                                        <div>
+                                            <p class="text-[10px] font-black text-emerald-500 uppercase mb-2">已填名單 ({{ getTaskRegCount(t.id) }})</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                <span v-for="name in getTaskParticipants(t.id)" :key="name" class="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded">{{ name }}</span>
+                                                <span v-if="getTaskRegCount(t.id) === 0" class="text-[9px] text-slate-300 italic">暫無人登記</span>
+                                            </div>
+                                        </div>
+                                        <div class="border-l border-slate-100 pl-4">
+                                            <p class="text-[10px] font-black text-rose-400 uppercase mb-2">未填名單 ({{ members.length - getTaskRegCount(t.id) }})</p>
+                                            <div class="flex flex-wrap gap-1">
+                                                <span v-for="name in getUnregisteredNames(t.id)" :key="name" class="text-[9px] font-bold px-1.5 py-0.5 bg-slate-50 text-slate-400 rounded">{{ name }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button v-if="!isUserSignedUp(t.id)" @click="toggleRegistration(t, 'meeting')" class="w-full py-3 rounded-xl bg-purple-600 text-white font-black text-sm shadow-md active:scale-95 transition-all">確認出席會議</button>
+                                    <button v-else @click="toggleRegistration(t, 'meeting')" class="w-full py-3 rounded-xl bg-slate-100 text-slate-500 font-black text-sm active:scale-95 transition-all">取消出席</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- App 式排班登記面板 -->
+        <!-- --- 任務發佈面板 --- -->
+        <div class="bottom-sheet-overlay" :class="{ active: isPostModalOpen }" @click="isPostModalOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isPostModalOpen }">
+            <div class="mb-6"><h4 class="text-xl font-black text-slate-800">發佈 {{ postType === 'duty' ? '公差' : '會議' }}</h4><p class="text-xs font-bold text-slate-400">請填寫詳細資訊</p></div>
+            <div class="space-y-4">
+                <input v-model="newTask.title" type="text" placeholder="任務/會議名稱" class="med-input w-full p-4">
+                <div class="grid grid-cols-2 gap-3"><input v-model="newTask.date" type="date" class="med-input w-full p-4"><input v-if="postType==='duty'" v-model="newTask.quota" type="number" placeholder="人數上限" class="med-input w-full p-4"></div>
+                <div class="grid grid-cols-2 gap-3"><input v-model="newTask.startTime" type="time" class="med-input w-full p-4"><input v-model="newTask.endTime" type="time" class="med-input w-full p-4"></div>
+                <input v-model="newTask.location" type="text" placeholder="地點" class="med-input w-full p-4">
+                <textarea v-model="newTask.note" placeholder="備註 (選填)" class="med-input w-full p-4 h-24"></textarea>
+                <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-all mt-4">確認發佈</button>
+            </div>
+        </div>
+
+        <!-- 原有：排班登記面板 -->
         <div class="bottom-sheet-overlay" :class="{ active: isShiftModalOpen }" @click="closeShiftModal"></div>
         <div class="bottom-sheet" :class="{ active: isShiftModalOpen }">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h4 class="text-xl font-black text-slate-800">{{ selectedDay?.date }} {{ selectedDay?.weekday }}</h4>
-                    <p class="text-xs font-bold text-blue-600 uppercase">Select Service Hours</p>
-                </div>
-                <button @click="resetShiftSelection" class="text-xs font-black bg-slate-100 text-slate-500 px-4 py-2 rounded-full">重設時間</button>
-            </div>
-            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-center justify-center gap-4">
-                <div class="text-center">
-                    <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">From</p>
-                    <span class="text-2xl font-num text-blue-600">{{ tempStartTime || '--' }}</span>
-                </div>
-                <div class="w-8 h-[2px] bg-blue-200"></div>
-                <div class="text-center">
-                    <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">To</p>
-                    <span class="text-2xl font-num text-blue-600">{{ tempEndTime || '--' }}</span>
-                </div>
-            </div>
-            <div class="grid grid-cols-6 gap-2 mb-6">
-                <button v-for="h in hourOptions" :key="h" 
-                        @click="selectHour(h)"
-                        :disabled="isHourDisabled(h)"
-                        class="hour-btn transition-all"
-                        :class="{ 'selected': tempStartTime === h || tempEndTime === h, 'opacity-20 pointer-events-none': isHourDisabled(h) }">
-                    {{ h }}
-                </button>
-            </div>
+            <div class="flex justify-between items-center mb-6"><div><h4 class="text-xl font-black text-slate-800">{{ selectedDay?.date }} {{ selectedDay?.weekday }}</h4><p class="text-xs font-bold text-blue-600 uppercase">Select Service Hours</p></div><button @click="resetShiftSelection" class="text-xs font-black bg-slate-100 text-slate-500 px-4 py-2 rounded-full">重設時間</button></div>
+            <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-center justify-center gap-4"><div class="text-center"><p class="text-[10px] text-blue-400 font-bold uppercase mb-1">From</p><span class="text-2xl font-num text-blue-600">{{ tempStartTime || '--' }}</span></div><div class="w-8 h-[2px] bg-blue-200"></div><div class="text-center"><p class="text-[10px] text-blue-400 font-bold uppercase mb-1">To</p><span class="text-2xl font-num text-blue-600">{{ tempEndTime || '--' }}</span></div></div>
+            <div class="grid grid-cols-6 gap-2 mb-6"><button v-for="h in hourOptions" :key="h" @click="selectHour(h)" :disabled="isHourDisabled(h)" class="hour-btn transition-all" :class="{ 'selected': tempStartTime === h || tempEndTime === h, 'opacity-20 pointer-events-none': isHourDisabled(h) }">{{ h }}</button></div>
             <button @click="confirmShift" :disabled="!tempStartTime || !tempEndTime" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-all disabled:opacity-30">確認登記</button>
         </div>
 
-        <!-- App 式刪除確認面板 -->
+        <!-- 原有：刪除確認面板 -->
         <div class="bottom-sheet-overlay" :class="{ active: isDeleteModalOpen }" @click="isDeleteModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isDeleteModalOpen }">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa-solid fa-trash-can"></i></div>
-                <h4 class="text-xl font-black text-slate-800">確定要刪除排班？</h4>
-                <p class="text-sm font-bold text-slate-400 mt-1">您已登記於 {{ selectedDay?.date }} 日 {{ myExistShift?.start }}-{{ myExistShift?.end }}</p>
-            </div>
-            <div class="space-y-3">
-                <button @click="deleteShift" class="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-lg shadow-lg active:scale-95 transition-all">刪除登記</button>
-                <button @click="isDeleteModalOpen = false" class="w-full py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-lg active:scale-95 transition-all">暫時不要</button>
-            </div>
+            <div class="text-center mb-8"><div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa-solid fa-trash-can"></i></div><h4 class="text-xl font-black text-slate-800">確定要刪除排班？</h4><p class="text-sm font-bold text-slate-400 mt-1">您已登記於 {{ selectedDay?.date }} 日 {{ myExistShift?.start }}-{{ myExistShift?.end }}</p></div>
+            <div class="space-y-3"><button @click="deleteShift" class="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-lg shadow-lg active:scale-95 transition-all">刪除登記</button><button @click="isDeleteModalOpen = false" class="w-full py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-lg active:scale-95 transition-all">暫時不要</button></div>
         </div>
 
         <!-- 底部導覽 -->
@@ -431,7 +499,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { 
         getFirestore, collection, onSnapshot, 
-        addDoc, deleteDoc, doc, query, where, getDocs 
+        addDoc, deleteDoc, doc, query, where, getDocs, updateDoc 
     } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = { apiKey:"AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q", authDomain:"star-c5e91.firebaseapp.com", projectId:"star-c5e91", storageBucket:"star-c5e91.firebasestorage.app", messagingSenderId:"804810488246", appId:"1:804810488246:web:477340ff049b90ed68e917" };
@@ -454,15 +522,25 @@
             const tabsScrollRef = ref(null);
             const scheduleTabsScrollRef = ref(null);
 
-            // 排班狀態
+            // 管理員檢查
+            const isAdmin = computed(() => loginUserName.value === '劉奕昕');
+
+            // 排班與任務狀態
             const currentWeekStart = ref(new Date());
-            const currentCalendarDate = ref(new Date()); // 用於月曆
+            const currentCalendarDate = ref(new Date());
             const userShifts = ref({}); 
+            const officialTasks = ref([]);
+            const meetingTasks = ref([]);
+            const registrations = ref([]);
+            
             const isShiftModalOpen = ref(false);
             const isDeleteModalOpen = ref(false);
+            const isPostModalOpen = ref(false);
             const selectedDay = ref(null);
             const tempStartTime = ref(null);
             const tempEndTime = ref(null);
+            const postType = ref('duty'); // 'duty' or 'meeting'
+            const newTask = ref({ title:'', date:'', startTime:'', endTime:'', location:'', note:'', quota: 1 });
             const hourOptions = ["08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"];
 
             const userData = computed(() => {
@@ -470,7 +548,7 @@
                 return members.value.find(m => m.姓名 === loginUserName.value) || {};
             });
 
-            // --- 月曆邏輯 ---
+            // --- 月曆與排班邏輯 ---
             const calendarTitle = computed(() => {
                 const y = currentCalendarDate.value.getFullYear();
                 const m = currentCalendarDate.value.getMonth() + 1;
@@ -488,26 +566,19 @@
                 const month = currentCalendarDate.value.getMonth();
                 const firstDay = new Date(year, month, 1);
                 const lastDay = new Date(year, month + 1, 0);
-                
                 let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
                 const cells = [];
-                
-                // 前一個月剩餘天數
                 const prevLastDay = new Date(year, month, 0).getDate();
                 for (let i = startDay - 1; i >= 0; i--) {
                     const d = new Date(year, month - 1, prevLastDay - i);
                     cells.push({ day: d.getDate(), fullDate: d.toISOString().split('T')[0], currentMonth: false });
                 }
-                
-                // 當前月
                 const todayStr = new Date().toISOString().split('T')[0];
                 for (let i = 1; i <= lastDay.getDate(); i++) {
                     const d = new Date(year, month, i);
                     const ds = d.toISOString().split('T')[0];
                     cells.push({ day: i, fullDate: ds, currentMonth: true, isToday: ds === todayStr });
                 }
-                
-                // 下一個月補齊
                 const total = cells.length;
                 for (let i = 1; i <= (42 - total); i++) {
                     const d = new Date(year, month + 1, i);
@@ -518,41 +589,30 @@
 
             const getShiftsForCell = (date) => userShifts.value[date] || [];
             const getShiftsCount = (date) => (userShifts.value[date] || []).length;
-
-            // --- 其他排班邏輯 ---
             const myExistShift = computed(() => {
                 if (!selectedDay.value || !userData.value.姓名) return null;
                 const dayShifts = userShifts.value[selectedDay.value.fullDate] || [];
                 return dayShifts.find(s => s.name === userData.value.姓名);
             });
-
             const isPastDate = (fullDate) => {
                 const today = new Date(); today.setHours(0, 0, 0, 0); 
                 return new Date(fullDate) < today;
             };
-
             const isHourDisabled = (h) => {
                 if (!tempStartTime.value) return false;
                 if (tempStartTime.value && !tempEndTime.value) return parseInt(h) < parseInt(tempStartTime.value);
                 return false;
             };
-
             const isMyShift = (date) => {
                 const dayShifts = userShifts.value[date] || [];
                 return dayShifts.some(s => s.name === userData.value?.姓名);
             };
-
             const openShiftModal = (day) => {
                 if (isPastDate(day.fullDate)) return;
                 selectedDay.value = day;
-                if (isMyShift(day.fullDate)) {
-                    isDeleteModalOpen.value = true;
-                } else {
-                    tempStartTime.value = null; tempEndTime.value = null;
-                    isShiftModalOpen.value = true;
-                }
+                if (isMyShift(day.fullDate)) isDeleteModalOpen.value = true;
+                else { tempStartTime.value = null; tempEndTime.value = null; isShiftModalOpen.value = true; }
             };
-
             const selectHour = (h) => {
                 if (h === tempStartTime.value) { tempStartTime.value = null; tempEndTime.value = null; return; }
                 if (h === tempEndTime.value) { tempEndTime.value = null; return; }
@@ -560,49 +620,25 @@
                 else if (!tempEndTime.value) {
                     if (parseInt(h) > parseInt(tempStartTime.value)) tempEndTime.value = h;
                     else tempStartTime.value = h;
-                } else {
-                    tempStartTime.value = h; tempEndTime.value = null;
-                }
+                } else { tempStartTime.value = h; tempEndTime.value = null; }
             };
-
             const confirmShift = async () => {
                 if (tempStartTime.value && tempEndTime.value && selectedDay.value) {
-                    const date = selectedDay.value.fullDate;
-                    try {
-                        await addDoc(collection(db, "shifts"), {
-                            name: userData.value.姓名,
-                            start: tempStartTime.value,
-                            end: tempEndTime.value,
-                            date: date,
-                            timestamp: new Date()
-                        });
-                        closeShiftModal();
-                    } catch (e) {
-                        alert("登記失敗，請檢查網路");
-                    }
+                    try { await addDoc(collection(db, "shifts"), { name: userData.value.姓名, start: tempStartTime.value, end: tempEndTime.value, date: selectedDay.value.fullDate, timestamp: new Date() }); closeShiftModal(); } catch (e) { alert("登記失敗"); }
                 }
             };
-
             const deleteShift = async () => {
                 if (!selectedDay.value) return;
-                const date = selectedDay.value.fullDate;
-                const name = userData.value.姓名;
                 try {
-                    const q = query(collection(db, "shifts"), where("date", "==", date), where("name", "==", name));
-                    const querySnapshot = await getDocs(q);
-                    querySnapshot.forEach(async (d) => {
-                        await deleteDoc(doc(db, "shifts", d.id));
-                    });
+                    const q = query(collection(db, "shifts"), where("date", "==", selectedDay.value.fullDate), where("name", "==", userData.value.姓名));
+                    const snap = await getDocs(q);
+                    snap.forEach(async (d) => await deleteDoc(doc(db, "shifts", d.id)));
                     isDeleteModalOpen.value = false;
-                } catch (e) {
-                    alert("刪除失敗");
-                }
+                } catch (e) { alert("刪除失敗"); }
             };
-
             const resetShiftSelection = () => { tempStartTime.value = null; tempEndTime.value = null; };
             const closeShiftModal = () => { isShiftModalOpen.value = false; };
             const hasShift = (date) => (userShifts.value[date] || []).length > 0;
-
             const weekDates = computed(() => {
                 const start = new Date(currentWeekStart.value);
                 const dayOfWeek = start.getDay(); 
@@ -610,20 +646,56 @@
                 const monday = new Date(start.setDate(diff));
                 return Array.from({ length: 7 }, (_, i) => {
                     const d = new Date(monday); d.setDate(monday.getDate() + i);
-                    const fullDate = d.toISOString().split('T')[0];
-                    return { fullDate, date: d.getDate(), weekday: ['週一','週二','週三','週四','週五','週六','週日'][i], isToday: new Date().toISOString().split('T')[0] === fullDate, isWeekend: i >= 5 };
+                    const ds = d.toISOString().split('T')[0];
+                    return { fullDate: ds, date: d.getDate(), weekday: ['週一','週二','週三','週四','週五','週六','週日'][i], isToday: new Date().toISOString().split('T')[0] === ds, isWeekend: i >= 5 };
                 });
             });
+            const currentWeekRangeText = computed(() => weekDates.value.length === 0 ? '' : `${weekDates.value[0].fullDate.replace(/-/g, '/')} - ${weekDates.value[6].fullDate.replace(/-/g, '/')}`);
+            const changeWeek = (dir) => { const nd = new Date(currentWeekStart.value); nd.setDate(nd.getDate() + (dir * 7)); currentWeekStart.value = nd; };
 
-            const currentWeekRangeText = computed(() => {
-                if (weekDates.value.length === 0) return '';
-                return `${weekDates.value[0].fullDate.replace(/-/g, '/')} - ${weekDates.value[6].fullDate.replace(/-/g, '/')}`;
-            });
+            // --- 公差與會議發佈與刪除邏輯 ---
+            const openPostTaskModal = (type) => { 
+                postType.value = type; 
+                newTask.value = { title:'', date: new Date().toISOString().split('T')[0], startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99 }; 
+                isPostModalOpen.value = true; 
+            };
+            const handlePostTask = async () => {
+                if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
+                const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
+                try {
+                    await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+                    isPostModalOpen.value = false;
+                } catch (e) { alert("發佈失敗"); }
+            };
+            const handleDeleteTask = async (task, type) => {
+                if (!confirm(`確定要刪除「${task.title}」嗎？此動作將同時刪除所有登記資料。`)) return;
+                const collName = type === 'duty' ? "official_tasks" : "meeting_tasks";
+                try {
+                    // 刪除任務主體
+                    await deleteDoc(doc(db, collName, task.id));
+                    // 刪除相關登記
+                    const q = query(collection(db, "registrations"), where("taskId", "==", task.id));
+                    const snap = await getDocs(q);
+                    snap.forEach(async (d) => await deleteDoc(doc(db, "registrations", d.id)));
+                } catch (e) { alert("刪除失敗"); }
+            };
 
-            const changeWeek = (direction) => {
-                const newDate = new Date(currentWeekStart.value);
-                newDate.setDate(newDate.getDate() + (direction * 7));
-                currentWeekStart.value = newDate;
+            const getTaskRegCount = (taskId) => registrations.value.filter(r => r.taskId === taskId).length;
+            const getTaskParticipants = (taskId) => registrations.value.filter(r => r.taskId === taskId).map(r => r.userName);
+            const getUnregisteredNames = (taskId) => {
+                const participants = getTaskParticipants(taskId);
+                return members.value.map(m => m.姓名).filter(name => !participants.includes(name));
+            };
+            const isUserSignedUp = (taskId) => registrations.value.some(r => r.taskId === taskId && r.userName === userData.value.姓名);
+            const toggleRegistration = async (task, type) => {
+                if (isUserSignedUp(task.id)) {
+                    const q = query(collection(db, "registrations"), where("taskId", "==", task.id), where("userName", "==", userData.value.姓名));
+                    const snap = await getDocs(q);
+                    snap.forEach(async (d) => await deleteDoc(doc(db, "registrations", d.id)));
+                } else {
+                    if (type === 'duty' && getTaskRegCount(task.id) >= task.quota) return alert("人數已滿");
+                    await addDoc(collection(db, "registrations"), { taskId: task.id, userName: userData.value.姓名, type, timestamp: new Date() });
+                }
             };
 
             const NAME_ORDER = ['陳政龍','蘇傳凱','許智傑','劉奕昕','許微絜','陳冠中','洪松齡','莊麗雲','詹明祥','李宗憲','吳柏昇','林聖欽','史民其','葉鑫','蘇智虹','劉心瑀','蔡弦甫','王佩瑾','蒲琦佩','呂庭佳','林宛萱'];
@@ -684,20 +756,18 @@
                 onSnapshot(collection(db, "members"), (snap) => { members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); }); 
                 onSnapshot(collection(db, "shifts"), (snap) => {
                     const obj = {};
-                    snap.docs.forEach(doc => {
-                        const data = doc.data();
-                        if (!obj[data.date]) obj[data.date] = [];
-                        obj[data.date].push(data);
-                    });
+                    snap.docs.forEach(doc => { const data = doc.data(); if (!obj[data.date]) obj[data.date] = []; obj[data.date].push(data); });
                     userShifts.value = obj;
                 });
+                onSnapshot(collection(db, "official_tasks"), (snap) => { officialTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b)=>new Date(a.date)-new Date(b.date)); });
+                onSnapshot(collection(db, "meeting_tasks"), (snap) => { meetingTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })).sort((a,b)=>new Date(a.date)-new Date(b.date)); });
+                onSnapshot(collection(db, "registrations"), (snap) => { registrations.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
             });
 
             const handleLogin = () => { const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass)); if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; } else { errMsg.value = "安全密碼錯誤"; } };
             const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
             const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
             const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; return Math.max(0,Math.ceil((new Date(s)-new Date())/864e5)); };
-
             const resetPageTop = (index, sliderRef) => { const pages = sliderRef?.querySelectorAll('.slide-page'); if (pages?.[index]) pages[index].scrollTop = 0; };
             const scrollToTab = (index) => { if (!slider.value) return; resetPageTop(index, slider.value); slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:'smooth' }); activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); };
             const scrollToScheduleTab = (index) => { if (!scheduleSlider.value) return; resetPageTop(index, scheduleSlider.value); scheduleSlider.value.scrollTo({ left: scheduleSlider.value.clientWidth * index, behavior:'smooth' }); activeScheduleTab.value = scheduleTabs[index].id; syncTabScroll(index, scheduleTabsScrollRef.value); };
@@ -713,9 +783,10 @@
             const isUnderHours = (val, mIdx) => { const currM = new Date().getMonth()+1; return (Number(val)||0) < 8 && mIdx <= currM; };
 
             return {
-                currPage, activeDashboardTab, activeScheduleTab, cardsExpanded, dashboardTabs, scheduleTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, scheduleSlider, tabsScrollRef, scheduleTabsScrollRef, totalYearlyHours, sortedMembersList, sortedLoginMembers, sortedTeams, rotationDuty, sortedCashHistory, medalCount,
+                isAdmin, currPage, activeDashboardTab, activeScheduleTab, cardsExpanded, dashboardTabs, scheduleTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, scheduleSlider, tabsScrollRef, scheduleTabsScrollRef, totalYearlyHours, sortedMembersList, sortedLoginMembers, sortedTeams, rotationDuty, sortedCashHistory, medalCount,
                 currentWeekStart, weekDates, currentWeekRangeText, changeWeek, hasShift, isPastDate, hourOptions, isShiftModalOpen, isDeleteModalOpen, selectedDay, tempStartTime, tempEndTime, isHourDisabled, isMyShift, userShifts, myExistShift,
                 currentCalendarDate, calendarTitle, calendarCells, changeCalendarMonth, getShiftsForCell, getShiftsCount,
+                officialTasks, meetingTasks, isPostModalOpen, postType, newTask, openPostTaskModal, handlePostTask, handleDeleteTask, getTaskRegCount, getTaskParticipants, getUnregisteredNames, isUserSignedUp, toggleRegistration,
                 openShiftModal, selectHour, resetShiftSelection, confirmShift, closeShiftModal, deleteShift,
                 handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, onSliderScroll, onScheduleSliderScroll, scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours
             };
