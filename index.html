@@ -116,6 +116,10 @@
                         <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div><div class="mb-6 mt-2"><h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 <span class="font-num">{{ calculateDays(userData['honor_expiry']) }}</span> 天</p></div></div>
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p><p class="text-[15px] font-num">{{ userData['honor_expiry'] || '無' }}</p></div><div class="text-left pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">累計總時數</p><p class="text-[15px] font-num">{{ totalYearlyHours }}</p></div></div>
                     </div>
+                    <div class="bank-card" style="background: linear-gradient(135deg, #6d28d9 0%, #a855f7 100%) !important;">
+                        <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">EMT 救護證照 <i class="fa-solid fa-id-card text-lg"></i></div><div class="mb-4 mt-2"><h3 class="text-2xl font-black">{{ userData['emt_level'] || 'EMT-1' }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 <span class="font-num">{{ calculateDays(userData['emt_expiry']) }}</span> 天</p></div></div>
+                        <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p><p class="text-[15px] font-num">{{ userData['emt_expiry'] || '無' }}</p></div><div class="text-left pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">證照字號</p><p class="text-[13px] font-bold whitespace-nowrap truncate">{{ userData['emt_id'] || '--' }}</p></div></div>
+                    </div>
                 </div>
             </div>
 
