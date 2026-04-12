@@ -900,7 +900,7 @@
             
             // FIX: 提高收起小卡的門檻到 80px，避免輕微滑動就收起
             const onPageScroll = (event, idx) => { 
-                if (event.target.scrollTop > 80) cardsExpanded.value = false; 
+                if (event.target.scrollTop > 90) cardsExpanded.value = false; 
                 else if (event.target.scrollTop === 0) cardsExpanded.value = true; 
             };
             
