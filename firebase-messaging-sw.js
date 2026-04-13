@@ -21,16 +21,16 @@ messaging.onBackgroundMessage((payload) => {
     const body = payload.notification?.body || '';
     self.registration.showNotification(title, {
         body,
-        icon: 'https://eurekateamstar-star.github.io/star/icon-192.png',
-        badge: 'https://eurekateamstar-star.github.io/star/icon-192.png',
+        icon: 'https://eurekateamstar-star.github.io/icon-192.png',
+        badge: 'https://eurekateamstar-star.github.io/icon-192.png',
         vibrate: [200, 100, 200],
         requireInteraction: true,
-        data: { url: payload.fcmOptions?.link || 'https://eurekateamstar-star.github.io/star/' }
+        data: { url: payload.fcmOptions?.link || 'https://eurekateamstar-star.github.io/' }
     });
 });
 
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
-    const url = event.notification.data?.url || 'https://eurekateamstar-star.github.io/star/';
+    const url = event.notification.data?.url || 'https://eurekateamstar-star.github.io/';
     event.waitUntil(clients.openWindow(url));
 });
