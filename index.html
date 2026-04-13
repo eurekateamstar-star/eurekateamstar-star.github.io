@@ -546,13 +546,13 @@
             if (permission !== "granted") { console.log("推播授權被拒"); return; }
 
             // SW 路徑（GitHub Pages 在 /star/ 子目錄）
-            const swPath = "/star/firebase-messaging-sw.js";
+            const swPath = "/firebase-messaging-sw.js";
 
             // 強制重新註冊，確保用最新版 SW
             const existingReg = await navigator.serviceWorker.getRegistration(swPath);
             if (existingReg) await existingReg.unregister();
 
-            const swReg = await navigator.serviceWorker.register(swPath, { scope: "/star/" });
+            const swReg = await navigator.serviceWorker.register(swPath);
             console.log("SW 註冊:", swReg.scope);
 
             // 等 SW 變成 active
