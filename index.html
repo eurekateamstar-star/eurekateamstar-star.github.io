@@ -13,7 +13,7 @@
         // ══════════════════════════════════════════
         // ★ Firebase FCM 推播設定 ★
         // 你的 Firebase VAPID Key（在 Firebase Console → Project Settings → Cloud Messaging）
-        const FCM_VAPID_KEY = "BHyRR-j7j66BV3nHSW_z5bMIYMPbtn8LcpttaY7ZuDHTmVFFXxILG3SbHhzFPD6TEhM1AP1XRjwgchhJrISkFyY";
+        const FCM_VAPID_KEY = "BN92OMSIEj5v1wCPagzAlNoTCOoEna4MIOLSlGSKz5hJh3zm93bfuofRAczDwZIImQk3au1SYhdkQeTRrKBq6Ko";
         // ══════════════════════════════════════════
 
         // 呼叫 Cloud Function 發送推播（管理員用）
@@ -539,45 +539,52 @@
     // ── FCM 用戶訂閱（登入後呼叫） ──
     async function subscribeFCM(userName) {
         try {
-            if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+            if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
                 console.warn("此瀏覽器不支援推播"); return;
             }
             const permission = await Notification.requestPermission();
             if (permission !== "granted") { console.log("推播授權被拒"); return; }
 
-            // SW 路徑（GitHub Pages 在 /star/ 子目錄）
-            const swPath = "/firebase-messaging-sw.js";
-
-            // 強制重新註冊，確保用最新版 SW
-            const existingReg = await navigator.serviceWorker.getRegistration(swPath);
-            if (existingReg) await existingReg.unregister();
-
-            const swReg = await navigator.serviceWorker.register(swPath);
-            console.log("SW 註冊:", swReg.scope);
-
-            // 等 SW 變成 active
+            // 註冊 Service Worker
+            const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
             await navigator.serviceWorker.ready;
             console.log("SW ready ✅");
 
-            const token = await getToken(messaging, {
-                vapidKey: FCM_VAPID_KEY,
-                serviceWorkerRegistration: swReg
-            });
+            // 用原生 Web Push API 訂閱（不走 FCM SDK，避免 401）
+            const vapidPublicKey = FCM_VAPID_KEY;
+            const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
 
-            if (token) {
-                const membersSnap = await getDocs(
-                    query(collection(db, "members"), where("姓名", "==", userName))
-                );
-                for (const d of membersSnap.docs) {
-                    await updateDoc(doc(db, "members", d.id), { fcmToken: token });
-                }
-                console.log("✅ FCM 訂閱成功:", token.substring(0, 20) + "...");
-            } else {
-                console.warn("無法取得 FCM token");
+            let subscription = await swReg.pushManager.getSubscription();
+            if (!subscription) {
+                subscription = await swReg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: convertedKey
+                });
             }
+
+            console.log("✅ Push 訂閱成功");
+
+            // 把訂閱資料存到 Firestore members
+            const subJson = JSON.stringify(subscription.toJSON());
+            const membersSnap = await getDocs(
+                query(collection(db, "members"), where("姓名", "==", userName))
+            );
+            for (const d of membersSnap.docs) {
+                await updateDoc(doc(db, "members", d.id), { pushSubscription: subJson });
+            }
+            console.log("✅ 訂閱已存入 Firestore");
+
         } catch(e) {
-            console.warn("FCM 訂閱失敗:", e.message, e.code);
+            console.warn("推播訂閱失敗:", e.message);
         }
+    }
+
+    // Base64 轉 Uint8Array（Web Push 需要）
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = atob(base64);
+        return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     }
 
     // 前景收到推播時顯示 toast
