@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q",
+    apiKey: "BKzCw6KkFwMdNAeOXrAs5yuPnCh0pIi6bXe1zuNXUxuRkSgTrxFfqCg-6sV4MtqcS06hzJtJjfy5tlXFquSs6eM",
     authDomain: "star-c5e91.firebaseapp.com",
     projectId: "star-c5e91",
     storageBucket: "star-c5e91.firebasestorage.app",
