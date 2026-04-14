@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- 1. 一般網頁圖示 (瀏覽器分頁) -->
+    <!-- 1. 一般網頁圖示 -->
     <link rel="icon" href="icon1.jpg?v=1" type="image/jpeg">
-
-    <!-- 2. iPhone / iPad 專用圖示 (加入主畫面用) -->
+    <!-- 2. iPhone / iPad 專用圖示 -->
     <link rel="apple-touch-icon" href="icon1.jpg?v=1">
-
-    <!-- 3. 指定 Manifest 檔案 (Android 必備) -->
+    <!-- 3. 指定 Manifest 檔案 -->
     <link rel="manifest" href="manifest.json">
     <title>海山救護義消平台</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -183,7 +181,7 @@
                             <div class="pt-2 pb-10">
                                 <div class="mb-4 px-1"><h3 class="text-xl font-black text-slate-800">隊員協勤時數明細</h3></div>
                                 <div class="space-y-4">
-                                    <div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-personal-blue ring-4 ring-blue-100 scale-[1.02] z-10' : 'bg-white border-slate-100'">
+                                    <div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-personal-blue ring-4 ring-blue-100 scale-[1.02] i-10' : 'bg-white border-slate-100'">
                                         <div class="flex items-center justify-between mb-4"><div class="flex flex-col"><span class="text-lg font-black leading-none">{{ m.姓名 }}</span><span class="text-[10px] font-bold opacity-60 mt-1 uppercase tracking-wider">{{ m.duty_title || '隊員' }}</span></div><div class="text-right"><span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span><span class="text-2xl font-num leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span></div></div>
                                         <div class="horizontal-scroll pb-1"><div class="flex gap-6"><div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]"><span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span><span class="text-base font-num" :class="isUnderHours(m['m'+i], i) ? 'text-red-500 font-black' : ''">{{ m['m'+i] || 0 }}</span></div></div></div>
                                     </div>
@@ -295,7 +293,7 @@
                             </div>
                             <div class="space-y-5">
                                 <div v-for="t in filteredOfficialTasks" :key="t.id" class="list-card shadow-sm border-0 relative" :class="{ 'expired-task': isExpired(t.date) }">
-                                    <button v-if="isAdmin" @click="confirmDeleteTask(t, 'duty')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-2 z-10"><i class="fa-solid fa-trash-can"></i></button>
+                                    <button v-if="isAdmin" @click="confirmDeleteTask(t, 'duty')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-2 i-10"><i class="fa-solid fa-trash-can"></i></button>
                                     <div class="p-5 task-card-header bg-slate-50/50 flex gap-4 items-stretch">
                                         <div class="task-card-date-box border border-rose-100 flex flex-col justify-center"><p class="text-lg font-num text-slate-800 leading-none">{{ t.date.split('-')[1] }}/{{ t.date.split('-')[2] }}</p><p class="text-[10px] font-black text-rose-500 uppercase tracking-tighter mt-1">{{ getWeekday(t.date) }}</p></div>
                                         <div class="flex-1 flex flex-col justify-center"><span class="type-tag tag-official inline-block mb-1.5 w-fit">公差任務</span><h4 class="text-lg font-black text-slate-800 leading-tight">{{ t.title }}</h4></div>
@@ -327,7 +325,7 @@
                             </div>
                             <div class="space-y-5">
                                 <div v-for="t in filteredMeetingTasks" :key="t.id" class="list-card shadow-sm border-0 relative" :class="{ 'expired-task': isExpired(t.date) }">
-                                    <button v-if="isAdmin" @click="confirmDeleteTask(t, 'meeting')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-2 z-10"><i class="fa-solid fa-trash-can"></i></button>
+                                    <button v-if="isAdmin" @click="confirmDeleteTask(t, 'meeting')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-2 i-10"><i class="fa-solid fa-trash-can"></i></button>
                                     <div class="p-5 task-card-header bg-slate-50/50 flex gap-4 items-stretch">
                                         <div class="task-card-date-box border border-purple-100 flex flex-col justify-center"><p class="text-lg font-num text-slate-800 leading-none">{{ t.date.split('-')[1] }}/{{ t.date.split('-')[2] }}</p><p class="text-[10px] font-black text-purple-500 uppercase tracking-tighter mt-1">{{ getWeekday(t.date) }}</p></div>
                                         <div class="flex-1 flex flex-col justify-center"><span class="type-tag inline-block mb-1.5 w-fit" :class="getCategoryClass(t.category)">{{ t.category || '一般會議' }}</span><h4 class="text-lg font-black text-slate-800 leading-tight">{{ t.title }}</h4></div>
@@ -616,11 +614,6 @@ console.log("✨ 成功建立全新訂閱");
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
-
-
-
-
-            
             const activeReminders = computed(() => {
                 if (!loginUserName.value) return [];
                 const list = [];
@@ -658,7 +651,6 @@ console.log("✨ 成功建立全新訂閱");
                 if (diff > 1) return `${diff}天後`;
                 return "進行中";
             };
-
 
             const calendarTitle = computed(() => `${currentCalendarDate.value.getFullYear()} 年 ${currentCalendarDate.value.getMonth() + 1} 月`);
             const changeCalendarMonth = (dir) => { const d = new Date(currentCalendarDate.value); d.setMonth(d.getMonth() + dir); currentCalendarDate.value = d; };
@@ -772,43 +764,31 @@ console.log("✨ 成功建立全新訂閱");
                 isPostModalOpen.value = true;
             };
 
-            // ★ 修正：fetch 正確包在 try 裡
-          const handlePostTask = async () => {
-    if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
-    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
-    
-    try {
-        // 1. 先存入資料庫
-        await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
-        isPostModalOpen.value = false;
-
-        const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-        const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
-
-        // 2. 呼叫 Cloud Run 推播 API 並接收回傳值
-        const response = await fetch(CLOUD_RUN_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
-                body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
-            })
-        });
-
-        const result = await response.json();
-
-        // 3. 顯示結果給管理者看
-        if (result.stats) {
-            alert(`✅ 任務發佈成功！\n系統已發出推播給：\n成功：${result.stats.success} 人\n失敗：${result.stats.failed} 人`);
-        } else {
-            alert("任務已發佈，但推播狀態未知。");
-        }
-
-    } catch (e) {
-        console.error(e);
-        alert('發佈失敗，請檢查網路連接');
-    }
-};
+            const handlePostTask = async () => {
+                if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
+                const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
+                try {
+                    await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+                    isPostModalOpen.value = false;
+                    const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+                    const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
+                    
+                    const response = await fetch(CLOUD_RUN_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
+                            body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
+                        })
+                    });
+                    const result = await response.json();
+                    if (result.stats) {
+                        alert(`✅ 任務發佈成功！\n推播結果：\n成功：${result.stats.success} 人\n失敗：${result.stats.failed} 人`);
+                    } else {
+                        alert("任務已發佈，但推播狀態未知。");
+                    }
+                } catch (e) { alert('發佈失敗'); }
+            };
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
             const handleDeleteTask = async () => {
@@ -970,6 +950,10 @@ console.log("✨ 成功建立全新訂閱");
             const sortedCashHistory = computed(() => { try { let logStr = userData.value['cash_history']; return logStr ? JSON.parse(logStr).sort((a, b) => new Date(b.date) - new Date(a.date)) : []; } catch(e) { return []; } });
 
             onMounted(() => {
+                // 進入即清除紅點
+                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+                document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && 'clearAppBadge' in navigator) navigator.clearAppBadge(); });
+
                 onSnapshot(collection(db, "members"), (snap) => { members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
                 onSnapshot(collection(db, "shifts"), (snap) => { const obj = {}; snap.docs.forEach(doc => { const data = doc.data(); if (!obj[data.date]) obj[data.date] = []; obj[data.date].push(data); }); userShifts.value = obj; });
                 onSnapshot(collection(db, "official_tasks"), (snap) => { officialTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
@@ -1021,9 +1005,6 @@ console.log("✨ 成功建立全新訂閱");
             };
         }
     }).mount('#app');
-
-
-    
 </script>
 </body>
 </html>
