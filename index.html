@@ -78,6 +78,31 @@
         .expired-task { opacity: 0.6; filter: grayscale(0.5); }
         .task-card-header { border-bottom: 1px dashed #e2e8f0; }
         .task-card-date-box { background: #f8fafc; border-radius: 14px; padding: 10px 0; min-width: 72px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+/* 優化彈窗高度，確保鍵盤彈出時不會遮擋 */
+.bottom-sheet {
+    max-height: 94dvh !important; /* 使用 dvh 讓高度更精準 */
+    display: flex;
+    flex-direction: column;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-top: 16px !important;
+}
+
+/* 內容滾動區：確保在小螢幕上可以上下滑動 */
+.modal-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 150px; /* 底部留白，防止被手機鍵盤擋住按鈕 */
+}
+
+/* 修正輸入框在手機上的預設樣式 */
+.med-input {
+    font-size: 16px !important; /* 16px 才能防止 iPhone 自動放大頁面 */
+    padding: 12px 16px !important;
+    appearance: none;
+    -webkit-appearance: none;
+}
     </style>
 </head>
 <body>
@@ -429,42 +454,78 @@
         </div>
 
         <div class="bottom-sheet-overlay" :class="{ active: isPostModalOpen }" @click="isPostModalOpen = false"></div>
-       <div class="bottom-sheet" :class="{ active: isPostModalOpen }">
-    <div class="flex justify-between items-center mb-4">
+    <!-- 發佈任務彈窗 -->
+<div class="bottom-sheet" :class="{ active: isPostModalOpen }">
+    <!-- 標題與關閉按鈕 -->
+    <div class="flex justify-between items-center mb-4 shrink-0">
         <h4 class="text-xl font-black text-slate-800">發佈 {{ postType === 'duty' ? '公差任務' : '會議項目' }}</h4>
-        <button @click="isPostModalOpen = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+        <button @click="isPostModalOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
 
-    <!-- AI 智慧輸入區 -->
-    <div class="mb-4 bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
+    <!-- AI 解析區 (保持頂部固定) -->
+    <div class="mb-4 bg-indigo-50 p-3 rounded-2xl border border-indigo-100 shrink-0">
         <div class="flex justify-between items-center mb-2">
-            <span class="text-[11px] font-black text-indigo-600 uppercase"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 智慧解析填表</span>
-            <button @click="handleAiParse" :disabled="isAiProcessing" class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-lg">
-                {{ isAiProcessing ? '解析中...' : '自動填入' }}
+            <span class="text-[11px] font-black text-indigo-600 uppercase"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 智慧解析</span>
+            <button @click="handleAiParse" :disabled="isAiProcessing" class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-lg active:scale-95 transition-all">
+                {{ isAiProcessing ? '處理中...' : '自動填入' }}
             </button>
         </div>
-        <textarea v-model="aiRawInput" placeholder="直接貼上 LINE 訊息內容..." class="w-full p-3 bg-white border-0 rounded-xl text-xs font-bold h-20 outline-none"></textarea>
+        <textarea v-model="aiRawInput" placeholder="直接貼上 LINE 訊息內容..." class="w-full p-3 bg-white border-0 rounded-xl text-xs font-bold h-20 outline-none shadow-sm"></textarea>
     </div>
 
-    <!-- 滾動內容區 -->
+    <!-- 滾動輸入區 -->
     <div class="modal-scroll-area space-y-4">
-        <div v-if="postType==='meeting'" class="flex gap-2 mb-2">
+        <!-- 分類切換 (如果是會議) -->
+        <div v-if="postType==='meeting'" class="flex gap-2">
             <button v-for="cat in ['一般會議','旅遊','聚餐']" :key="cat" @click="newTask.category = cat" class="flex-1 py-3 rounded-xl text-xs font-black border transition-all" :class="newTask.category === cat ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-400 border-slate-200'">{{cat}}</button>
         </div>
-        <!-- ... 這裡放原本 newTask 的所有 input 欄位 ... -->
-        <input v-model="newTask.title" type="text" placeholder="名稱 (如：4100旅遊)" class="med-input w-full p-4">
-        <div class="grid grid-cols-2 gap-3">
-            <input v-model="newTask.date" type="date" class="med-input w-full p-4">
-            <input v-if="postType==='duty'" v-model="newTask.quota" type="number" placeholder="名員" class="med-input w-full p-4">
+
+        <!-- 名稱 -->
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 ml-1">任務名稱</label>
+            <input v-model="newTask.title" type="text" placeholder="例如：慈惠宮勤務" class="med-input w-full">
         </div>
-        <div class="grid grid-cols-2 gap-3">
-            <input v-model="newTask.startTime" type="time" class="med-input w-full p-4">
-            <input v-model="newTask.endTime" type="time" class="med-input w-full p-4">
+
+        <!-- 日期與名額：修正為 grid-cols-3，讓日期佔兩份，名額佔一份 -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="col-span-2 space-y-1">
+                <label class="text-[10px] font-black text-slate-400 ml-1">任務日期</label>
+                <input v-model="newTask.date" type="date" class="med-input w-full">
+            </div>
+            <div v-if="postType==='duty'" class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 ml-1">名額</label>
+                <input v-model="newTask.quota" type="number" class="med-input w-full text-center">
+            </div>
         </div>
-        <input v-model="newTask.location" type="text" placeholder="地點" class="med-input w-full p-4">
-        <textarea v-model="newTask.note" placeholder="備註..." class="med-input w-full p-4 h-24"></textarea>
+
+        <!-- 時間 -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 ml-1">開始時間</label>
+                <input v-model="newTask.startTime" type="time" class="med-input w-full">
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-black text-slate-400 ml-1">結束時間</label>
+                <input v-model="newTask.endTime" type="time" class="med-input w-full">
+            </div>
+        </div>
+
+        <!-- 地點 -->
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 ml-1">地點</label>
+            <input v-model="newTask.location" type="text" placeholder="輸入詳細地點" class="med-input w-full">
+        </div>
+
+        <!-- 備註 -->
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 ml-1">備註資訊 (服裝等)</label>
+            <textarea v-model="newTask.note" placeholder="例如：穿著黑色POLO衫..." class="med-input w-full h-24"></textarea>
+        </div>
         
-        <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg">確認發佈項目</button>
+        <!-- 發佈按鈕 -->
+        <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-all">
+            確認發佈項目
+        </button>
     </div>
 </div>
 
