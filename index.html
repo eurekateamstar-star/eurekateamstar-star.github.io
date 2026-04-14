@@ -483,6 +483,33 @@
             </div>
         </div>
 
+<!-- >>> 貼在這裡：發佈成功 APP 風格彈窗 <<< -->
+        <div class="bottom-sheet-overlay" :class="{ active: isSuccessStatusOpen }" @click="isSuccessStatusOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isSuccessStatusOpen }">
+            <div class="text-center py-6">
+                <div class="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-circle-check text-4xl text-emerald-500"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-2">任務發佈成功！</h4>
+                <p class="text-sm font-bold text-slate-400 mb-8">系統已自動完成雲端推播發送</p>
+                <div class="bg-slate-50 rounded-2xl p-5 flex gap-4 mb-8 border border-slate-100">
+                    <div class="flex-1 text-center border-r border-slate-200">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">成功接收</p>
+                        <p class="text-2xl font-num text-emerald-600">{{ lastPushStats.success }} <span class="text-xs">人</span></p>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">失效/離隊</p>
+                        <p class="text-2xl font-num text-slate-300">{{ lastPushStats.failed }} <span class="text-xs">人</span></p>
+                    </div>
+                </div>
+                <button @click="isSuccessStatusOpen = false" class="w-full py-4 rounded-2xl bg-slate-900 text-white font-black text-lg shadow-xl active:scale-95 transition-transform">
+                    太棒了
+                </button>
+            </div>
+        </div>
+
+
+        
         <!-- 底部導覽列 -->
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
             <div class="flex justify-around items-center h-full px-4">
@@ -592,6 +619,8 @@ console.log("✨ 成功建立全新訂閱");
 
             const isShiftModalOpen = ref(false);
             const isDeleteShiftModalOpen = ref(false);
+            const isSuccessStatusOpen = ref(false);
+            const lastPushStats = ref({ success: 0, failed: 0 });
             const isPostModalOpen = ref(false);
             const isMeetingRegModalOpen = ref(false);
             const isDetailedListModalOpen = ref(false);
@@ -764,31 +793,39 @@ console.log("✨ 成功建立全新訂閱");
                 isPostModalOpen.value = true;
             };
 
-            const handlePostTask = async () => {
-                if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
-                const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
-                try {
-                    await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
-                    isPostModalOpen.value = false;
-                    const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-                    const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
-                    
-                    const response = await fetch(CLOUD_RUN_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
-                            body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
-                        })
-                    });
-                    const result = await response.json();
-                    if (result.stats) {
-                        alert(`✅ 任務發佈成功！\n推播結果：\n成功：${result.stats.success} 人\n失敗：${result.stats.failed} 人`);
-                    } else {
-                        alert("任務已發佈，但推播狀態未知。");
-                    }
-                } catch (e) { alert('發佈失敗'); }
-            };
+      const handlePostTask = async () => {
+    if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
+    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
+    
+    try {
+        await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+        isPostModalOpen.value = false;
+
+        const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+        const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
+
+        const response = await fetch(CLOUD_RUN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
+                body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
+            })
+        });
+
+        const result = await response.json();
+
+        // --- 取代 alert() 的部分 ---
+        if (result.stats) {
+            lastPushStats.value = result.stats;
+            isSuccessStatusOpen.value = true; // 開啟自定義 APP 彈窗
+        } else {
+            alert("任務已發佈，但推播狀態未知。");
+        }
+    } catch (e) {
+        alert('發佈失敗');
+    }
+};
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
             const handleDeleteTask = async () => {
@@ -1018,7 +1055,8 @@ console.log("✨ 成功建立全新訂閱");
                 isAdminPriceEditOpen, editingReg, adminBreakdown, openAdminPriceEdit, submitAdminPriceEdit, calculateBasePrice, computedAdminTotal, resetAdminBreakdown,
                 handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, onSliderScroll, onScheduleSliderScroll,
                 scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
-                activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards
+                activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen,
+    lastPushStats,
             };
         }
     }).mount('#app');
