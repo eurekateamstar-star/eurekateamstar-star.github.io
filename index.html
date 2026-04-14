@@ -1015,6 +1015,20 @@ console.log("✨ 成功建立全新訂閱");
             };
         }
     }).mount('#app');
+
+onMounted(() => {
+    // 1. 只要進到 App 就清除紅點
+    if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge();
+    }
+
+    // 2. 監聽「回到視窗」事件（例如從其他 App 切換回來）
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && 'clearAppBadge' in navigator) {
+            navigator.clearAppBadge();
+        }
+    });
+    
 </script>
 </body>
 </html>
