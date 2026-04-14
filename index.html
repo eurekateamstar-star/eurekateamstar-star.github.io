@@ -839,12 +839,14 @@
                     // FCM 推播通知
                     const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
                     const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
-                    sendPushToAll(
-                        '🚨 海山救護義消 — ' + typeLabel + '發佈',
-                        '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認') + '  請盡快登記！'
-                    );
-                } catch (e) { alert('發佈失敗'); }
-            };
+               fetch('https://send-task-notification-804810488246.asia-east1.run.app/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
+        body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認') + '  請盡快登記！'
+    })
+}).catch(e => console.warn('推播呼叫失敗:', e));
             
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
             const handleDeleteTask = async () => {
