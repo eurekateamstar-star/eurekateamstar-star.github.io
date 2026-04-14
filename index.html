@@ -429,15 +429,44 @@
         </div>
 
         <div class="bottom-sheet-overlay" :class="{ active: isPostModalOpen }" @click="isPostModalOpen = false"></div>
-        <div class="bottom-sheet" :class="{ active: isPostModalOpen }">
-            <div class="mb-6"><h4 class="text-xl font-black text-slate-800">發佈 {{ postType === 'duty' ? '公差任務' : '會議項目' }}</h4></div>
-            <div class="space-y-4 max-h-[70vh] overflow-y-auto pb-4">
-                <div v-if="postType==='meeting'" class="flex gap-2 mb-2"><button v-for="cat in ['一般會議','旅遊','聚餐']" :key="cat" @click="newTask.category = cat" class="flex-1 py-3 rounded-xl text-xs font-black border transition-all" :class="newTask.category === cat ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-400 border-slate-200'">{{cat}}</button></div>
-                <div v-if="postType === 'meeting' && (newTask.category === '旅遊' || newTask.category === '聚餐')" class="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-4"><p class="text-[11px] font-black text-indigo-500 uppercase tracking-wider mb-2">預設眷屬費用設定</p><div class="grid grid-cols-2 gap-3"><div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-1">大人金額</label><input v-model="newTask.priceAdult" type="number" placeholder="大人金額" class="med-input w-full p-4"></div><div class="space-y-1"><label class="text-[10px] font-bold text-slate-400 ml-1">小孩金額</label><input v-model="newTask.priceChild" type="number" placeholder="小孩金額" class="med-input w-full p-4"></div></div></div>
-                <div class="space-y-3"><input v-model="newTask.title" type="text" placeholder="名稱 (如：4100旅遊)" class="med-input w-full p-4"><div class="grid grid-cols-2 gap-3"><input v-model="newTask.date" type="date" class="med-input w-full p-4"><input v-if="postType==='duty'" v-model="newTask.quota" type="number" placeholder="名額" class="med-input w-full p-4"></div><div class="grid grid-cols-2 gap-3"><input v-model="newTask.startTime" type="time" class="med-input w-full p-4"><input v-model="newTask.endTime" type="time" class="med-input w-full p-4"></div><input v-model="newTask.location" type="text" placeholder="地點" class="med-input w-full p-4"><textarea v-model="newTask.note" placeholder="活動備註資訊..." class="med-input w-full p-4 h-24"></textarea></div>
-                <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg mt-4">確認發佈項目</button>
-            </div>
+       <div class="bottom-sheet" :class="{ active: isPostModalOpen }">
+    <div class="flex justify-between items-center mb-4">
+        <h4 class="text-xl font-black text-slate-800">發佈 {{ postType === 'duty' ? '公差任務' : '會議項目' }}</h4>
+        <button @click="isPostModalOpen = false" class="text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- AI 智慧輸入區 -->
+    <div class="mb-4 bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-[11px] font-black text-indigo-600 uppercase"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI 智慧解析填表</span>
+            <button @click="handleAiParse" :disabled="isAiProcessing" class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1 rounded-lg">
+                {{ isAiProcessing ? '解析中...' : '自動填入' }}
+            </button>
         </div>
+        <textarea v-model="aiRawInput" placeholder="直接貼上 LINE 訊息內容..." class="w-full p-3 bg-white border-0 rounded-xl text-xs font-bold h-20 outline-none"></textarea>
+    </div>
+
+    <!-- 滾動內容區 -->
+    <div class="modal-scroll-area space-y-4">
+        <div v-if="postType==='meeting'" class="flex gap-2 mb-2">
+            <button v-for="cat in ['一般會議','旅遊','聚餐']" :key="cat" @click="newTask.category = cat" class="flex-1 py-3 rounded-xl text-xs font-black border transition-all" :class="newTask.category === cat ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-400 border-slate-200'">{{cat}}</button>
+        </div>
+        <!-- ... 這裡放原本 newTask 的所有 input 欄位 ... -->
+        <input v-model="newTask.title" type="text" placeholder="名稱 (如：4100旅遊)" class="med-input w-full p-4">
+        <div class="grid grid-cols-2 gap-3">
+            <input v-model="newTask.date" type="date" class="med-input w-full p-4">
+            <input v-if="postType==='duty'" v-model="newTask.quota" type="number" placeholder="名員" class="med-input w-full p-4">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <input v-model="newTask.startTime" type="time" class="med-input w-full p-4">
+            <input v-model="newTask.endTime" type="time" class="med-input w-full p-4">
+        </div>
+        <input v-model="newTask.location" type="text" placeholder="地點" class="med-input w-full p-4">
+        <textarea v-model="newTask.note" placeholder="備註..." class="med-input w-full p-4 h-24"></textarea>
+        
+        <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg">確認發佈項目</button>
+    </div>
+</div>
 
         <div class="bottom-sheet-overlay" :class="{ active: isMeetingRegModalOpen }" @click="isMeetingRegModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isMeetingRegModalOpen }">
@@ -639,6 +668,8 @@ console.log("✨ 成功建立全新訂閱");
             const postType = ref('duty');
             const newTask = ref({ title:'', date:'', startTime:'', endTime:'', location:'', note:'', quota: 1, category: '一般會議', priceAdult: 0, priceChild: 0 });
             const regForm = ref({ status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 });
+            const aiRawInput = ref('');
+            const isAiProcessing = ref(false);
             const hourOptions = ["08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"];
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
@@ -792,7 +823,37 @@ console.log("✨ 成功建立全新訂閱");
                 newTask.value = { title:'', date: getTodayStr(), startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99, category: '一般會議', priceAdult: 0, priceChild: 0 };
                 isPostModalOpen.value = true;
             };
+const handleAiParse = async () => {
+    if (!aiRawInput.value) return alert("請先貼上文字內容");
+    isAiProcessing.value = true;
+    try {
+        const response = await fetch(CLOUD_RUN_URL + 'ai-parse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: aiRawInput.value })
+        });
+        
+        if (!response.ok) throw new Error("AI 解析失敗");
+        
+        const data = await response.json();
+        
+        // 將 AI 解析結果填入原本的表單
+        if (data.title) newTask.value.title = data.title;
+        if (data.date) newTask.value.date = data.date;
+        if (data.startTime) newTask.value.startTime = data.startTime;
+        if (data.endTime) newTask.value.endTime = data.endTime;
+        if (data.location) newTask.value.location = data.location;
+        if (data.note) newTask.value.note = data.note;
+        if (data.quota) newTask.value.quota = data.quota;
 
+        aiRawInput.value = ""; // 解析成功後自動清空貼上區
+    } catch (e) {
+        console.error(e);
+        alert("AI 無法解析這段文字，請檢查內容或手動輸入");
+    } finally {
+        isAiProcessing.value = false;
+    }
+};
       const handlePostTask = async () => {
     if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
     const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
@@ -1055,7 +1116,7 @@ console.log("✨ 成功建立全新訂閱");
                 isAdminPriceEditOpen, editingReg, adminBreakdown, openAdminPriceEdit, submitAdminPriceEdit, calculateBasePrice, computedAdminTotal, resetAdminBreakdown,
                 handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, onSliderScroll, onScheduleSliderScroll,
                 scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
-                activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen,
+                activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen, aiRawInput, isAiProcessing, handleAiParse,
     lastPushStats,
             };
         }
