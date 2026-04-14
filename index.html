@@ -119,11 +119,24 @@
                     <p class="text-[15px] text-slate-500 font-bold mt-1 tracking-wider">海山救護義消智慧平台</p>
                 </div>
                 <div class="space-y-5 text-left">
-                    <div class="relative"><i class="fa-solid fa-user-doctor absolute left-4 top-4 text-slate-400"></i><select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none text-slate-700"><option value="" disabled>請選擇救護人員</option><option v-for="m in sortedLoginMembers" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option></select></div>
-                    <div class="relative"><i class="fa-solid fa-shield-halved absolute left-4 top-4 text-slate-400"></i><input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12 font-bold"></div>
-                    <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all uppercase tracking-widest text-lg font-black">登入系統</button>
-                    <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black"><i class="fa-solid fa-circle-exclamation"></i> {{ errMsg }}</p>
-                </div>
+    <!-- 名字選擇框 -->
+    <div class="relative">
+        <i class="fa-solid fa-user-doctor absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+        <select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none text-slate-700 relative bg-white">
+            <option value="" disabled>請選擇救護人員</option>
+            <option v-for="m in sortedLoginMembers" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option>
+        </select>
+        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"></i>
+    </div>
+
+    <!-- 密碼輸入框 -->
+    <div class="relative">
+        <i class="fa-solid fa-shield-halved absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10"></i>
+        <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12 font-bold bg-white">
+    </div>
+
+    <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all uppercase tracking-widest text-lg font-black">登入系統</button>
+</div>
             </div>
         </div>
     </div>
@@ -474,17 +487,35 @@
     </div>
 
     <!-- 滾動輸入區 -->
-    <div class="modal-scroll-area space-y-4">
-        <!-- 分類切換 (如果是會議) -->
-        <div v-if="postType==='meeting'" class="flex gap-2">
+   <div class="modal-scroll-area space-y-4">
+    <!-- 分類切換 (如果是會議) -->
+    <div v-if="postType==='meeting'" class="space-y-4">
+        <div class="flex gap-2">
             <button v-for="cat in ['一般會議','旅遊','聚餐']" :key="cat" @click="newTask.category = cat" class="flex-1 py-3 rounded-xl text-xs font-black border transition-all" :class="newTask.category === cat ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-400 border-slate-200'">{{cat}}</button>
         </div>
 
-        <!-- 名稱 -->
-        <div class="space-y-1">
-            <label class="text-[10px] font-black text-slate-400 ml-1">任務名稱</label>
-            <input v-model="newTask.title" type="text" placeholder="例如：慈惠宮勤務" class="med-input w-full">
+        <!-- >>> 新增：旅遊與聚餐的費用設定 <<< -->
+        <div v-if="newTask.category === '旅遊' || newTask.category === '聚餐'" class="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-4">
+            <p class="text-[11px] font-black text-indigo-500 uppercase tracking-wider"><i class="fa-solid fa-calculator mr-1"></i> 預設眷屬費用設定</p>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 ml-1">大人金額</label>
+                    <input v-model="newTask.priceAdult" type="number" placeholder="0" class="med-input w-full">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-slate-400 ml-1">小孩金額</label>
+                    <input v-model="newTask.priceChild" type="number" placeholder="0" class="med-input w-full">
+                </div>
+            </div>
         </div>
+        <!-- >>> 費用設定結束 <<< -->
+    </div>
+
+    <!-- 任務名稱 -->
+    <div class="space-y-1">
+        <label class="text-[10px] font-black text-slate-400 ml-1">任務/活動名稱</label>
+        <input v-model="newTask.title" type="text" placeholder="例如：慈惠宮勤務" class="med-input w-full">
+    </div>
 
         <!-- 日期與名額：修正為 grid-cols-3，讓日期佔兩份，名額佔一份 -->
         <div class="grid grid-cols-3 gap-3">
