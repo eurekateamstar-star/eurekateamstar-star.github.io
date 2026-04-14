@@ -654,6 +654,19 @@ console.log("✨ 成功建立全新訂閱");
                 return "進行中";
             };
 
+            onMounted(() => {
+            // 1. 進入 App 即清除紅點
+            if ('clearAppBadge' in navigator) {
+                navigator.clearAppBadge();
+            }
+
+            // 2. 監聽「回到視窗」事件
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && 'clearAppBadge' in navigator) {
+                    navigator.clearAppBadge();
+                }
+            });
+
             const calendarTitle = computed(() => `${currentCalendarDate.value.getFullYear()} 年 ${currentCalendarDate.value.getMonth() + 1} 月`);
             const changeCalendarMonth = (dir) => { const d = new Date(currentCalendarDate.value); d.setMonth(d.getMonth() + dir); currentCalendarDate.value = d; };
 
