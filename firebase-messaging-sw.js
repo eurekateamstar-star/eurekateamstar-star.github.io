@@ -14,7 +14,7 @@ self.addEventListener('push', function(event) {
     const title = data.title || '海山救護義消';
     const options = {
         body: data.body || '',
-        icon: 'https://eurekateamstar-star.github.io/icon-192.png', // 確認此圖片存在
+        icon: 'https://eurekateamstar-star.github.io/icon1.jpg', // 確認此圖片存在
         badge: 'https://eurekateamstar-star.github.io/icon-192.png',
         vibrate: [200, 100, 200],
         requireInteraction: true,
