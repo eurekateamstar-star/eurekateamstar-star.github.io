@@ -509,10 +509,19 @@
             await navigator.serviceWorker.ready;
             console.log("SW ready ✅");
             const convertedKey = urlBase64ToUint8Array(FCM_VAPID_KEY);
-            let subscription = await swReg.pushManager.getSubscription();
-            if (!subscription) {
-                subscription = await swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: convertedKey });
-            }
+           let subscription = await swReg.pushManager.getSubscription();
+if (subscription) {
+    // 發現任何現存的訂閱，直接強制取消！(斬斷殭屍訂閱)
+    await subscription.unsubscribe();
+    console.log("🧹 已清除舊的瀏覽器推播訂閱");
+}
+
+// 強制使用最新的 VAPID 公鑰，建立 100% 全新的訂閱
+subscription = await swReg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: convertedKey
+});
+console.log("✨ 成功建立全新訂閱");
             console.log("Push 訂閱成功");
             const subJson = JSON.stringify(subscription.toJSON());
             const membersSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", userName)));
