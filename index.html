@@ -617,18 +617,7 @@ console.log("✨ 成功建立全新訂閱");
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
 
-onMounted(() => {
-            // 1. 進入 App 即清除紅點
-            if ('clearAppBadge' in navigator) {
-                navigator.clearAppBadge();
-            }
 
-            // 2. 監聽「回到視窗」事件
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && 'clearAppBadge' in navigator) {
-                    navigator.clearAppBadge();
-                }
-            });
 
 
             
