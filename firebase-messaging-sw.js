@@ -47,7 +47,13 @@ self.addEventListener('push', function(event) {
 // 點擊通知後的處理
 self.addEventListener('notificationclick', function(event) {
     event.notification.close();
-    
+    // --- 加入這段：點擊通知即清除紅點 ---
+    if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge();
+    }
+    // -------------------------------
+
+    if (event.action === 'close') return;
     // 如果點擊的是忽略按鈕
     if (event.action === 'close') return;
 
