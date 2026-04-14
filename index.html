@@ -767,24 +767,42 @@ console.log("✨ 成功建立全新訂閱");
             };
 
             // ★ 修正：fetch 正確包在 try 裡
-            const handlePostTask = async () => {
-                if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
-                const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
-                try {
-                    await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
-                    isPostModalOpen.value = false;
-                    const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-                    const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
-                    fetch(CLOUD_RUN_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
-                            body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認') + '  請盡快登記！'
-                        })
-                    }).catch(e => console.warn('推播呼叫失敗:', e));
-                } catch (e) { alert('發佈失敗'); }
-            };
+          const handlePostTask = async () => {
+    if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
+    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
+    
+    try {
+        // 1. 先存入資料庫
+        await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+        isPostModalOpen.value = false;
+
+        const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+        const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
+
+        // 2. 呼叫 Cloud Run 推播 API 並接收回傳值
+        const response = await fetch(CLOUD_RUN_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
+                body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
+            })
+        });
+
+        const result = await response.json();
+
+        // 3. 顯示結果給管理者看
+        if (result.stats) {
+            alert(`✅ 任務發佈成功！\n系統已發出推播給：\n成功：${result.stats.success} 人\n失敗：${result.stats.failed} 人`);
+        } else {
+            alert("任務已發佈，但推播狀態未知。");
+        }
+
+    } catch (e) {
+        console.error(e);
+        alert('發佈失敗，請檢查網路連接');
+    }
+};
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
             const handleDeleteTask = async () => {
