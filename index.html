@@ -951,8 +951,25 @@ console.log("✨ 成功建立全新訂閱");
 
             onMounted(() => {
                 // 進入即清除紅點
-                if ('clearAppBadge' in navigator) navigator.clearAppBadge();
-                document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && 'clearAppBadge' in navigator) navigator.clearAppBadge(); });
+                 if ('clearAppBadge' in navigator) {
+        navigator.clearAppBadge();
+    }
+
+    // 發送訊息給 Service Worker 同步清空硬碟裡的數字
+    if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ action: 'clearBadge' });
+    }
+
+    // 監聽回到視窗
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({ action: 'clearBadge' });
+            }
+        }
+    });
+              
 
                 onSnapshot(collection(db, "members"), (snap) => { members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
                 onSnapshot(collection(db, "shifts"), (snap) => { const obj = {}; snap.docs.forEach(doc => { const data = doc.data(); if (!obj[data.date]) obj[data.date] = []; obj[data.date].push(data); }); userShifts.value = obj; });
