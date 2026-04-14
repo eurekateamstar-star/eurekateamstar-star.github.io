@@ -830,23 +830,24 @@
                 newTask.value = { title:'', date: getTodayStr(), startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99, category: '一般會議', priceAdult: 0, priceChild: 0 }; 
                 isPostModalOpen.value = true; 
             };
-            const handlePostTask = async () => { 
-                if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊'); 
-                const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks"; 
-                try {
-                    await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
-                    isPostModalOpen.value = false;
-                    // FCM 推播通知
-                    const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-                    const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
-               fetch('https://send-task-notification-804810488246.asia-east1.run.app/', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
-        body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認') + '  請盡快登記！'
-    })
-}).catch(e => console.warn('推播呼叫失敗:', e));
+           const handlePostTask = async () => { 
+    if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊'); 
+    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks"; 
+    try {
+        await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+        isPostModalOpen.value = false;
+        const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+        const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
+        fetch('https://send-task-notification-804810488246.asia-east1.run.app/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
+                body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認') + '  請盡快登記！'
+            })
+        }).catch(e => console.warn('推播呼叫失敗:', e));
+    } catch (e) { alert('發佈失敗'); }
+};
             
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
             const handleDeleteTask = async () => {
