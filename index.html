@@ -287,9 +287,8 @@
                                 <button @click="changeWeek(1)" class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-right"></i></button>
                             </div>
                             <div class="space-y-3">
-                                <div v-for="day in weekDates" :key="day.fullDate" 
-     @click="isAdmin ? openAdminShiftDetail(day) : openShiftModal(day)" 
-     class="list-card p-4 ...">
+                                <div v-for="day in weekDates" :key="day.fullDate" @click="openShiftModal(day)" class="list-card p-4 flex items-center justify-between transition-all" :class="[day.isToday ? 'border-l-4 border-l-blue-500 bg-blue-50/30' : 'bg-white', isPastDate(day.fullDate) ? 'opacity-40 grayscale pointer-events-none bg-slate-100' : 'active:bg-slate-50']">
+                                    <div class="flex items-center gap-4 flex-1">
                                         <div class="text-center min-w-[40px]"><p class="text-[10px] font-black uppercase" :class="day.isWeekend ? 'text-rose-500' : 'text-slate-400'">{{ day.weekday }}</p><p class="text-xl font-num" :class="day.isToday ? 'text-blue-600' : 'text-slate-700'">{{ day.date }}</p></div>
                                         <div class="h-8 w-[1px] bg-slate-100"></div>
                                         <div class="flex-1">
@@ -631,44 +630,7 @@
             </div>
         </div>
 
-<!-- 管理員主控：排班名單明細 -->
-<div class="bottom-sheet-overlay" :class="{ active: isAdminDetailOpen }" @click="isAdminDetailOpen = false"></div>
-<div class="bottom-sheet" :class="{ active: isAdminDetailOpen }">
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h4 class="text-xl font-black text-slate-800">{{ adminDetailDay?.fullDate }} 名單</h4>
-            <p class="text-xs font-bold text-blue-600 uppercase">Shift Command Center</p>
-        </div>
-        <button @click="isAdminDetailOpen = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    
-    <div class="space-y-3 max-h-[50vh] overflow-y-auto pb-6">
-        <div v-for="s in adminDetailList" :key="s.name" class="p-4 rounded-2xl border border-slate-100 bg-white flex justify-between items-center shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-black">{{ s.name.charAt(0) }}</div>
-                <div>
-                    <p class="font-black text-slate-800">{{ s.name }}</p>
-                    <p class="text-xs font-num text-slate-400">{{ s.start }} - {{ s.end }}</p>
-                </div>
-            </div>
-            <div class="text-right">
-                <!-- 推播狀態標籤 -->
-                <span v-if="s.push_status === '已送達'" class="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-1 rounded-lg font-black border border-emerald-100">
-                    <i class="fa-solid fa-paper-plane mr-1"></i>推播成功
-                </span>
-                <span v-else class="text-[10px] bg-slate-50 text-slate-400 px-2 py-1 rounded-lg font-black border border-slate-100">
-                    未推播
-                </span>
-                <p v-if="s.pushed_at" class="text-[8px] text-slate-300 mt-1">時間: {{ formatTime(s.pushed_at) }}</p>
-            </div>
-        </div>
-        <div v-if="adminDetailList.length === 0" class="text-center py-10">
-            <i class="fa-solid fa-calendar-xmark text-3xl text-slate-200 mb-2"></i>
-            <p class="text-sm font-bold text-slate-300">本日尚無人登記協勤</p>
-        </div>
-    </div>
-    <button @click="isAdminDetailOpen = false" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg">關閉控制台</button>
-</div>
+
         
         <!-- 底部導覽列 -->
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
@@ -804,25 +766,7 @@ console.log("✨ 成功建立全新訂閱");
             const hourOptions = ["08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"];
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
-const isAdminDetailOpen = ref(false);
-const adminDetailDay = ref(null);
-const adminDetailList = ref([]);
 
-const openAdminShiftDetail = (day) => {
-    if (!isAdmin.value) return; 
-    adminDetailDay.value = day;
-    // 從現有的 userShifts 緩存中抓取該日期的所有人
-    adminDetailList.value = userShifts.value[day.fullDate] || [];
-    isAdminDetailOpen.value = true;
-};
-
-// 格式化推播時間的簡單函式
-const formatPushTime = (ts) => {
-    if (!ts) return '';
-    const date = ts.toDate ? ts.toDate() : new Date(ts);
-    return date.getHours().toString().padStart(2, '0') + ':' + 
-           date.getMinutes().toString().padStart(2, '0');
-};
             const activeReminders = computed(() => {
                 if (!loginUserName.value) return [];
                 const list = [];
@@ -1266,7 +1210,7 @@ const handleAiParse = async () => {
                 handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, onSliderScroll, onScheduleSliderScroll,
                 scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
                 activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen, aiRawInput, isAiProcessing, handleAiParse,
-    lastPushStats, formatPushTime
+    lastPushStats,
             };
         }
     }).mount('#app');
