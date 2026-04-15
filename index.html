@@ -809,11 +809,19 @@ const adminDetailDay = ref(null);
 const adminDetailList = ref([]);
 
 const openAdminShiftDetail = (day) => {
-    if (!isAdmin.value) return; // 只有管理員能開
+    if (!isAdmin.value) return; 
     adminDetailDay.value = day;
-    // 從現有的 userShifts 抓取該日期的所有人
+    // 從現有的 userShifts 緩存中抓取該日期的所有人
     adminDetailList.value = userShifts.value[day.fullDate] || [];
     isAdminDetailOpen.value = true;
+};
+
+// 格式化推播時間的簡單函式
+const formatPushTime = (ts) => {
+    if (!ts) return '';
+    const date = ts.toDate ? ts.toDate() : new Date(ts);
+    return date.getHours().toString().padStart(2, '0') + ':' + 
+           date.getMinutes().toString().padStart(2, '0');
 };
             const activeReminders = computed(() => {
                 if (!loginUserName.value) return [];
