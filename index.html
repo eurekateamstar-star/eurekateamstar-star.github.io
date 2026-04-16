@@ -282,7 +282,7 @@
                                 </div>
                                 <div v-for="group in [{n:'幹部',i:'fa-crown',c:'text-purple-600 bg-purple-50'},{n:'第一小隊',i:'fa-shield-heart',c:'text-orange-600 bg-orange-50'},{n:'第二小隊',i:'fa-kit-medical',c:'text-red-600 bg-red-50'},{n:'第三小隊',i:'fa-ambulance',c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card">
                                     <div class="p-3 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c"><span class="flex items-center"><div class="mr-3 w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm"><i :class="['fa-solid',group.i]" class="text-[10px]"></i></div>{{ group.n }}</span><span class="bg-white/60 px-3 py-1 rounded-full text-[11px] font-num">{{ getGroupTotal(group.n) }} 次</span></div>
-                                    <div class="p-2 grid grid-cols-2 gap-1"><div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl shadow-sm bg-white"><div class="flex flex-col"><div class="flex items-center gap-1.5"><i class="fa-solid fa-user-doctor text-[10px] text-slate-400"></i><span class="text-sm font-bold text-slate-700">{{ m.姓名 }}</span></div><span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span></div><span class="text-sm font-num text-slate-600">{{ m.duty_count||0 }}</span></div></div>
+                                    <div class="p-2 grid grid-cols-2 gap-1"><div v-for="m in filterByGroup(group.n)" :key="m.姓名" @click="openMemberDutyHistory(m)" class="flex justify-between items-center p-3 rounded-xl shadow-sm bg-white cursor-pointer active:scale-95 transition-transform hover:bg-slate-50"><div class="flex flex-col"><div class="flex items-center gap-1.5"><i class="fa-solid fa-user-doctor text-[10px] text-slate-400"></i><span class="text-sm font-bold text-slate-700">{{ m.姓名 }}</span></div><span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span></div><span class="text-sm font-num text-slate-600">{{ m.duty_count||0 }}</span></div></div>
                                 </div>
                             </div>
                         </template>
@@ -637,6 +637,38 @@
             </div>
         </div>
 
+<!-- ===== 個人公差歷史紀錄 Modal ===== -->
+        <div class="bottom-sheet-overlay" :class="{ active: isMemberHistoryModalOpen }" @click="isMemberHistoryModalOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isMemberHistoryModalOpen }">
+            <div class="flex justify-between items-center mb-6 shrink-0 px-1">
+                <div>
+                    <h4 class="text-xl font-black text-slate-800">{{ selectedDutyMember?.姓名 }}</h4>
+                    <p class="text-xs font-bold text-slate-400 mt-1">{{ selectedDutyMember?.duty_group }} - {{ selectedDutyMember?.duty_title || '隊員' }}</p>
+                </div>
+                <button @click="isMemberHistoryModalOpen = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-scroll-area space-y-3">
+                <div v-if="selectedMemberDutyHistory.length === 0" class="py-10 text-center text-slate-300">
+                    <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
+                    <p class="text-sm font-black">目前無公差紀錄</p>
+                </div>
+                
+                <div v-for="task in selectedMemberDutyHistory" :key="task.id" class="list-card p-4 flex gap-4 items-center bg-white border border-slate-100">
+                    <div class="text-center shrink-0 w-14 bg-rose-50 rounded-xl p-2 border border-rose-100/50">
+                        <p class="text-sm font-num text-slate-800 leading-none">{{ task.date.split('-')[1] }}/{{ task.date.split('-')[2] }}</p>
+                        <p class="text-[9px] font-black text-rose-500 mt-1">{{ getWeekday(task.date) }}</p>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h5 class="text-sm font-black text-slate-800 truncate">{{ task.title }}</h5>
+                        <p class="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1"><i class="fa-solid fa-clock text-rose-300"></i> {{ task.startTime }} - {{ task.endTime }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ================================== -->
+
+        
         <!-- Modals（完全不動） -->
         <div class="bottom-sheet-overlay" :class="{ active: isDetailedListModalOpen }" @click="isDetailedListModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isDetailedListModalOpen }" style="padding-top: 20px;">
@@ -1143,7 +1175,34 @@
             const deleteTargetType = ref('duty');
             const editingReg = ref(null);
             const adminBreakdown = ref({ self: 0, adults: [], children: [] });
+  const isMemberHistoryModalOpen = ref(false);
+            const selectedDutyMember = ref(null);
 
+            const openMemberDutyHistory = (m) => {
+                selectedDutyMember.value = m;
+                isMemberHistoryModalOpen.value = true;
+            };
+
+            const selectedMemberDutyHistory = computed(() => {
+                if (!selectedDutyMember.value) return [];
+                const targetName = selectedDutyMember.value.姓名;
+                
+                // 1. 找出該名成員所有狀態為「出席」的「公差 (duty)」紀錄
+                const userDutyRegs = registrations.value.filter(r => 
+                    r.userName === targetName && 
+                    r.type === 'duty' && 
+                    r.status === '出席'
+                );
+                
+                // 2. 映射回 officialTasks 取得任務詳細資料
+                const history = userDutyRegs.map(reg => {
+                    const task = officialTasks.value.find(t => t.id === reg.taskId);
+                    return task ? { ...task, regId: reg.id } : null;
+                }).filter(t => t !== null);
+
+                // 3. 依照日期由新到舊排序
+                return history.sort((a, b) => b.date.localeCompare(a.date));
+            });
             const tempStartTime = ref(null);
             const tempEndTime = ref(null);
             const postType = ref('duty');
@@ -1707,7 +1766,18 @@
             let touchStartY = 0;
             const onPageTouchStart = (event) => { touchStartY = event.touches[0].clientY; };
             const onPageTouchMove = (event) => { const el = event.currentTarget; const dy = event.touches[0].clientY - touchStartY; if (el.scrollTop === 0 && dy > 40 && !cardsExpanded.value) cardsExpanded.value = true; };
-            const filterByGroup = (g) => members.value.filter(m => m.duty_group === g);
+            // 定義職稱權重排序 (越前面越優先)
+            const TITLE_ORDER_WEIGHTS = ['分隊長', '副分隊長', '幹事', '助理幹事', '小隊長', '副小隊長', '隊員'];
+            const getTitleWeight = (title) => {
+                const idx = TITLE_ORDER_WEIGHTS.indexOf(title);
+                return idx === -1 ? 99 : idx; // 找不到的預設排到最後
+            };
+
+            const filterByGroup = (g) => {
+                return members.value
+                    .filter(m => m.duty_group === g)
+                    .sort((a, b) => getTitleWeight(a.duty_title) - getTitleWeight(b.duty_title));
+            };
             const getGroupTotal = (g) => filterByGroup(g).reduce((s,m) => s+(Number(m.duty_count)||0), 0);
             const formatNumber = (v) => v ? Number(v).toLocaleString() : '0';
             const hasMedal = (mId) => { if (!userData.value) return false; const keys = Object.keys(userData.value); const foundKey = keys.find(k => k.startsWith('medal_') && mId.split(/[- \n]+/).every(p => k.includes(p))); return foundKey && userData.value[foundKey] && userData.value[foundKey] !== "無"; };
@@ -1994,7 +2064,7 @@
                 selectAdminHour, openAdminAddShift, submitAdminShift,
                 openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,
                 submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg,
-                openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,
+                openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
             };
         }
     }).mount('#app');
