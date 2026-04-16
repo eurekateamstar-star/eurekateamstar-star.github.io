@@ -582,29 +582,30 @@
                                         <span class="text-[9px] text-slate-300 font-bold">本周無登記活動</span>
                                     </div>
 
-                                    <!-- 下排：操作按鈕 -->
+                                    <!-- 下排A：推播操作按鈕 -->
                                     <div class="flex gap-2 pl-1">
-                                        <!-- 取消訂閱（只有已訂閱才顯示） -->
-                                        <button
-                                            v-if="m.hasSub"
-                                            @click="confirmCancelSub(m)"
-                                            :disabled="adminActionLoading === m.姓名"
-                                            class="flex-1 py-2 rounded-xl text-[10px] font-black border border-rose-200 bg-rose-50 text-rose-500 active:scale-95 transition-all disabled:opacity-40"
-                                        >
-                                            <i class="fa-solid fa-bell-slash mr-1" style="font-size:9px"></i>
-                                            {{ adminActionLoading === m.姓名 + '_cancel' ? '處理中...' : '取消訂閱' }}
+                                        <button v-if="m.hasSub" @click="confirmCancelSub(m)" :disabled="adminActionLoading === m.姓名" class="flex-1 py-2 rounded-xl text-[10px] font-black border border-rose-200 bg-rose-50 text-rose-500 active:scale-95 transition-all disabled:opacity-40">
+                                            <i class="fa-solid fa-bell-slash mr-1" style="font-size:9px"></i>{{ adminActionLoading === m.姓名 + '_cancel' ? '處理中...' : '取消訂閱' }}
                                         </button>
-                                        <!-- 單獨發送推播 -->
-                                        <button
-                                            v-if="m.hasSub"
-                                            @click="openSinglePushModal(m)"
-                                            class="flex-1 py-2 rounded-xl text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-600 active:scale-95 transition-all"
-                                        >
+                                        <button v-if="m.hasSub" @click="openSinglePushModal(m)" class="flex-1 py-2 rounded-xl text-[10px] font-black border border-blue-200 bg-blue-50 text-blue-600 active:scale-95 transition-all">
                                             <i class="fa-solid fa-paper-plane mr-1" style="font-size:9px"></i>單獨推播
                                         </button>
-                                        <div v-if="!m.hasSub" class="flex-1 py-2 rounded-xl text-[10px] font-bold text-center bg-slate-50 text-slate-300 border border-slate-100">
-                                            裝置未訂閱，無法發送
-                                        </div>
+                                        <div v-if="!m.hasSub" class="flex-1 py-2 rounded-xl text-[10px] font-bold text-center bg-slate-50 text-slate-300 border border-slate-100">裝置未訂閱，無法發送</div>
+                                    </div>
+                                    <!-- 下排B：代操作按鈕（新增排班/公差/會議） -->
+                                    <div class="flex gap-2 pl-1 border-t border-slate-50 pt-2">
+                                        <button @click="openAdminAddShift(m)" class="flex-1 py-2 rounded-xl text-[10px] font-black border border-slate-200 bg-slate-50 text-slate-600 active:scale-95 transition-all">
+                                            <i class="fa-solid fa-calendar-plus mr-1" style="font-size:9px"></i>排班
+                                        </button>
+                                        <button @click="openAdminAddReg(m, 'duty')" class="flex-1 py-2 rounded-xl text-[10px] font-black border border-rose-100 bg-rose-50/60 text-rose-600 active:scale-95 transition-all">
+                                            <i class="fa-solid fa-clipboard-check mr-1" style="font-size:9px"></i>公差
+                                        </button>
+                                        <button @click="openAdminAddReg(m, 'meeting')" class="flex-1 py-2 rounded-xl text-[10px] font-black border border-purple-100 bg-purple-50/60 text-purple-600 active:scale-95 transition-all">
+                                            <i class="fa-solid fa-users mr-1" style="font-size:9px"></i>會議
+                                        </button>
+                                        <button @click="openAdminDeleteActivity(m)" class="flex-1 py-2 rounded-xl text-[10px] font-black border border-slate-200 bg-slate-50 text-slate-400 active:scale-95 transition-all">
+                                            <i class="fa-solid fa-trash-can mr-1" style="font-size:9px"></i>刪除
+                                        </button>
                                     </div>
                                 </div>
 
@@ -873,6 +874,144 @@
         </div>
         <!-- ===== 單獨推播彈窗結束 ===== -->
 
+        <!-- ===== 代為新增排班 Modal ===== -->
+        <div class="bottom-sheet-overlay" :class="{ active: isAdminAddShiftOpen }" @click="isAdminAddShiftOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isAdminAddShiftOpen }">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <div><h4 class="text-xl font-black text-slate-800">代為新增排班</h4><p class="text-xs font-bold text-slate-400 mt-0.5">對象：{{ adminOpTarget?.姓名 }}</p></div>
+                <button @click="isAdminAddShiftOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1">日期</label>
+                    <input v-model="adminShiftForm.date" type="date" class="med-input w-full">
+                </div>
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-center gap-4">
+                    <div class="text-center"><p class="text-[10px] text-blue-400 font-bold uppercase mb-1">From</p><span class="text-2xl font-num text-blue-600">{{ adminShiftForm.start || '--' }}</span></div>
+                    <div class="w-8 h-[2px] bg-blue-200"></div>
+                    <div class="text-center"><p class="text-[10px] text-blue-400 font-bold uppercase mb-1">To</p><span class="text-2xl font-num text-blue-600">{{ adminShiftForm.end || '--' }}</span></div>
+                </div>
+                <div class="grid grid-cols-6 gap-2">
+                    <button v-for="h in hourOptions" :key="h" @click="selectAdminHour(h)" class="hour-btn transition-all" :class="{ 'selected': adminShiftForm.start === h || adminShiftForm.end === h }">{{ h }}</button>
+                </div>
+                <button @click="submitAdminShift" :disabled="!adminShiftForm.date || !adminShiftForm.start || !adminShiftForm.end || adminActionLoading === 'shift'" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-all disabled:opacity-30">
+                    {{ adminActionLoading === 'shift' ? '新增中...' : '確認新增排班' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== 代為登記公差/會議 Modal ===== -->
+        <div class="bottom-sheet-overlay" :class="{ active: isAdminAddRegOpen }" @click="isAdminAddRegOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isAdminAddRegOpen }">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <div>
+                    <h4 class="text-xl font-black text-slate-800">代為登記{{ adminRegType === 'duty' ? '公差' : '會議' }}</h4>
+                    <p class="text-xs font-bold text-slate-400 mt-0.5">對象：{{ adminOpTarget?.姓名 }}</p>
+                </div>
+                <button @click="isAdminAddRegOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="modal-scroll-area space-y-3">
+                <template v-if="adminRegType === 'duty'">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">選擇公差任務</p>
+                    <div v-if="availableAdminRegTasks.length === 0" class="py-8 text-center text-slate-300 text-sm font-bold">目前無未過期的公差任務</div>
+                    <div v-for="t in availableAdminRegTasks" :key="t.id" @click="submitAdminReg(t)" class="list-card p-4 flex items-center gap-4 active:bg-slate-50 cursor-pointer transition-colors">
+                        <div class="text-center shrink-0 w-14 bg-rose-50 rounded-xl p-2">
+                            <p class="text-sm font-num text-slate-800 leading-none">{{ t.date.slice(5,7) }}/{{ t.date.slice(8,10) }}</p>
+                            <p class="text-[9px] font-black text-rose-500 mt-1">{{ getWeekday(t.date) }}</p>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-black text-slate-800 truncate">{{ t.title }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t.startTime }}-{{ t.endTime }} ・ {{ t.location }}</p>
+                        </div>
+                        <div class="shrink-0">
+                            <span v-if="isTargetSignedUp(t.id)" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">已登記</span>
+                            <i v-else class="fa-solid fa-plus text-slate-300"></i>
+                        </div>
+                    </div>
+                </template>
+                <template v-if="adminRegType === 'meeting'">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1">選擇會議/活動</p>
+                    <div v-if="availableAdminRegTasks.length === 0" class="py-8 text-center text-slate-300 text-sm font-bold">目前無未過期的會議活動</div>
+                    <div v-for="t in availableAdminRegTasks" :key="t.id" @click="openAdminMeetingRegForm(t)" class="list-card p-4 flex items-center gap-4 active:bg-slate-50 cursor-pointer transition-colors">
+                        <div class="text-center shrink-0 w-14 bg-purple-50 rounded-xl p-2">
+                            <p class="text-sm font-num text-slate-800 leading-none">{{ t.date.slice(5,7) }}/{{ t.date.slice(8,10) }}</p>
+                            <p class="text-[9px] font-black text-purple-500 mt-1">{{ getWeekday(t.date) }}</p>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-black text-slate-800 truncate">{{ t.title }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold mt-0.5">{{ t.category || '一般會議' }} ・ {{ t.startTime }}-{{ t.endTime }}</p>
+                        </div>
+                        <div class="shrink-0">
+                            <span v-if="isTargetSignedUp(t.id)" class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">已登記</span>
+                            <i v-else class="fa-solid fa-plus text-slate-300"></i>
+                        </div>
+                    </div>
+                </template>
+                <div v-if="adminMeetingRegTask" class="mt-2 p-4 bg-purple-50/50 rounded-2xl border border-purple-100 space-y-4">
+                    <p class="text-[11px] font-black text-purple-600">{{ adminMeetingRegTask.title }} — 填寫出席資訊</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button @click="adminRegForm.status='出席'" class="py-3 rounded-xl font-black text-sm border-2 transition-all" :class="adminRegForm.status==='出席' ? 'border-emerald-500 bg-emerald-50 text-emerald-600' : 'border-slate-100 text-slate-400'">出席</button>
+                        <button @click="adminRegForm.status='請假'" class="py-3 rounded-xl font-black text-sm border-2 transition-all" :class="adminRegForm.status==='請假' ? 'border-rose-400 bg-rose-50 text-rose-500' : 'border-slate-100 text-slate-400'">請假</button>
+                    </div>
+                    <template v-if="adminRegForm.status === '出席'">
+                        <div v-if="adminMeetingRegTask.category === '一般會議'" class="grid grid-cols-2 gap-2">
+                            <button @click="adminRegForm.diet='葷食'" class="py-3 rounded-xl font-black text-sm border-2 transition-all" :class="adminRegForm.diet==='葷食' ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-400'">葷食</button>
+                            <button @click="adminRegForm.diet='素食'" class="py-3 rounded-xl font-black text-sm border-2 transition-all" :class="adminRegForm.diet==='素食' ? 'border-green-500 bg-green-50 text-green-600' : 'border-slate-100 text-slate-400'">素食</button>
+                        </div>
+                        <div v-if="adminMeetingRegTask.category === '旅遊' || adminMeetingRegTask.category === '聚餐'" class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">攜大人</label><div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200"><button @click="adminRegForm.plusAdult=Math.max(0,adminRegForm.plusAdult-1)" class="w-8 h-8 rounded-lg bg-slate-50 font-bold">-</button><span class="flex-1 text-center font-num">{{ adminRegForm.plusAdult }}</span><button @click="adminRegForm.plusAdult++" class="w-8 h-8 rounded-lg bg-slate-50 font-bold">+</button></div></div>
+                            <div class="space-y-1"><label class="text-[10px] font-bold text-slate-400">攜小孩</label><div class="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200"><button @click="adminRegForm.plusChild=Math.max(0,adminRegForm.plusChild-1)" class="w-8 h-8 rounded-lg bg-slate-50 font-bold">-</button><span class="flex-1 text-center font-num">{{ adminRegForm.plusChild }}</span><button @click="adminRegForm.plusChild++" class="w-8 h-8 rounded-lg bg-slate-50 font-bold">+</button></div></div>
+                        </div>
+                    </template>
+                    <button @click="submitAdminMeetingReg" :disabled="adminActionLoading === 'reg'" class="w-full py-3 rounded-2xl bg-purple-600 text-white font-black text-sm shadow-lg active:scale-95 transition-all disabled:opacity-30">
+                        {{ adminActionLoading === 'reg' ? '登記中...' : '確認代為登記' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 刪除活動 Modal ===== -->
+        <div class="bottom-sheet-overlay" :class="{ active: isAdminDeleteActOpen }" @click="isAdminDeleteActOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isAdminDeleteActOpen }">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <div><h4 class="text-xl font-black text-slate-800">刪除活動紀錄</h4><p class="text-xs font-bold text-slate-400 mt-0.5">對象：{{ adminOpTarget?.姓名 }}</p></div>
+                <button @click="isAdminDeleteActOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="modal-scroll-area space-y-3">
+                <div v-if="adminDeleteableActivities.length === 0" class="py-10 text-center text-slate-300">
+                    <i class="fa-solid fa-calendar-xmark text-3xl mb-3"></i>
+                    <p class="text-sm font-bold">{{ adminOpTarget?.姓名 }} 目前無可刪除的活動</p>
+                </div>
+                <div v-for="act in adminDeleteableActivities" :key="act.key" class="list-card p-4 flex items-center gap-4">
+                    <div class="text-center shrink-0 w-14 rounded-xl p-2" :class="act.type==='shift' ? 'bg-blue-50' : act.type==='duty' ? 'bg-rose-50' : 'bg-purple-50'">
+                        <p class="text-sm font-num text-slate-800 leading-none">{{ act.dateLabel }}</p>
+                        <p class="text-[9px] font-black mt-1" :class="act.type==='shift' ? 'text-blue-500' : act.type==='duty' ? 'text-rose-500' : 'text-purple-500'">{{ act.type==='shift' ? '排班' : act.type==='duty' ? '公差' : '會議' }}</p>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-black text-slate-800 truncate">{{ act.label }}</p>
+                    </div>
+                    <button @click="confirmAdminDeleteAct(act)" :disabled="adminActionLoading === act.key" class="shrink-0 w-9 h-9 rounded-full bg-red-50 text-red-500 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 刪除確認彈窗 ===== -->
+        <div class="bottom-sheet-overlay" :class="{ active: isAdminDeleteConfirmOpen }" @click="isAdminDeleteConfirmOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isAdminDeleteConfirmOpen }">
+            <div class="text-center py-4">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-trash-can text-2xl text-red-500"></i></div>
+                <h4 class="text-xl font-black text-slate-800 mb-2">確認刪除？</h4>
+                <p class="text-sm font-bold text-slate-400 mb-8">將移除 {{ adminOpTarget?.姓名 }} 的「{{ actToDelete?.label }}」紀錄</p>
+                <div class="flex gap-3">
+                    <button @click="isAdminDeleteConfirmOpen = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
+                    <button @click="executeAdminDeleteAct" :disabled="adminActionLoading === actToDelete?.key" class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-black text-sm shadow-lg active:scale-95 transition-transform disabled:opacity-40">
+                        {{ adminActionLoading === actToDelete?.key ? '刪除中...' : '確認刪除' }}
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
             <div class="flex justify-around items-center h-full px-4">
@@ -1575,6 +1714,191 @@
             const findMedalValue = (mId) => { if (!userData.value) return null; const foundKey = Object.keys(userData.value).find(k => k.startsWith('medal_') && mId.split(/[- \n]+/).every(p => k.includes(p))); return foundKey ? userData.value[foundKey] : null; };
             const isUnderHours = (val, mIdx) => { const currM = new Date().getMonth()+1; return (Number(val)||0) < 8 && mIdx <= currM; };
 
+            // ══════════════════════════════════════════════
+            //  管理員代操作：refs
+            // ══════════════════════════════════════════════
+            const isAdminAddShiftOpen      = ref(false);
+            const isAdminAddRegOpen        = ref(false);
+            const isAdminDeleteActOpen     = ref(false);
+            const isAdminDeleteConfirmOpen = ref(false);
+            const adminOpTarget            = ref(null);   // 當前操作的隊員
+            const adminRegType             = ref('duty'); // 'duty' | 'meeting'
+            const adminShiftForm           = ref({ date: getTodayStr(), start: null, end: null });
+            const adminRegForm             = ref({ status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 });
+            const adminMeetingRegTask      = ref(null);   // 正在填寫的會議任務
+            const actToDelete              = ref(null);   // 等待確認刪除的活動
+
+            // 小時選取器（共用給 adminShiftForm）
+            const selectAdminHour = (h) => {
+                const f = adminShiftForm.value;
+                if (h === f.start) { f.start = null; f.end = null; return; }
+                if (h === f.end)   { f.end = null; return; }
+                if (!f.start) { f.start = h; return; }
+                if (!f.end) {
+                    if (parseInt(h) > parseInt(f.start)) f.end = h;
+                    else f.start = h;
+                } else { f.start = h; f.end = null; }
+            };
+
+            // ── 開啟「代為新增排班」 ──
+            const openAdminAddShift = (m) => {
+                adminOpTarget.value = m;
+                adminShiftForm.value = { date: getTodayStr(), start: null, end: null };
+                isAdminAddShiftOpen.value = true;
+            };
+
+            // ── 送出代為新增排班 ──
+            const submitAdminShift = async () => {
+                const f = adminShiftForm.value;
+                const m = adminOpTarget.value;
+                if (!f.date || !f.start || !f.end || !m) return;
+                adminActionLoading.value = 'shift';
+                try {
+                    await addDoc(collection(db, "shifts"), {
+                        name: m.姓名, start: f.start, end: f.end, date: f.date, timestamp: new Date()
+                    });
+                    isAdminAddShiftOpen.value = false;
+                } catch(e) { alert("新增失敗：" + e.message); }
+                finally { adminActionLoading.value = ''; }
+            };
+
+            // ── 開啟「代為登記公差/會議」 ──
+            const openAdminAddReg = (m, type) => {
+                adminOpTarget.value = m;
+                adminRegType.value  = type;
+                adminMeetingRegTask.value = null;
+                adminRegForm.value = { status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 };
+                isAdminAddRegOpen.value = true;
+            };
+
+            // 當前操作隊員 + 類型可以登記的任務清單
+            const availableAdminRegTasks = computed(() => {
+                const list = adminRegType.value === 'duty' ? officialTasks.value : meetingTasks.value;
+                return list.filter(t => !isExpired(t.date)).sort((a, b) => a.date.localeCompare(b.date));
+            });
+
+            // 當前操作隊員是否已登記某任務
+            const isTargetSignedUp = (taskId) => {
+                if (!adminOpTarget.value) return false;
+                return registrations.value.some(r => r.taskId === taskId && r.userName === adminOpTarget.value.姓名);
+            };
+
+            // ── 公差：直接登記 ──
+            const submitAdminReg = async (task) => {
+                const m = adminOpTarget.value;
+                if (!m) return;
+                if (isTargetSignedUp(task.id)) { alert(`${m.姓名} 已登記此公差`); return; }
+                adminActionLoading.value = 'reg';
+                try {
+                    await addDoc(collection(db, "registrations"), {
+                        taskId: task.id, userName: m.姓名, type: 'duty', status: '出席', timestamp: new Date()
+                    });
+                    isAdminAddRegOpen.value = false;
+                } catch(e) { alert("登記失敗：" + e.message); }
+                finally { adminActionLoading.value = ''; }
+            };
+
+            // ── 會議：先展開填寫表單 ──
+            const openAdminMeetingRegForm = (task) => {
+                adminMeetingRegTask.value = task;
+                adminRegForm.value = { status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 };
+            };
+
+            // ── 會議：送出登記 ──
+            const submitAdminMeetingReg = async () => {
+                const m    = adminOpTarget.value;
+                const task = adminMeetingRegTask.value;
+                if (!m || !task) return;
+                adminActionLoading.value = 'reg';
+                try {
+                    const existing = registrations.value.find(r => r.taskId === task.id && r.userName === m.姓名);
+                    if (existing) {
+                        await updateDoc(doc(db, "registrations", existing.id), { ...adminRegForm.value, timestamp: new Date() });
+                    } else {
+                        await addDoc(collection(db, "registrations"), {
+                            ...adminRegForm.value, taskId: task.id, userName: m.姓名, type: 'meeting', timestamp: new Date()
+                        });
+                    }
+                    adminMeetingRegTask.value = null;
+                    isAdminAddRegOpen.value = false;
+                } catch(e) { alert("登記失敗：" + e.message); }
+                finally { adminActionLoading.value = ''; }
+            };
+
+            // ── 開啟「刪除活動」 ──
+            const openAdminDeleteActivity = (m) => {
+                adminOpTarget.value = m;
+                actToDelete.value   = null;
+                isAdminDeleteActOpen.value = true;
+            };
+
+            // 當前操作隊員所有可刪除的活動（排班 + 有登記的公差/會議，含過去兩個月）
+            const adminDeleteableActivities = computed(() => {
+                if (!adminOpTarget.value) return [];
+                const name = adminOpTarget.value.姓名;
+                const list = [];
+
+                // 排班（所有，不限時間）
+                Object.keys(userShifts.value).forEach(date => {
+                    const s = (userShifts.value[date] || []).find(s => s.name === name);
+                    if (s) {
+                        list.push({
+                            key: `shift_${date}`,
+                            type: 'shift', date,
+                            dateLabel: `${date.slice(5,7)}/${date.slice(8,10)}`,
+                            label: `排班 ${s.start}-${s.end}`,
+                            firestoreQuery: { collection: 'shifts', field: 'date', value: date, nameField: 'name' },
+                        });
+                    }
+                });
+
+                // 公差登記
+                const twoMonthAgo = new Date(); twoMonthAgo.setMonth(twoMonthAgo.getMonth() - 2);
+                const twoMAStr = toLocalDateStr(twoMonthAgo);
+                registrations.value.forEach(r => {
+                    if (r.userName !== name) return;
+                    const taskList = r.type === 'duty' ? officialTasks.value : meetingTasks.value;
+                    const task = taskList.find(t => t.id === r.taskId);
+                    if (!task || task.date < twoMAStr) return;
+                    list.push({
+                        key: `reg_${r.id}`,
+                        type: r.type, date: task.date,
+                        dateLabel: `${task.date.slice(5,7)}/${task.date.slice(8,10)}`,
+                        label: task.title,
+                        regId: r.id,
+                    });
+                });
+
+                return list.sort((a, b) => b.date.localeCompare(a.date));
+            });
+
+            // ── 點擊垃圾桶：彈出確認 ──
+            const confirmAdminDeleteAct = (act) => {
+                actToDelete.value = act;
+                isAdminDeleteConfirmOpen.value = true;
+            };
+
+            // ── 確認刪除 ──
+            const executeAdminDeleteAct = async () => {
+                const act  = actToDelete.value;
+                const name = adminOpTarget.value?.姓名;
+                if (!act || !name) return;
+                adminActionLoading.value = act.key;
+                try {
+                    if (act.type === 'shift') {
+                        // 刪除排班：找到 date + name 的 shift 文件
+                        const q = query(collection(db, "shifts"), where("date", "==", act.date), where("name", "==", name));
+                        const snap = await getDocs(q);
+                        for (const d of snap.docs) await deleteDoc(doc(db, "shifts", d.id));
+                    } else {
+                        // 刪除公差/會議登記
+                        await deleteDoc(doc(db, "registrations", act.regId));
+                    }
+                    isAdminDeleteConfirmOpen.value = false;
+                } catch(e) { alert("刪除失敗：" + e.message); }
+                finally { adminActionLoading.value = ''; }
+            };
+
             // ── 新增：取消訂閱 ──
             const confirmCancelSub = (m) => { cancelSubTarget.value = m; isCancelSubModalOpen.value = true; };
             const executeCancelSub = async () => {
@@ -1664,6 +1988,13 @@
                 adminActionLoading, singlePushForm,
                 confirmCancelSub, executeCancelSub,
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush,
+                // ── 代操作 export ──
+                isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
+                adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
+                selectAdminHour, openAdminAddShift, submitAdminShift,
+                openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,
+                submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg,
+                openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,
             };
         }
     }).mount('#app');
