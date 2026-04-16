@@ -1589,15 +1589,35 @@
             const isUserSignedUp = (taskId) => registrations.value.some(r => r.taskId === taskId && r.userName === userData.value.姓名);
 
             const toggleRegistration = async (task, type) => {
+                const targetName = userData.value.姓名;
                 if (isUserSignedUp(task.id)) {
-                    const snap = await getDocs(query(collection(db, "registrations"), where("taskId", "==", task.id), where("userName", "==", userData.value.姓名)));
+                    // 取消登記
+                    const snap = await getDocs(query(collection(db, "registrations"), where("taskId", "==", task.id), where("userName", "==", targetName)));
                     snap.forEach(async (d) => await deleteDoc(doc(db, "registrations", d.id)));
+                    
+                    // 若為公差，次數自動 -1
+                    if (type === 'duty') {
+                        const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", targetName)));
+                        mSnap.forEach(async (mDoc) => {
+                            const currentCount = Number(mDoc.data().duty_count) || 0;
+                            await updateDoc(doc(db, "members", mDoc.id), { duty_count: Math.max(0, currentCount - 1) });
+                        });
+                    }
                 } else {
+                    // 登記
                     if (type === 'duty' && getTaskRegCount(task.id) >= task.quota) return alert("人數已滿");
-                    await addDoc(collection(db, "registrations"), { taskId: task.id, userName: userData.value.姓名, type, status:'出席', timestamp: new Date() });
+                    await addDoc(collection(db, "registrations"), { taskId: task.id, userName: targetName, type, status:'出席', timestamp: new Date() });
+                    
+                    // 若為公差，次數自動 +1
+                    if (type === 'duty') {
+                        const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", targetName)));
+                        mSnap.forEach(async (mDoc) => {
+                            const currentCount = Number(mDoc.data().duty_count) || 0;
+                            await updateDoc(doc(db, "members", mDoc.id), { duty_count: currentCount + 1 });
+                        });
+                    }
                 }
             };
-
             const openMeetingRegModal = (task) => {
                 currentTask.value = task;
                 const existing = registrations.value.find(r => r.taskId === task.id && r.userName === userData.value.姓名);
@@ -1861,7 +1881,7 @@
             };
 
             // ── 公差：直接登記 ──
-            const submitAdminReg = async (task) => {
+        const submitAdminReg = async (task) => {
                 const m = adminOpTarget.value;
                 if (!m) return;
                 if (isTargetSignedUp(task.id)) { alert(`${m.姓名} 已登記此公差`); return; }
@@ -1870,6 +1890,16 @@
                     await addDoc(collection(db, "registrations"), {
                         taskId: task.id, userName: m.姓名, type: 'duty', status: '出席', timestamp: new Date()
                     });
+                    
+                    // 管理員代為登記公差，次數自動 +1
+                    if (adminRegType.value === 'duty') {
+                        const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
+                        mSnap.forEach(async (mDoc) => {
+                            const currentCount = Number(mDoc.data().duty_count) || 0;
+                            await updateDoc(doc(db, "members", mDoc.id), { duty_count: currentCount + 1 });
+                        });
+                    }
+                    
                     isAdminAddRegOpen.value = false;
                 } catch(e) { alert("登記失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
@@ -1956,20 +1986,27 @@
             };
 
             // ── 確認刪除 ──
-            const executeAdminDeleteAct = async () => {
+           const executeAdminDeleteAct = async () => {
                 const act  = actToDelete.value;
                 const name = adminOpTarget.value?.姓名;
                 if (!act || !name) return;
                 adminActionLoading.value = act.key;
                 try {
                     if (act.type === 'shift') {
-                        // 刪除排班：找到 date + name 的 shift 文件
                         const q = query(collection(db, "shifts"), where("date", "==", act.date), where("name", "==", name));
                         const snap = await getDocs(q);
                         for (const d of snap.docs) await deleteDoc(doc(db, "shifts", d.id));
                     } else {
-                        // 刪除公差/會議登記
                         await deleteDoc(doc(db, "registrations", act.regId));
+                        
+                        // 管理員刪除公差紀錄，次數自動 -1
+                        if (act.type === 'duty') {
+                            const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", name)));
+                            mSnap.forEach(async (mDoc) => {
+                                const currentCount = Number(mDoc.data().duty_count) || 0;
+                                await updateDoc(doc(db, "members", mDoc.id), { duty_count: Math.max(0, currentCount - 1) });
+                            });
+                        }
                     }
                     isAdminDeleteConfirmOpen.value = false;
                 } catch(e) { alert("刪除失敗：" + e.message); }
