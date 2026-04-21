@@ -245,7 +245,7 @@
                 <div class="horizontal-scroll px-6 mb-2">
                     <div class="bank-card bg-card-blue">
                         <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div><div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-num tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div></div>
-                        <div class="grid grid-cols-3 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-[15px] font-num">{{ userData['出勤次數'] || 0 }} <span class="text-[9px] font-normal">次</span></p></div><div class="border-r border-white/10 text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-[15px] font-num">{{ cleanValue(userData['救出人數']) }} <span class="text-[9px] font-normal">人</span></p></div><div class="text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">服務年資</p><p class="text-[14px] font-bold whitespace-nowrap">{{ userData['seniority'] || '--' }}</p></div></div>
+                        <div class="grid grid-cols-3 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-[15px] font-num">{{ userData['出勤次數'] || 0 }} <span class="text-[9px] font-normal">次</span></p></div><div class="border-r border-white/10 text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-[15px] font-num">{{ cleanValue(userData['救出人數']) }} <span class="text-[9px] font-normal">人</span></p></div><div class="text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">服務年資</p><p class="text-[14px] font-bold whitespace-nowrap">{{ calculateSeniority(userData['join_date']) }}</p></div></div>
                     </div>
                     <div class="bank-card bg-card-emerald">
                         <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div><div class="mb-6 mt-2"><h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 <span class="font-num">{{ calculateDays(userData['honor_expiry']) }}</span> 天</p></div></div>
@@ -1058,8 +1058,11 @@
         </div>
 
         <div class="admin-edit-field">
-            <span class="admin-edit-label">服務年資</span>
-            <input v-model="adminEditForm.seniority" type="text" placeholder="例如：3年6個月" class="admin-edit-input">
+            <div class="flex justify-between items-end mb-1">
+                <span class="admin-edit-label mb-0">加入日期</span>
+                <span class="text-[10px] font-bold text-blue-500">{{ calculateSeniority(adminEditForm.join_date) }}</span>
+            </div>
+            <input v-model="adminEditForm.join_date" type="date" class="admin-edit-input">
         </div>
 
         <!-- 勤務數據 -->
@@ -1332,7 +1335,38 @@
             const aiRawInput = ref('');
             const isAiProcessing = ref(false);
             const hourOptions = ["08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"];
+// --- 加入這段計算年資的函數 ---
+            const calculateSeniority = (joinDateStr) => {
+                if (!joinDateStr) return '--';
+                const joinDate = new Date(joinDateStr);
+                if (isNaN(joinDate.getTime())) return '--';
 
+                const today = new Date();
+                let years = today.getFullYear() - joinDate.getFullYear();
+                let months = today.getMonth() - joinDate.getMonth();
+
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+
+                // 如果今天的「日」比加入時的「日」還小，代表這個月還沒滿，扣掉一個月
+                if (today.getDate() < joinDate.getDate()) {
+                    months--;
+                    if (months < 0) {
+                        years--;
+                        months += 12;
+                    }
+                }
+
+                if (years === 0 && months === 0) return '未滿1個月';
+                
+                let result = '';
+                if (years > 0) result += `${years}年`;
+                if (months > 0) result += `${months}個月`;
+                return result;
+            };
+            // ---------------------------------
             // ── 新增：主控台篩選狀態 ──
             const adminFilter = ref('all');
             const adminFilters = [
@@ -2139,8 +2173,10 @@ const openAdminEditMember = (m) => {
     adminEditForm.value = {
         duty_group:   m.duty_group   || '隊員',
         duty_title:   m.duty_title   || '隊員',
-        seniority:    m.seniority    || '',
-        協勤時數:      m['協勤時數']  || 0,
+        // --- 改成載入 join_date ---
+        join_date:    m.join_date    || '', 
+        // ------------------------
+        '協勤時數':   m['協勤時數']  || 0,
         duty_count:   m.duty_count   || 0,
         emt_level:    m.emt_level    || 'EMT-1',
         emt_expiry:   m.emt_expiry   || '',
@@ -2161,8 +2197,10 @@ const submitAdminEditMember = async () => {
         const updateData = {
             duty_group:   f.duty_group,
             duty_title:   f.duty_title,
-            seniority:    f.seniority,
-            '協勤時數':   Number(f.協勤時數) || 0,
+            // --- 儲存 join_date 到資料庫 ---
+            join_date:    f.join_date,
+            // -----------------------------
+            '協勤時數':   Number(f['協勤時數']) || 0,
             duty_count:   Number(f.duty_count) || 0,
             emt_level:    f.emt_level,
             emt_expiry:   f.emt_expiry,
@@ -2277,7 +2315,7 @@ openAdminEditMember, submitAdminEditMember,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
                 adminActionLoading, singlePushForm,
                 confirmCancelSub, executeCancelSub,
-                openSinglePushModal, fillSinglePushFromActivity, executeSinglePush,
+                openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
                 // ── 代操作 export ──
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
