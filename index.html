@@ -317,11 +317,15 @@
             <!-- 若為請假，顯示請假標籤 -->
             <span v-if="isMonthOnLeave(m, i)" class="text-[10px] font-black text-amber-500 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">請假</span>
             
-            <!-- 若無請假，顯示時數數字 -->
+           
+          <!-- 若無請假，顯示時數數字 -->
             <span v-else class="text-base font-num" :class="isUnderHours(m['m'+i], i) ? 'text-red-500 font-black' : ''">{{ m['m'+i] || 0 }}</span>
         </div>
     </div>
 </div>
+                                    </div>
+                                </div>
+                            </div>
                         </template>
                         <template v-if="i === 5">
                             <div class="pt-2 pb-24">
@@ -2243,9 +2247,7 @@ const openAdminEditMember = (m) => {
         newPassword:  '',
     };
     
-    showEditPassword.value = false;
-    isAdminEditMemberOpen.value = true;
-};
+    
     
     showEditPassword.value = false;
     isAdminEditMemberOpen.value = true;
