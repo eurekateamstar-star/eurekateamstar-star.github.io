@@ -1065,12 +1065,27 @@
             <input v-model="adminEditForm.join_date" type="date" class="admin-edit-input">
         </div>
 
-        <!-- 勤務數據 -->
+       <!-- 勤務數據 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-chart-bar mr-1 text-indigo-400"></i>勤務數據</div>
         <div class="grid grid-cols-2 gap-3">
+            <!-- 將協勤時數改為請假月份選項 -->
             <div class="admin-edit-field">
-                <span class="admin-edit-label">協勤時數 (年度)</span>
-                <input v-model="adminEditForm.協勤時數" type="number" placeholder="0" class="admin-edit-input text-center">
+                <span class="admin-edit-label">請假月份設定</span>
+                <select v-model="adminEditForm.leave_month" class="admin-edit-select">
+                    <option value="">無請假</option>
+                    <option value="1月">1月</option>
+                    <option value="2月">2月</option>
+                    <option value="3月">3月</option>
+                    <option value="4月">4月</option>
+                    <option value="5月">5月</option>
+                    <option value="6月">6月</option>
+                    <option value="7月">7月</option>
+                    <option value="8月">8月</option>
+                    <option value="9月">9月</option>
+                    <option value="10月">10月</option>
+                    <option value="11月">11月</option>
+                    <option value="12月">12月</option>
+                </select>
             </div>
             <div class="admin-edit-field">
                 <span class="admin-edit-label">公差次數</span>
@@ -1087,10 +1102,11 @@
         <div class="grid grid-cols-2 gap-3">
             <div class="admin-edit-field">
                 <span class="admin-edit-label">EMT 等級</span>
+                <!-- 更新 EMT 選項 -->
                 <select v-model="adminEditForm.emt_level" class="admin-edit-select">
-                    <option>EMT-1</option>
-                    <option>EMT-2</option>
-                    <option>EMT-P</option>
+                    <option>初級技術員</option>
+                    <option>中級技術員</option>
+                    <option>高級技術員</option>
                 </select>
             </div>
             <div class="admin-edit-field">
@@ -2182,19 +2198,20 @@ const openAdminEditMember = (m) => {
         return `${y}-${month}-${day}`;
     };
 
-    adminEditForm.value = {
+  adminEditForm.value = {
         duty_group:   m.duty_group   || '幹部',
         duty_title:   m.duty_title   || '隊員',
-        // --- 日期經過轉換 ---
         join_date:    toInputDate(m.join_date),
         emt_expiry:   toInputDate(m.emt_expiry),
         honor_expiry: toInputDate(m.honor_expiry),
-        // ------------------
-        '協勤時數':   Number(m['協勤時數']) || 0,
+        
+        // 移除協勤時數，加入請假月份
+        leave_month:  m.leave_month || '',
         duty_count:   Number(m.duty_count) || 0,
-        // --- 加上 .trim() 濾掉多餘的空白 ---
-        emt_level:    (m.emt_level || 'EMT-1').trim(),
-        // ------------------
+        
+        // 更新預設值為 初級技術員
+        emt_level:    (m.emt_level || '初級技術員').trim(),
+        
         newPassword:  '',
     };
     
@@ -2209,14 +2226,15 @@ const submitAdminEditMember = async () => {
     adminActionLoading.value = 'edit';
     try {
         const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
-        const updateData = {
+       const updateData = {
             duty_group:   f.duty_group,
             duty_title:   f.duty_title,
-            // --- 儲存 join_date 到資料庫 ---
             join_date:    f.join_date,
-            // -----------------------------
-            '協勤時數':   Number(f['協勤時數']) || 0,
+            
+            // 移除協勤時數更新，儲存請假月份
+            leave_month:  f.leave_month,
             duty_count:   Number(f.duty_count) || 0,
+            
             emt_level:    f.emt_level,
             emt_expiry:   f.emt_expiry,
             honor_expiry: f.honor_expiry,
