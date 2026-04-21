@@ -303,32 +303,27 @@
                                 <div class="list-card p-3 pb-10 shadow-sm"><div class="grid grid-cols-2 gap-x-6 gap-y-1"><div v-for="y in Array.from({length:21}, (_,i)=>114-i)" :key="y" class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0" :class="userData['hist_'+y] ? 'opacity-100' : 'opacity-30'"><span class="text-xs font-black text-slate-400">{{y}} 年度</span><span class="text-sm font-num" :class="userData['hist_'+y] ? 'text-indigo-600' : 'text-slate-300'">{{ userData['hist_'+y] || '0' }} <span class="text-[9px] font-bold uppercase">hr</span></span></div></div></div>
                             </div>
                         </template>
- <template v-if="i === 4">
-    <div class="pt-2 pb-10">
-        <div class="mb-4 px-1"><h3 class="text-xl font-black text-slate-800">隊員協勤時數明細</h3></div>
-        <div class="space-y-4">
-            <div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-personal-blue ring-4 ring-blue-100 scale-[1.02] i-10' : 'bg-white border-slate-100'">
-                <div class="flex items-center justify-between mb-4"><div class="flex flex-col"><span class="text-lg font-black leading-none">{{ m.姓名 }}</span><span class="text-[10px] font-bold opacity-60 mt-1 uppercase tracking-wider">{{ m.duty_title || '隊員' }}</span></div><div class="text-right"><span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span><span class="text-2xl font-num leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span></div></div>
-                <div class="horizontal-scroll pb-1">
-                    <div class="flex gap-6">
-                        <div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]">
-                            <span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span>
-                            
-                            <!-- 加上強力防呆，避免變數型別錯誤導致整個畫面白屏 -->
-                            <template v-if="m.leave_months && typeof m.leave_months.includes === 'function' && m.leave_months.includes(i + '月')">
-                                <span class="text-[11px] font-black bg-rose-100/50 px-1.5 py-0.5 rounded" :class="m.姓名 === userData.姓名 ? 'text-white bg-white/20' : 'text-rose-500'">請假</span>
-                            </template>
-                            <template v-else>
-                                <span class="text-base font-num" :class="isUnderHours(m['m'+i], i) ? (m.姓名 === userData.姓名 ? 'text-rose-200 font-black' : 'text-red-500 font-black') : ''">{{ m['m'+i] || 0 }}</span>
-                            </template>
-                            
-                        </div>
+                        <template v-if="i === 4">
+                            <div class="pt-2 pb-10">
+                                <div class="mb-4 px-1"><h3 class="text-xl font-black text-slate-800">隊員協勤時數明細</h3></div>
+                                <div class="space-y-4">
+                                    <div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-personal-blue ring-4 ring-blue-100 scale-[1.02] i-10' : 'bg-white border-slate-100'">
+                                        <div class="flex items-center justify-between mb-4"><div class="flex flex-col"><span class="text-lg font-black leading-none">{{ m.姓名 }}</span><span class="text-[10px] font-bold opacity-60 mt-1 uppercase tracking-wider">{{ m.duty_title || '隊員' }}</span></div><div class="text-right"><span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span><span class="text-2xl font-num leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span></div></div>
+                                        <div class="horizontal-scroll pb-1"><div class="flex gap-6"><div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]"><span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span><span class="text-base font-num" :class="isUnderHours(m['m'+i], i) ? 'text-red-500 font-black' : ''">{{ m['m'+i] || 0 }}</span></div></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <template v-if="i === 5">
+                            <div class="pt-2 pb-24">
+                                <div class="list-card fund-gradient p-6 shadow-lg mb-4"><div class="flex justify-between items-start mb-6"><div><p class="text-[10px] opacity-60 font-bold tracking-widest uppercase">目前結餘</p><h3 class="text-4xl font-num mt-1">$ {{ formatNumber(userData['squad_fund']) }}</h3></div><div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg"><i class="fa-solid fa-vault text-xl text-emerald-400"></i></div></div><div class="flex gap-4 border-t border-white/10 pt-4 mt-2"><div class="flex-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">年度總收入</p><p class="text-lg font-num text-emerald-400">$ {{ formatNumber(userData['squad_income']) }}</p></div><div class="flex-1 border-l border-white/10 pl-4"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">年度總支出</p><p class="text-lg font-num text-rose-400">$ {{ formatNumber(userData['squad_expense']) }}</p></div></div></div>
+                                <div class="space-y-2"><div v-for="(log, idx) in sortedCashHistory" :key="idx" class="list-card p-4 bg-white border-l-4 shadow-sm" :class="log.income > 0 ? 'border-l-emerald-400' : 'border-l-rose-400'"><div class="flex justify-between items-start"><div class="flex-1"><div class="flex items-center gap-2 mb-1"><span class="text-[10px] font-num text-slate-400 font-bold">{{ log.date }}</span><span v-if="log.income > 0" class="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-black">收入</span><span v-else class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">支出</span></div><h5 class="text-sm font-black text-slate-700 leading-tight">{{ log.item }}</h5></div><div class="text-right"><p class="text-sm font-num" :class="log.income > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ log.income > 0 ? '+' : '-' }} {{ formatNumber(log.income > 0 ? log.income : log.expense) }}</p><p class="text-[10px] font-num text-slate-300 mt-1">結餘 {{ formatNumber(log.balance) }}</p></div></div></div></div>
+                            </div>
+                        </template>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</template>
 
         <!-- 排班分頁 -->
         <div v-if="currPage === 'schedule'" class="dashboard-wrapper fade-in">
@@ -1070,31 +1065,36 @@
             <input v-model="adminEditForm.join_date" type="date" class="admin-edit-input">
         </div>
 
-   <!-- 勤務數據 -->
+       <!-- 勤務數據 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-chart-bar mr-1 text-indigo-400"></i>勤務數據</div>
-        <div class="grid grid-cols-2 gap-3 mb-3">
-            <div class="admin-edit-field col-span-2">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="admin-edit-label mb-0">公差次數</span>
-                </div>
+        <div class="grid grid-cols-2 gap-3">
+            <!-- 將協勤時數改為請假月份選項 -->
+            <div class="admin-edit-field">
+                <span class="admin-edit-label">請假月份設定</span>
+                <select v-model="adminEditForm.leave_month" class="admin-edit-select">
+                    <option value="">無請假</option>
+                    <option value="1月">1月</option>
+                    <option value="2月">2月</option>
+                    <option value="3月">3月</option>
+                    <option value="4月">4月</option>
+                    <option value="5月">5月</option>
+                    <option value="6月">6月</option>
+                    <option value="7月">7月</option>
+                    <option value="8月">8月</option>
+                    <option value="9月">9月</option>
+                    <option value="10月">10月</option>
+                    <option value="11月">11月</option>
+                    <option value="12月">12月</option>
+                </select>
+            </div>
+            <div class="admin-edit-field">
+                <span class="admin-edit-label">公差次數</span>
                 <div class="flex items-center gap-2 mt-1">
                     <button @click="adminEditForm.duty_count = Math.max(0, Number(adminEditForm.duty_count) - 1)" class="w-9 h-9 rounded-xl bg-slate-100 font-black text-slate-600 flex items-center justify-center shrink-0">−</button>
                     <input v-model="adminEditForm.duty_count" type="number" class="admin-edit-input text-center" style="padding: 8px 4px !important;">
                     <button @click="adminEditForm.duty_count = Number(adminEditForm.duty_count) + 1" class="w-9 h-9 rounded-xl bg-slate-100 font-black text-slate-600 flex items-center justify-center shrink-0">＋</button>
                 </div>
             </div>
-        </div>
-
-        <!-- 請假月份設定 (12 宮格) -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-calendar-xmark mr-1 text-rose-400"></i>請假月份設定 (可複選)</div>
-        <div class="grid grid-cols-4 gap-2 mb-3">
-            <button v-for="month in 12" :key="month"
-                @click="toggleLeaveMonth(month + '月')"
-                class="py-2 rounded-xl text-[11px] font-black border transition-all flex items-center justify-center gap-1"
-                :class="adminEditForm.leave_months && adminEditForm.leave_months.includes(month + '月') ? 'bg-rose-500 text-white border-rose-600 shadow-sm' : 'bg-slate-50 text-slate-400 border-slate-200'">
-                {{ month }}月
-                <i v-if="adminEditForm.leave_months && adminEditForm.leave_months.includes(month + '月')" class="fa-solid fa-check text-[9px]"></i>
-            </button>
         </div>
 
         <!-- 證照效期 -->
@@ -2176,7 +2176,9 @@
                 } catch(e) { alert("刪除失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
             };
-// ===== 編輯隊員資料功能 (已完美修復白屏與請假陣列問題) =====
+// ══════════════════════════════════════════════
+//  管理員編輯隊員資料
+// ══════════════════════════════════════════════
 const isAdminEditMemberOpen = ref(false);
 const adminEditTarget       = ref(null);
 const adminEditForm         = ref(null);
@@ -2185,6 +2187,7 @@ const showEditPassword      = ref(false);
 const openAdminEditMember = (m) => {
     adminEditTarget.value = m;
 
+    // 建立一個小工具：把 2016/1/1 這種格式轉換成 HTML 規定的 2016-01-01
     const toInputDate = (dStr) => {
         if (!dStr || dStr === '無' || dStr.includes('-/-')) return '';
         const d = new Date(dStr);
@@ -2195,26 +2198,18 @@ const openAdminEditMember = (m) => {
         return `${y}-${month}-${day}`;
     };
 
-    // 如果資料庫中原本是用字串存的，自動轉成陣列防呆
-    let safeLeaveMonths = [];
-    if (Array.isArray(m.leave_months)) {
-        safeLeaveMonths = [...m.leave_months];
-    } else if (typeof m.leave_months === 'string') {
-        safeLeaveMonths = [m.leave_months]; // 把原本存錯的字串包成陣列
-    } else if (typeof m.leave_month === 'string') {
-        safeLeaveMonths = [m.leave_month]; // 把舊版欄位包成陣列
-    }
-
-    adminEditForm.value = {
+  adminEditForm.value = {
         duty_group:   m.duty_group   || '幹部',
         duty_title:   m.duty_title   || '隊員',
         join_date:    toInputDate(m.join_date),
         emt_expiry:   toInputDate(m.emt_expiry),
         honor_expiry: toInputDate(m.honor_expiry),
         
-        // 使用修復後的請假陣列
-        leave_months: safeLeaveMonths,
+        // 移除協勤時數，加入請假月份
+        leave_month:  m.leave_month || '',
         duty_count:   Number(m.duty_count) || 0,
+        
+        // 更新預設值為 初級技術員
         emt_level:    (m.emt_level || '初級技術員').trim(),
         
         newPassword:  '',
@@ -2224,20 +2219,6 @@ const openAdminEditMember = (m) => {
     isAdminEditMemberOpen.value = true;
 };
 
-// 點擊 12 宮格切換請假月份
-const toggleLeaveMonth = (monthStr) => {
-    if (!adminEditForm.value) return;
-    if (!Array.isArray(adminEditForm.value.leave_months)) {
-        adminEditForm.value.leave_months = [];
-    }
-    const idx = adminEditForm.value.leave_months.indexOf(monthStr);
-    if (idx > -1) {
-        adminEditForm.value.leave_months.splice(idx, 1);
-    } else {
-        adminEditForm.value.leave_months.push(monthStr);
-    }
-};
-
 const submitAdminEditMember = async () => {
     const m = adminEditTarget.value;
     const f = adminEditForm.value;
@@ -2245,19 +2226,20 @@ const submitAdminEditMember = async () => {
     adminActionLoading.value = 'edit';
     try {
         const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
-        const updateData = {
+       const updateData = {
             duty_group:   f.duty_group,
             duty_title:   f.duty_title,
             join_date:    f.join_date,
             
-            // 正確寫入陣列
-            leave_months: f.leave_months,
+            // 移除協勤時數更新，儲存請假月份
+            leave_month:  f.leave_month,
             duty_count:   Number(f.duty_count) || 0,
             
             emt_level:    f.emt_level,
             emt_expiry:   f.emt_expiry,
             honor_expiry: f.honor_expiry,
         };
+        // 只有填了新密碼才更新
         if (f.newPassword && f.newPassword.trim() !== '') {
             updateData.password = f.newPassword.trim();
         }
@@ -2265,7 +2247,7 @@ const submitAdminEditMember = async () => {
             await updateDoc(doc(db, "members", d.id), updateData);
         }
         isAdminEditMemberOpen.value = false;
-        
+        // 簡單成功提示
         const toast = document.createElement("div");
         toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:800;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.2);";
         toast.textContent = `✅ ${m.姓名} 的資料已更新`;
@@ -2277,7 +2259,6 @@ const submitAdminEditMember = async () => {
         adminActionLoading.value = '';
     }
 };
-// ===== 編輯隊員功能結束 =====
             // ── 新增：取消訂閱 ──
             const confirmCancelSub = (m) => { cancelSubTarget.value = m; isCancelSubModalOpen.value = true; };
             const executeCancelSub = async () => {
@@ -2367,7 +2348,7 @@ openAdminEditMember, submitAdminEditMember,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
                 adminActionLoading, singlePushForm,
                 confirmCancelSub, executeCancelSub,
-                openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority, toggleLeaveMonth,
+                openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
                 // ── 代操作 export ──
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
