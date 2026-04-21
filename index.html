@@ -2170,19 +2170,34 @@ const showEditPassword      = ref(false);
 
 const openAdminEditMember = (m) => {
     adminEditTarget.value = m;
+
+    // 建立一個小工具：把 2016/1/1 這種格式轉換成 HTML 規定的 2016-01-01
+    const toInputDate = (dStr) => {
+        if (!dStr || dStr === '無' || dStr.includes('-/-')) return '';
+        const d = new Date(dStr);
+        if (isNaN(d.getTime())) return '';
+        const y = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${month}-${day}`;
+    };
+
     adminEditForm.value = {
-        duty_group:   m.duty_group   || '隊員',
+        duty_group:   m.duty_group   || '幹部',
         duty_title:   m.duty_title   || '隊員',
-        // --- 改成載入 join_date ---
-        join_date:    m.join_date    || '', 
-        // ------------------------
-        '協勤時數':   m['協勤時數']  || 0,
-        duty_count:   m.duty_count   || 0,
-        emt_level:    m.emt_level    || 'EMT-1',
-        emt_expiry:   m.emt_expiry   || '',
-        honor_expiry: m.honor_expiry || '',
+        // --- 日期經過轉換 ---
+        join_date:    toInputDate(m.join_date),
+        emt_expiry:   toInputDate(m.emt_expiry),
+        honor_expiry: toInputDate(m.honor_expiry),
+        // ------------------
+        '協勤時數':   Number(m['協勤時數']) || 0,
+        duty_count:   Number(m.duty_count) || 0,
+        // --- 加上 .trim() 濾掉多餘的空白 ---
+        emt_level:    (m.emt_level || 'EMT-1').trim(),
+        // ------------------
         newPassword:  '',
     };
+    
     showEditPassword.value = false;
     isAdminEditMemberOpen.value = true;
 };
