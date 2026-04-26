@@ -78,118 +78,49 @@
         .expired-task { opacity: 0.6; filter: grayscale(0.5); }
         .task-card-header { border-bottom: 1px dashed #e2e8f0; }
         .task-card-date-box { background: #f8fafc; border-radius: 14px; padding: 10px 0; min-width: 72px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-/* 優化彈窗高度，確保鍵盤彈出時不會遮擋 */
-.bottom-sheet {
-    max-height: 94dvh !important;
-    display: flex;
-    flex-direction: column;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    padding-top: 16px !important;
-}
+        .bottom-sheet { max-height: 94dvh !important; display: flex; flex-direction: column; padding-left: 20px !important; padding-right: 20px !important; padding-top: 16px !important; }
+        .modal-scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 150px; }
+        .med-input { font-size: 16px !important; padding: 12px 16px !important; appearance: none; -webkit-appearance: none; }
 
-/* 內容滾動區：確保在小螢幕上可以上下滑動 */
-.modal-scroll-area {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 150px;
-}
-
-/* 修正輸入框在手機上的預設樣式 */
-.med-input {
-    font-size: 16px !important;
-    padding: 12px 16px !important;
-    appearance: none;
-    -webkit-appearance: none;
-}
-
-/* ============================================
-   以下是新增的主控台樣式，完全不影響現有樣式
-   ============================================ */
-.admin-panel-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-}
-.admin-stat-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 14px;
-}
-.admin-stat-box {
-    background: #f8fafc;
-    border-radius: 16px;
-    padding: 14px 12px;
-    border: 1px solid #e2e8f0;
-}
-.admin-stat-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 4px; }
-.admin-stat-value { font-size: 26px; font-weight: 800; font-family: 'Inter'; letter-spacing: -0.03em; }
-.push-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 3px 10px;
-    border-radius: 20px;
-}
-.push-ok   { background: #f0fdf4; color: #15803d; }
-.push-fail { background: #fff1f2; color: #be123c; }
-.push-none { background: #f1f5f9; color: #94a3b8; }
-.push-nosub{ background: #fefce8; color: #a16207; }
-.status-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-    display: inline-block;
-}
-.dot-green  { background: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
-.dot-red    { background: #ef4444; box-shadow: 0 0 0 2px #fee2e2; }
-.dot-amber  { background: #f59e0b; box-shadow: 0 0 0 2px #fef3c7; }
-.admin-member-row {
-    display: flex;
-    align-items: center;
-    padding: 11px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    gap: 10px;
-    transition: background 0.15s;
-}
-.admin-member-row:last-child { border-bottom: none; }
-.admin-member-row:active { background: #f8fafc; }
-.admin-avatar {
-    width: 34px; height: 34px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 900; flex-shrink: 0;
-}
-.admin-filter-tabs {
-    display: flex; gap: 6px; overflow-x: auto;
-    scrollbar-width: none; padding-bottom: 2px; margin-bottom: 12px;
-}
-.admin-filter-tabs::-webkit-scrollbar { display: none; }
-.admin-filter-btn {
-    flex: 0 0 auto;
-    font-size: 10px; font-weight: 900;
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid #e2e8f0;
-    background: #fff; color: #64748b;
-    transition: all 0.2s;
-}
-.admin-filter-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
-.activity-chip {
-    font-size: 9px; font-weight: 900;
-    padding: 2px 7px; border-radius: 6px;
-    display: inline-block; margin-right: 3px;
-}
-.chip-shift   { background: #eff6ff; color: #1d4ed8; }
-.chip-duty    { background: #fff1f2; color: #be123c; }
-.chip-meeting { background: #faf5ff; color: #7e22ce; }
+        .admin-panel-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .admin-stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+        .admin-stat-box { background: #f8fafc; border-radius: 16px; padding: 14px 12px; border: 1px solid #e2e8f0; }
+        .admin-stat-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 4px; }
+        .admin-stat-value { font-size: 26px; font-weight: 800; font-family: 'Inter'; letter-spacing: -0.03em; }
+        .push-indicator { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 20px; }
+        .push-ok   { background: #f0fdf4; color: #15803d; }
+        .push-fail { background: #fff1f2; color: #be123c; }
+        .push-none { background: #f1f5f9; color: #94a3b8; }
+        .push-nosub{ background: #fefce8; color: #a16207; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: inline-block; }
+        .dot-green  { background: #22c55e; box-shadow: 0 0 0 2px #dcfce7; }
+        .dot-red    { background: #ef4444; box-shadow: 0 0 0 2px #fee2e2; }
+        .dot-amber  { background: #f59e0b; box-shadow: 0 0 0 2px #fef3c7; }
+        .admin-member-row { display: flex; align-items: center; padding: 11px 14px; border-bottom: 1px solid #f1f5f9; gap: 10px; transition: background 0.15s; }
+        .admin-member-row:last-child { border-bottom: none; }
+        .admin-member-row:active { background: #f8fafc; }
+        .admin-avatar { width: 34px; height: 34px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; flex-shrink: 0; }
+        .admin-filter-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-bottom: 12px; }
+        .admin-filter-tabs::-webkit-scrollbar { display: none; }
+        .admin-filter-btn { flex: 0 0 auto; font-size: 10px; font-weight: 900; padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; transition: all 0.2s; }
+        .admin-filter-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
+        .activity-chip { font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 6px; display: inline-block; margin-right: 3px; }
+        .chip-shift   { background: #eff6ff; color: #1d4ed8; }
+        .chip-duty    { background: #fff1f2; color: #be123c; }
+        .chip-meeting { background: #faf5ff; color: #7e22ce; }
         .admin-edit-field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; }
-.admin-edit-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px; display: block; }
-.admin-edit-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; box-sizing: border-box; }
-.admin-edit-select { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; }
-.admin-edit-section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; padding: 4px 0 8px 2px; border-bottom: 1px solid #f1f5f9; margin-bottom: 10px; }
+        .admin-edit-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px; display: block; }
+        .admin-edit-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        .admin-edit-select { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; }
+        .admin-edit-section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; padding: 4px 0 8px 2px; border-bottom: 1px solid #f1f5f9; margin-bottom: 10px; }
+
+        /* 紅色防呆錯誤提示輸入框樣式 */
+        .input-error { border-color: #fca5a5 !important; background-color: #fef2f2 !important; color: #e11d48 !important; }
+        .input-error::placeholder { color: #fca5a5 !important; }
+        /* 案件與全隊紀錄搜尋篩選樣式 */
+        .search-filter-box { background: #fff; border-radius: 20px; padding: 12px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+        .filter-select { background: #f1f5f9; border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 800; border: none; outline: none; color: #475569; appearance: none; -webkit-appearance: none; }
+        .case-card-sky { background: #f0f9ff !important; border: 1px solid #7dd3fc !important; }
     </style>
 </head>
 <body>
@@ -339,7 +270,7 @@
         </div>
 
         <!-- 排班分頁 -->
-        <div v-if="currPage === 'schedule'" class="dashboard-wrapper fade-in">
+        <div v-else-if="currPage === 'schedule'" class="dashboard-wrapper fade-in">
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="px-6 mb-2">
                     <div class="bank-card bg-card-reminder !w-full !min-height-[180px] flex flex-col justify-center relative">
@@ -498,10 +429,7 @@
                         </div>
                     </div>
 
-                    <!-- =====================================================
-                         新增 slide 4：推播主控台（僅管理員可見）
-                         完全不影響上方任何現有 slide
-                         ===================================================== -->
+                    <!-- 推播主控台（僅管理員可見） -->
                     <div class="slide-page" @scroll="onPageScroll($event, 4)" @touchstart="onPageTouchStart($event)" @touchmove="onPageTouchMove($event)">
                         <div class="pt-4 pb-24" v-if="isAdmin">
 
@@ -655,13 +583,447 @@
                             <p class="font-black text-sm">僅限管理員使用</p>
                         </div>
                     </div>
-                    <!-- ===== 推播主控台 slide 結束 ===== -->
 
                 </div>
             </div>
         </div>
 
-<!-- ===== 個人公差歷史紀錄 Modal ===== -->
+        <!-- 協勤登記頁面 (與 dashboard / schedule 同級切換) -->
+        <div v-else-if="currPage === 'assistance'" class="dashboard-wrapper fade-in">
+            <!-- 協勤上方 Tabs -->
+            <div class="tabs-section">
+                <div class="tabs-scroll-container" ref="assistTabsScrollRef">
+                    <div v-for="(tab, index) in visibleAssistTabs" :key="tab.id" @click="scrollToAssistTab(index)" class="tab-item">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all" :class="activeAssistTab === tab.id ? tab.activeClass : 'bg-white text-slate-300 border border-slate-100'">
+                            <i :class="tab.icon" class="text-xl"></i>
+                        </div>
+                        <span class="text-[11px] font-black" :class="activeAssistTab === tab.id ? tab.textColor : 'text-slate-400'">{{ tab.name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 協勤內容 Slider -->
+            <div class="slides-section">
+                <div class="content-slider" ref="assistSlider" @scroll="onAssistSliderScroll">
+                    
+                    <!-- Slide 0: 新增紀錄 (原來的 3 步驟表單) -->
+                    <div class="slide-page" style="padding-top: 16px;">
+                        <!-- 步驟一：協勤打卡 -->
+                        <div v-if="assistanceStep === 1" class="fade-in">
+                            <div class="text-center mb-6">
+                                <h2 class="text-xl font-black text-slate-800 tracking-wider">協勤打卡</h2>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">SHIFT CLOCK-IN</p>
+                            </div>
+                            
+                            <div class="space-y-5">
+                                <!-- 人員資訊 -->
+                                <div class="list-card p-5 border border-slate-100 shadow-sm">
+                                    <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">人員資訊</p>
+                                    <div class="space-y-4">
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-bold text-slate-600">姓名</label>
+                                            <span class="text-base font-black text-slate-800">{{ userData.姓名 }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <label class="text-sm font-bold text-slate-600">協勤日期</label>
+                                            <input type="date" v-model="assistanceForm.date" class="text-right font-num text-slate-800 bg-transparent border-0 outline-none p-0">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 協勤時段 -->
+                              <!-- 協勤時段 -->
+<div class="list-card p-5 border border-slate-100 shadow-sm">
+    <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">點擊下方選擇協勤時段</p>
+    <div @click="openAssistTimeModal" class="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex items-center justify-center gap-4 cursor-pointer active:scale-[0.98] transition-transform">
+        <div class="text-center">
+            <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">開始時間</p>
+            <span class="text-2xl font-num text-blue-600">{{ assistanceForm.startTime ? assistanceForm.startTime.replace(':00', '') : '--' }}</span>
+        </div>
+        <div class="w-8 h-[2px] bg-blue-200"></div>
+        <div class="text-center">
+            <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">結束時間</p>
+            <span class="text-2xl font-num text-blue-600">{{ assistanceForm.endTime ? assistanceForm.endTime.replace(':00', '') : '--' }}</span>
+        </div>
+    </div>
+</div>
+
+                                <div class="pt-4 space-y-3">
+                                    <button @click="goToConfirmStep(true)" :disabled="!assistanceForm.startTime || !assistanceForm.endTime" class="w-full py-4 rounded-xl border-2 border-blue-100 bg-white text-blue-600 font-black text-sm active:scale-[0.98] transition-transform disabled:opacity-50 shadow-sm">
+                                        僅提交協勤時間 (無案件)
+                                    </button>
+                                    <button @click="goToAddCase" :disabled="!assistanceForm.startTime || !assistanceForm.endTime" class="w-full py-4 rounded-xl bg-blue-600 text-white font-black text-sm active:scale-[0.98] transition-transform disabled:opacity-50 shadow-md">
+                                        下一頁 (填寫救護案件)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 步驟二：輸入案件 -->
+                        <div v-if="assistanceStep === 2" class="fade-in">
+                            <div class="flex items-center mb-6 relative">
+                                <button @click="assistanceStep = 1" class="absolute left-0 w-8 h-8 flex items-center justify-center text-slate-400 bg-white rounded-full shadow-sm">
+                                    <i class="fa-solid fa-chevron-left text-sm"></i>
+                                </button>
+                                <div class="flex-1 text-center">
+                                    <h2 class="text-xl font-black text-slate-800 tracking-wider">輸入案件</h2>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">CASE DETAILS</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div v-for="(caseItem, idx) in assistanceForm.cases" :key="idx" class="p-5 shadow-sm relative transition-all" :class="idx % 2 === 0 ? 'list-card border border-blue-100 bg-white' : 'list-card case-card-sky'">
+                                    <!-- 刪除案件按鈕 -->
+                                    <button v-if="assistanceForm.cases.length > 1" @click="removeCase(idx)" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 z-10 p-2">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                    
+                                    <div class="inline-block bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-full mb-4 shadow-sm">
+                                        第 {{ ['一','二','三','四','五','六','七','八','九','十'][idx] || idx + 1 }} 件
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <!-- 時間 (數字快速輸入，自動轉格式) -->
+                                        <!-- 時間 (數字快速輸入，防呆校驗) -->
+<div class="flex justify-between items-center border-b pb-2 transition-colors" :class="caseItem.errStart ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
+    <div class="flex flex-col pl-2">
+        <label class="text-sm font-bold" :class="caseItem.errStart ? 'text-rose-600' : 'text-slate-600'">救護開始</label>
+        <span class="text-[9px] font-bold" :class="caseItem.errStart ? 'text-rose-400' : 'text-slate-400'">(輸入如 1230)</span>
+    </div>
+    <input type="tel" v-model="caseItem.startTime" @blur="handleTimeInput(caseItem, 'startTime', 'new')" placeholder="12:30" maxlength="5" class="text-right font-num bg-transparent border-0 outline-none p-2 text-base w-24" :class="caseItem.errStart ? 'text-rose-600 font-black' : 'text-slate-800'">
+</div>
+<div class="flex justify-between items-center border-b pb-2 mt-2 transition-colors" :class="caseItem.errEnd ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
+    <div class="flex flex-col pl-2">
+        <label class="text-sm font-bold" :class="caseItem.errEnd ? 'text-rose-600' : 'text-slate-600'">救護結束</label>
+        <span class="text-[9px] font-bold" :class="caseItem.errEnd ? 'text-rose-400' : 'text-slate-400'">(輸入如 1345)</span>
+    </div>
+    <input type="tel" v-model="caseItem.endTime" @blur="handleTimeInput(caseItem, 'endTime', 'new')" placeholder="13:45" maxlength="5" class="text-right font-num bg-transparent border-0 outline-none p-2 text-base w-24" :class="caseItem.errEnd ? 'text-rose-600 font-black' : 'text-slate-800'">
+</div>
+<!-- 紅色錯誤提示文字 -->
+<div v-if="caseItem.errMsg" class="mt-2 px-2 py-1 bg-rose-100 text-rose-700 text-[11px] font-black rounded-lg flex items-center gap-1">
+    <i class="fa-solid fa-circle-exclamation"></i> {{ caseItem.errMsg }}
+</div>
+
+                                        <!-- 地點區塊 (加入 autocomplete) -->
+                                        <div class="pt-2 border-b border-slate-50 pb-4">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2" :class="{'text-rose-600': caseItem.errAddress}">發生地點</p>
+                                            <div class="flex justify-between items-center border-b border-slate-50 pb-2 mb-2">
+                                                <label class="text-sm font-bold text-slate-600" :class="{'text-rose-600': caseItem.errDistrict}">區域</label>
+                                                <select v-model="caseItem.district" class="text-right font-bold bg-transparent border-0 outline-none appearance-none pr-4 relative z-10" :class="caseItem.errDistrict ? 'text-rose-600' : 'text-slate-800'" style="direction: rtl;">
+                                                    <option value="板橋區">板橋區</option>
+                                                    <option value="中和區">中和區</option>
+                                                    <option value="新莊區">新莊區</option>
+                                                    <option value="土城區">土城區</option>
+                                                    <option value="樹林區">樹林區</option>
+                                                    <option value="其他">其他</option>
+                                                </select>
+                                            </div>
+                                            <div class="relative">
+                                                <input type="text" v-model="caseItem.address" 
+                                                       @input="handleAddressInput(caseItem)" 
+                                                       @focus="handleAddressInput(caseItem)" 
+                                                       @blur="hideSuggestions(caseItem)"
+                                                       placeholder="路/街/段/巷/弄/號/樓 或地標" 
+                                                       class="w-full text-sm font-bold bg-white border border-slate-200 rounded-xl p-3 outline-none"
+                                                       :class="caseItem.errAddress ? 'border-rose-300 text-rose-600 input-error' : 'border-slate-100 text-slate-800'">
+                                                <!-- Autocomplete Dropdown -->
+                                                <ul v-if="caseItem.showSuggestions && caseItem.suggestions.length > 0" 
+                                                    class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                                    <li v-for="street in caseItem.suggestions" :key="street" 
+                                                        @mousedown.prevent="selectStreet(caseItem, street)"
+                                                        class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-b-0">
+                                                        {{ street }}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <!-- 救出人數 -->
+                                        <div class="pt-2 border-b border-slate-50 pb-4">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">救出人數</p>
+                                            <div class="flex border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                                <button v-for="n in [0, 1, 2, 3, 4, '>4']" :key="n"
+                                                        @click="caseItem.rescuedCount = n"
+                                                        class="flex-1 py-2 text-sm font-black text-center border-r border-slate-200 last:border-r-0 transition-colors"
+                                                        :class="caseItem.rescuedCount === n ? 'bg-blue-600 text-white' : 'bg-white text-slate-500'">
+                                                    {{ n }}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- 案件資訊 -->
+                                        <div class="pt-2 border-b border-slate-50 pb-4">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2" :class="{'text-rose-600': caseItem.errType}">案件資訊</p>
+                                            <div class="flex flex-wrap gap-2">
+                                                <select v-model="caseItem.type" class="w-full text-sm font-bold bg-white border border-slate-200 rounded-xl p-3 outline-none" :class="caseItem.errType ? 'border-rose-300 text-rose-600 input-error' : 'border-slate-100 text-slate-800'">
+                                                    <option disabled value="">請選擇救護種類</option>
+                                                    <option v-for="t in caseTypes" :key="t.name" :value="t.name">{{ t.name }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- 現場狀況及後續處置 -->
+                                        <div class="pt-2">
+                                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">現場狀況及後續處置 (選填)</p>
+                                            <textarea v-model="caseItem.description" placeholder="請簡述現場狀況..." class="w-full text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-xl p-3 outline-none h-20"></textarea>
+                                        </div>
+
+                                        <!-- 單件錯誤提示文字 -->
+                                        <div v-if="caseItem.errMsg" class="bg-rose-50 text-rose-600 text-xs font-bold p-3 rounded-xl border border-rose-100 mt-3 flex items-start gap-2">
+                                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                                            <span>{{ caseItem.errMsg }}</span>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <!-- 操作按鈕 -->
+                                <div class="pt-2 pb-6 space-y-4">
+                                    <button @click="addCase" class="w-full py-3 rounded-xl border-2 border-dashed border-blue-200 text-blue-500 font-black text-sm bg-blue-50/50 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-plus"></i> 新增一件
+                                    </button>
+                                    
+                                    <button @click="goToConfirmStep(false)" class="w-full py-4 rounded-xl bg-blue-600 text-white font-black text-lg shadow-md active:scale-[0.98] transition-transform mt-4">
+                                        確認並預覽紀錄
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 步驟三：確認送出 (預覽頁面) -->
+                        <div v-if="assistanceStep === 3" class="fade-in">
+                            <div class="flex items-center mb-6 relative">
+                                <button @click="assistanceStep = assistanceForm.cases.length > 0 ? 2 : 1" class="absolute left-0 w-8 h-8 flex items-center justify-center text-slate-400 bg-white rounded-full shadow-sm">
+                                    <i class="fa-solid fa-chevron-left text-sm"></i>
+                                </button>
+                                <div class="flex-1 text-center">
+                                    <h2 class="text-xl font-black text-slate-800 tracking-wider">確認資料</h2>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">CONFIRM & SUBMIT</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="list-card p-5 bg-white border border-slate-100 shadow-sm">
+                                    <p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 border-b border-slate-100 pb-2">協勤基本資料</p>
+                                    <div class="grid grid-cols-2 gap-y-3 text-sm">
+                                        <div class="text-slate-500 font-bold">人員姓名</div><div class="text-right font-black text-slate-800">{{ userData.姓名 }}</div>
+                                        <div class="text-slate-500 font-bold">協勤日期</div><div class="text-right font-num text-slate-800">{{ assistanceForm.date }}</div>
+                                        <div class="text-slate-500 font-bold">協勤時段</div><div class="text-right font-num text-blue-600">{{ assistanceForm.startTime }} - {{ assistanceForm.endTime }}</div>
+                                    </div>
+                                </div>
+
+                                <div v-if="assistanceForm.cases.length === 0" class="list-card p-5 bg-amber-50 border border-amber-100 text-amber-600 text-sm font-bold text-center">
+                                    本次僅提交協勤時數，無救護案件紀錄。
+                                </div>
+
+                                <div v-for="(c, idx) in assistanceForm.cases" :key="'conf-'+idx" class="list-card p-5 bg-white border border-slate-100 shadow-sm relative">
+                                    <div class="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-sm">
+                                        第 {{ ['一','二','三','四','五','六','七','八','九','十'][idx] || idx + 1 }} 件
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-y-3 text-sm mt-3">
+                                        <div class="text-slate-500 font-bold">救護時間</div><div class="text-right font-num text-slate-800">{{ c.startTime || '--' }} - {{ c.endTime || '--' }}</div>
+                                        <div class="text-slate-500 font-bold">案件種類</div><div class="text-right font-black text-slate-800">{{ c.type || '未填寫' }}</div>
+                                        <div class="text-slate-500 font-bold">救出人數</div><div class="text-right font-black text-slate-800">{{ c.rescuedCount }} 人</div>
+                                        <div class="text-slate-500 font-bold">發生地點</div>
+                                        <div class="text-right font-bold text-slate-800">
+                                            {{ c.district }}<br>
+                                            <span class="text-xs text-slate-500 mt-1 block">{{ c.address || '未填寫詳細地址' }}</span>
+                                        </div>
+                                    </div>
+                                    <div v-if="c.description" class="mt-3 pt-3 border-t border-slate-100">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">狀況及處置</p>
+                                        <p class="text-xs text-slate-600 font-bold">{{ c.description }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 pb-6 space-y-4">
+                                    <button @click="submitAssistanceToFirebase" class="w-full py-4 rounded-xl bg-emerald-500 text-white font-black text-lg shadow-md shadow-emerald-200 active:scale-[0.98] transition-transform">
+                                        確認無誤，立即送出
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 1: 我的紀錄 (歷史/修改) -->
+                    <div class="slide-page" style="padding-top: 16px;">
+                        <div class="flex justify-between items-center mb-4 px-1">
+                            <div>
+                                <h3 class="text-xl font-black text-slate-800">我的協勤紀錄</h3>
+                                <p class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">MY ASSISTANCE HISTORY</p>
+                            </div>
+                            <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-1 rounded-lg">共 {{ myAssistanceRecords.length }} 筆</span>
+                        </div>
+
+                        <div v-if="myAssistanceRecords.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                            <i class="fa-solid fa-folder-open text-4xl mb-4"></i>
+                            <p class="font-black text-sm">尚未有任何協勤紀錄</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div v-for="record in myAssistanceRecords" :key="record.id" class="list-card border border-slate-100 bg-white shadow-sm overflow-hidden">
+                                <div class="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="record.recordType === '待命協勤' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'">
+                                            {{ record.recordType }}
+                                        </span>
+                                        <span class="text-sm font-num text-slate-800">{{ record.date }}</span>
+                                    </div>
+                                    <div class="flex gap-3 text-slate-400">
+                                        <button @click="openAssistEditModal(record)" class="hover:text-blue-500 active:scale-95 transition-all"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                        <button @click="deleteAssistRecord(record.id)" class="hover:text-red-500 active:scale-95 transition-all"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-3">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                        <i class="fa-solid fa-clock text-blue-400 w-4 text-center"></i> 
+                                        協勤時段：<span class="font-num text-slate-700">{{ record.shiftStart }} - {{ record.shiftEnd }}</span>
+                                    </div>
+                                    
+                                    <!-- 將該時段底下的所有案件列在一起 -->
+                                    <div v-if="record.cases && record.cases.length > 0" class="mt-2 space-y-3 border-t border-slate-100 pt-2">
+                                        <div v-for="(c, cIdx) in record.cases" :key="cIdx" class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded">第 {{ cIdx + 1 }} 件</span>
+                                                <span class="text-xs font-num text-slate-500">{{ c.caseStart || '--:--' }} - {{ c.caseEnd || '--:--' }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 text-xs font-bold text-slate-600 mb-1.5">
+                                                <i class="fa-solid fa-truck-medical text-emerald-400 w-3 text-center"></i>
+                                                {{ c.caseType }} <span class="text-[10px] text-slate-400">(救出 {{ c.rescuedCount }} 人)</span>
+                                            </div>
+                                            <div class="flex gap-2 text-xs font-bold text-slate-500">
+                                                <i class="fa-solid fa-location-dot text-rose-400 w-3 text-center mt-0.5"></i>
+                                                <span class="flex-1">{{ c.district }} {{ c.address }}</span>
+                                            </div>
+                                            <div v-if="c.description" class="mt-2 pt-2 border-t border-slate-200">
+                                                <p class="text-[10px] font-black text-slate-400 uppercase mb-0.5">狀況及處置</p>
+                                                <p class="text-[11px] text-slate-600 font-bold truncate">{{ c.description }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 相容舊資料 (若有) -->
+                                    <template v-else-if="record.caseType">
+                                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 mt-2">
+                                            <div class="flex items-center justify-between mb-1.5">
+                                                <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded">第 1 件</span>
+                                                <span class="text-xs font-num text-slate-500">{{ record.caseStart || '--:--' }} - {{ record.caseEnd || '--:--' }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2 text-xs font-bold text-slate-600 mb-1.5">
+                                                <i class="fa-solid fa-truck-medical text-emerald-400 w-3 text-center"></i>
+                                                {{ record.caseType }} <span class="text-[10px] text-slate-400">(救出 {{ record.rescuedCount || 0 }} 人)</span>
+                                            </div>
+                                            <div class="flex gap-2 text-xs font-bold text-slate-500">
+                                                <i class="fa-solid fa-location-dot text-rose-400 w-3 text-center mt-0.5"></i>
+                                                <span class="flex-1">{{ record.district }} {{ record.address }}</span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: 全隊紀錄 (僅管理員可見) -->
+                    <div class="slide-page" style="padding-top: 16px;">
+                        <div v-if="isAdmin">
+                            <div class="flex justify-between items-center mb-4 px-1">
+                                <div>
+                                    <h3 class="text-xl font-black text-slate-800">全隊協勤紀錄</h3>
+                                    <p class="text-[10px] text-rose-500 font-bold uppercase tracking-widest">TEAM ASSISTANCE HISTORY</p>
+                                </div>
+                                <button @click="exportAssistanceToExcel" class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shadow-sm">
+                                    <i class="fa-solid fa-file-excel"></i>
+                                </button>
+                            </div>
+
+                            <!-- 搜尋篩選區域 (與匯出連動) -->
+                            <div class="search-filter-box space-y-3">
+                                <div class="relative">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input type="text" v-model="assistSearchQuery" placeholder="搜尋人員姓名或地點關鍵字..." class="w-full bg-slate-50 border-0 rounded-xl py-3 pl-11 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none">
+                                </div>
+                                <div class="flex gap-2">
+                                    <div class="flex-1 relative">
+                                        <select v-model="assistFilterYear" class="filter-select w-full">
+                                            <option v-for="y in Array.from({length:5}, (_,i)=>2024+i)" :key="y" :value="y.toString()">{{y}} 年</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                                    </div>
+                                    <div class="flex-1 relative">
+                                        <select v-model="assistFilterMonth" class="filter-select w-full">
+                                            <option value="">全部月份</option>
+                                            <option v-for="m in 12" :key="m" :value="m.toString().padStart(2, '0')">{{m}} 月</option>
+                                        </select>
+                                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                                    </div>
+                                    <div class="px-4 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-[11px] font-black">
+                                        共 {{ filteredAllAssistanceRecords.length }} 筆
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="filteredAllAssistanceRecords.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                                <i class="fa-solid fa-folder-open text-4xl mb-4"></i>
+                                <p class="font-black text-sm">找不到符合條件的紀錄</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div v-for="record in filteredAllAssistanceRecords" :key="'all-'+record.id" class="list-card border border-slate-100 bg-white shadow-sm overflow-hidden">
+                                    <div class="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-[11px] font-black bg-slate-800 text-white px-2 py-0.5 rounded shadow-sm">{{ record.userName }}</span>
+                                            <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="record.recordType === '待命協勤' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'">
+                                                {{ record.recordType }}
+                                            </span>
+                                            <span class="text-xs font-num text-slate-800">{{ record.date }}</span>
+                                        </div>
+                                        <div class="flex gap-3 text-slate-400">
+                                            <button @click="openAssistEditModal(record)" class="hover:text-blue-500 active:scale-95 transition-all"><i class="fa-solid fa-pen-to-square text-sm"></i></button>
+                                            <button @click="deleteAssistRecord(record.id)" class="hover:text-red-500 active:scale-95 transition-all"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="p-4 space-y-3">
+                                        <div class="flex items-center gap-2 text-xs font-bold text-slate-500">
+                                            <i class="fa-solid fa-clock text-blue-400 w-4 text-center"></i> 
+                                            協勤時段：<span class="font-num text-slate-700">{{ record.shiftStart }} - {{ record.shiftEnd }}</span>
+                                        </div>
+                                        
+                                        <!-- 將該時段底下的所有案件列在一起 -->
+                                        <div v-if="record.cases && record.cases.length > 0" class="mt-2 space-y-3 border-t border-slate-100 pt-2">
+                                            <div v-for="(c, cIdx) in record.cases" :key="cIdx" class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                <div class="flex items-center justify-between mb-1.5">
+                                                    <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded">第 {{ cIdx + 1 }} 件</span>
+                                                    <span class="text-xs font-num text-slate-500">{{ c.caseStart || '--:--' }} - {{ c.caseEnd || '--:--' }}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2 text-xs font-bold text-slate-600 mb-1.5">
+                                                    <i class="fa-solid fa-truck-medical text-emerald-400 w-3 text-center"></i>
+                                                    {{ c.caseType }} <span class="text-[10px] text-slate-400">(救出 {{ c.rescuedCount }} 人)</span>
+                                                </div>
+                                                <div class="flex gap-2 text-xs font-bold text-slate-500">
+                                                    <i class="fa-solid fa-location-dot text-rose-400 w-3 text-center mt-0.5"></i>
+                                                    <span class="flex-1">{{ c.district }} {{ c.address }}</span>
+                                                </div>
+                                                <div v-if="c.description" class="mt-2 pt-2 border-t border-slate-200">
+                                                    <p class="text-[10px] font-black text-slate-400 uppercase mb-0.5">狀況及處置</p>
+                                                    <p class="text-[11px] text-slate-600 font-bold truncate">{{ c.description }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="flex flex-col items-center justify-center h-64 text-slate-300">
+                            <i class="fa-solid fa-lock text-4xl mb-4"></i>
+                            <p class="font-black text-sm">僅限管理員使用</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
         <div class="bottom-sheet-overlay" :class="{ active: isMemberHistoryModalOpen }" @click="isMemberHistoryModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isMemberHistoryModalOpen }">
         <div class="flex justify-between items-start mb-6 shrink-0 px-1">
@@ -697,10 +1059,7 @@
                 </div>
             </div>
         </div>
-        <!-- ================================== -->
 
-        
-        <!-- Modals（完全不動） -->
         <div class="bottom-sheet-overlay" :class="{ active: isDetailedListModalOpen }" @click="isDetailedListModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isDetailedListModalOpen }" style="padding-top: 20px;">
             <div class="flex justify-between items-center mb-6 px-1">
@@ -1194,18 +1553,202 @@
             </div>
         </div>
 
+        <!-- 協勤專用的「修改紀錄 Modal」 -->
+        <div class="bottom-sheet-overlay" :class="{ active: isAssistEditModalOpen }" @click="isAssistEditModalOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isAssistEditModalOpen }">
+            <div class="flex justify-between items-center mb-4 shrink-0">
+                <div>
+                    <h4 class="text-xl font-black text-slate-800">修改協勤紀錄</h4>
+                    <p class="text-xs font-bold text-slate-400 mt-0.5">編輯歷史資料 <span v-if="isAdmin && editingAssistRecord && editingAssistRecord.userName !== userData.姓名" class="bg-rose-100 text-rose-600 px-2 rounded-full">{{ editingAssistRecord.userName }}</span></p>
+                </div>
+                <button @click="isAssistEditModalOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="modal-scroll-area space-y-4" v-if="editingAssistRecord">
+                
+                <div class="admin-edit-section-title"><i class="fa-solid fa-calendar-day mr-1 text-blue-400"></i>協勤基本資料</div>
+                <div class="admin-edit-field">
+                    <span class="admin-edit-label">協勤日期</span>
+                    <input v-model="editingAssistRecord.date" type="date" class="admin-edit-input">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="admin-edit-field">
+                        <span class="admin-edit-label">協勤開始 (整點)</span>
+                        <select v-model="editingAssistRecord.shiftStart" class="admin-edit-select">
+                            <option v-for="h in hourOptions" :key="h" :value="h+':00'">{{ h }}:00</option>
+                        </select>
+                    </div>
+                    <div class="admin-edit-field">
+                        <span class="admin-edit-label">協勤結束 (整點)</span>
+                        <select v-model="editingAssistRecord.shiftEnd" class="admin-edit-select">
+                            <option v-for="h in hourOptions" :key="h" :value="h+':00'">{{ h }}:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 編輯多筆案件 -->
+                <template v-if="editingAssistRecord.cases && editingAssistRecord.cases.length > 0">
+                    <div v-for="(c, cIdx) in editingAssistRecord.cases" :key="'edit-c-'+cIdx" class="mb-4 border border-slate-200 p-4 rounded-xl bg-white shadow-sm">
+                        <div class="admin-edit-section-title mt-0 border-b-0 mb-2"><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</div>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+    <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errStart ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
+        <span class="admin-edit-label" :class="c.errStart ? 'text-rose-600' : ''">救護開始 (如1230)</span>
+        <input v-model="c.caseStart" type="tel" @blur="handleTimeInput(c, 'caseStart', 'edit')" placeholder="12:30" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errStart ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
+    </div>
+    <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errEnd ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
+        <span class="admin-edit-label" :class="c.errEnd ? 'text-rose-600' : ''">救護結束 (如1345)</span>
+        <input v-model="c.caseEnd" type="tel" @blur="handleTimeInput(c, 'caseEnd', 'edit')" placeholder="13:45" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errEnd ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
+    </div>
+</div>
+<!-- 錯誤提示 -->
+<p v-if="c.errMsg" class="text-rose-600 text-[11px] font-black mb-3 px-2 py-1 bg-rose-50 rounded-lg">
+    <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ c.errMsg }}
+</p>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div class="admin-edit-field !bg-transparent !p-0 !border-0">
+                                <span class="admin-edit-label" :class="{'text-rose-600': c.errType}">案件種類</span>
+                                <select v-model="c.caseType" class="admin-edit-select" :class="c.errType ? 'border-rose-300 bg-rose-50 text-rose-600' : ''">
+                                    <option v-for="t in caseTypes" :key="t.name" :value="t.name">{{ t.name }}</option>
+                                </select>
+                            </div>
+                            <div class="admin-edit-field !bg-transparent !p-0 !border-0">
+                                <span class="admin-edit-label">救出人數</span>
+                                <select v-model="c.rescuedCount" class="admin-edit-select">
+                                    <option v-for="n in [0, 1, 2, 3, 4, '>4']" :key="n" :value="n">{{ n }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="admin-edit-field !bg-transparent !p-0 !border-0 mb-3">
+                            <span class="admin-edit-label" :class="{'text-rose-600': c.errDistrict}">區域</span>
+                            <select v-model="c.district" class="admin-edit-select" :class="c.errDistrict ? 'text-rose-600 border-rose-300' : ''">
+                                <option value="板橋區">板橋區</option>
+                                <option value="中和區">中和區</option>
+                                <option value="新莊區">新莊區</option>
+                                <option value="土城區">土城區</option>
+                                <option value="樹林區">樹林區</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="admin-edit-field !bg-transparent !p-0 !border-0 mb-3 relative">
+                            <span class="admin-edit-label" :class="{'text-rose-600': c.errAddress}">詳細地址 / 地標</span>
+                            <input v-model="c.address" type="text" 
+                                   @input="handleAddressInput(c, true)" 
+                                   @focus="handleAddressInput(c, true)" 
+                                   @blur="hideSuggestions(c)"
+                                   class="admin-edit-input" :class="c.errAddress ? 'border-rose-300 text-rose-600 input-error' : ''">
+                            <!-- Edit Autocomplete Dropdown -->
+                            <ul v-if="c.showSuggestions && c.suggestions.length > 0" 
+                                class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                <li v-for="street in c.suggestions" :key="street" 
+                                    @mousedown.prevent="selectStreet(c, street, true)"
+                                    class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-b-0">
+                                    {{ street }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="admin-edit-field !bg-transparent !p-0 !border-0">
+                            <span class="admin-edit-label">狀況及處置 (選填)</span>
+                            <textarea v-model="c.description" placeholder="請簡述..." class="admin-edit-input h-16"></textarea>
+                        </div>
+
+                        <div v-if="c.errMsg" class="bg-rose-50 text-rose-600 text-xs font-bold p-3 rounded-xl border border-rose-100 mt-3 flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                            <span>{{ c.errMsg }}</span>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="flex gap-3 pt-4">
+                    <button @click="isAssistEditModalOpen = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
+                    <button @click="submitAssistEdit" class="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-[0.98] transition-all">確認儲存</button>
+                </div>
+            </div>
+        </div>
+
+       <!-- 協勤專用的時間選擇 Modal -->
+<div class="bottom-sheet-overlay" :class="{ active: isAssistTimeModalOpen }" @click="isAssistTimeModalOpen = false"></div>
+<div class="bottom-sheet" :class="{ active: isAssistTimeModalOpen }">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h4 class="text-xl font-black text-slate-800">選擇協勤時段</h4>
+            <p class="text-xs font-bold text-blue-600 uppercase mt-1">Select Shift Hours (08-24)</p>
+        </div>
+        <button @click="resetAssistTimeSelection" class="text-xs font-black bg-slate-100 text-slate-500 px-4 py-2 rounded-full active:scale-95 transition-transform">
+            重設時間
+        </button>
+    </div>
+    
+    <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-center justify-center gap-4">
+        <div class="text-center">
+            <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">From</p>
+            <span class="text-2xl font-num text-blue-600">{{ assistTempStart || '--' }}</span>
+        </div>
+        <div class="w-8 h-[2px] bg-blue-200"></div>
+        <div class="text-center">
+            <p class="text-[10px] text-blue-400 font-bold uppercase mb-1">To</p>
+            <span class="text-2xl font-num text-blue-600">{{ assistTempEnd || '--' }}</span>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-6 gap-2 mb-6">
+        <button v-for="h in hourOptions" :key="h" 
+                @click="selectAssistHour(h)" 
+                :disabled="isAssistHourDisabled(h)" 
+                class="hour-btn transition-all" 
+                :class="{ 'selected': assistTempStart === h || assistTempEnd === h, 'opacity-20 pointer-events-none': isAssistHourDisabled(h) }">
+            {{ h }}
+        </button>
+    </div>
+    
+    <button @click="confirmAssistTime" :disabled="!assistTempStart || !assistTempEnd" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg disabled:opacity-30 active:scale-95 transition-transform">
+        確認選擇
+    </button>
+</div>
+        <!-- 自訂全域提醒彈窗 (App Alert Modal) -->
+        <div class="bottom-sheet-overlay" :class="{ active: appAlert.show }" @click="appAlert.show = false"></div>
+        <div class="bottom-sheet" :class="{ active: appAlert.show }" style="z-index: 1000 !important;">
+            <div class="text-center py-6">
+                <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+                     :class="appAlert.type === 'success' ? 'bg-emerald-50' : 'bg-rose-50'">
+                    <i class="fa-solid text-4xl"
+                       :class="appAlert.type === 'success' ? 'fa-circle-check text-emerald-500' : 'fa-circle-exclamation text-rose-500'"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-2">{{ appAlert.title }}</h4>
+                <p class="text-sm font-bold text-slate-400 mb-8 whitespace-pre-line">{{ appAlert.msg }}</p>
+                <button @click="appAlert.show = false" class="w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl active:scale-[0.98] transition-transform"
+                        :class="appAlert.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'">
+                    我知道了
+                </button>
+            </div>
+        </div>
+
+        <!-- 自訂全域確認彈窗 (App Confirm Modal) -->
+        <div class="bottom-sheet-overlay" :class="{ active: appConfirm.show }" @click="appConfirm.show = false"></div>
+        <div class="bottom-sheet" :class="{ active: appConfirm.show }" style="z-index: 1000 !important;">
+            <div class="text-center py-4">
+                <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-circle-question text-3xl text-amber-500"></i>
+                </div>
+                <h4 class="text-xl font-black text-slate-800 mb-2">{{ appConfirm.title }}</h4>
+                <p class="text-sm font-bold text-slate-400 mb-8">{{ appConfirm.msg }}</p>
+                <div class="flex gap-3">
+                    <button @click="appConfirm.show = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
+                    <button @click="appConfirm.onConfirm" class="flex-1 py-4 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-lg active:scale-[0.98] transition-transform">確認執行</button>
+                </div>
+            </div>
+        </div>
+
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
             <div class="flex justify-around items-center h-full px-4">
                 <div @click="currPage='dashboard';scrollToTab(0);expandCards()" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
                 <div @click="currPage='schedule';scrollToScheduleTab(0);expandCards()" :class="currPage === 'schedule' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
-                <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-clipboard-check text-xl"></i><span class="text-[13px] font-black mt-1">公差</span></div>
+                <div @click="currPage='assistance';scrollToAssistTab(0);expandCards()" :class="currPage === 'assistance' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-truck-medical text-xl"></i><span class="text-[13px] font-black mt-1">協勤</span></div>
                 <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-users text-xl"></i><span class="text-[13px] font-black mt-1">會議</span></div>
                 <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-user-nurse text-xl"></i><span class="text-[13px] font-black mt-1">我的</span></div>
             </div>
         </nav>
     </template>
 </div>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -1274,15 +1817,37 @@
     };
     const getTodayStr = () => toLocalDateStr(new Date());
 
-    // 取得昨日日期字串
     const getYesterdayStr = () => {
         const d = new Date();
         d.setDate(d.getDate() - 1);
         return toLocalDateStr(d);
     };
 
+    const formatDateTime = (date) => {
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    };
+
     createApp({
         setup() {
+            // 全域自訂彈窗
+            const appAlert = ref({ show: false, type: 'success', title: '', msg: '' });
+            const appConfirm = ref({ show: false, title: '', msg: '', onConfirm: null });
+
+            const showAppAlert = (type, title, msg) => {
+                appAlert.value = { show: true, type, title, msg };
+            };
+
+            const showAppConfirm = (title, msg, onConfirmCallback) => {
+                appConfirm.value = { 
+                    show: true, title, msg, 
+                    onConfirm: () => {
+                        appConfirm.value.show = false;
+                        if(onConfirmCallback) onConfirmCallback();
+                    }
+                };
+            };
+
             const currPage = ref('login');
             const activeDashboardTab = ref('stats');
             const activeScheduleTab = ref('register');
@@ -1304,7 +1869,6 @@
             const meetingTasks = ref([]);
             const registrations = ref([]);
 
-            // ── 新增：push_logs 集合的即時資料 ──
             const pushLogs = ref([]);
             const yesterdayStr = ref(getYesterdayStr());
 
@@ -1324,7 +1888,7 @@
             const deleteTargetType = ref('duty');
             const editingReg = ref(null);
             const adminBreakdown = ref({ self: 0, adults: [], children: [] });
-  const isMemberHistoryModalOpen = ref(false);
+            const isMemberHistoryModalOpen = ref(false);
             const selectedDutyMember = ref(null);
 
             const openMemberDutyHistory = (m) => {
@@ -1335,21 +1899,11 @@
             const selectedMemberDutyHistory = computed(() => {
                 if (!selectedDutyMember.value) return [];
                 const targetName = selectedDutyMember.value.姓名;
-                
-                // 1. 找出該名成員所有狀態為「出席」的「公差 (duty)」紀錄
-                const userDutyRegs = registrations.value.filter(r => 
-                    r.userName === targetName && 
-                    r.type === 'duty' && 
-                    r.status === '出席'
-                );
-                
-                // 2. 映射回 officialTasks 取得任務詳細資料
+                const userDutyRegs = registrations.value.filter(r => r.userName === targetName && r.type === 'duty' && r.status === '出席');
                 const history = userDutyRegs.map(reg => {
                     const task = officialTasks.value.find(t => t.id === reg.taskId);
                     return task ? { ...task, regId: reg.id } : null;
                 }).filter(t => t !== null);
-
-                // 3. 依照日期由新到舊排序
                 return history.sort((a, b) => b.date.localeCompare(a.date));
             });
             const tempStartTime = ref(null);
@@ -1360,39 +1914,26 @@
             const aiRawInput = ref('');
             const isAiProcessing = ref(false);
             const hourOptions = ["08","09","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"];
-// --- 加入這段計算年資的函數 ---
+
             const calculateSeniority = (joinDateStr) => {
                 if (!joinDateStr) return '--';
                 const joinDate = new Date(joinDateStr);
                 if (isNaN(joinDate.getTime())) return '--';
-
                 const today = new Date();
                 let years = today.getFullYear() - joinDate.getFullYear();
                 let months = today.getMonth() - joinDate.getMonth();
-
-                if (months < 0) {
-                    years--;
-                    months += 12;
-                }
-
-                // 如果今天的「日」比加入時的「日」還小，代表這個月還沒滿，扣掉一個月
+                if (months < 0) { years--; months += 12; }
                 if (today.getDate() < joinDate.getDate()) {
                     months--;
-                    if (months < 0) {
-                        years--;
-                        months += 12;
-                    }
+                    if (months < 0) { years--; months += 12; }
                 }
-
                 if (years === 0 && months === 0) return '未滿1個月';
-                
                 let result = '';
                 if (years > 0) result += `${years}年`;
                 if (months > 0) result += `${months}個月`;
                 return result;
             };
-            // ---------------------------------
-            // ── 新增：主控台篩選狀態 ──
+
             const adminFilter = ref('all');
             const adminFilters = [
                 { key: 'all',      label: '全員' },
@@ -1402,7 +1943,6 @@
                 { key: 'pushok',   label: '昨日成功' },
             ];
 
-            // ── 新增：取消訂閱 + 單獨推播 的 modal 狀態 ──
             const isCancelSubModalOpen  = ref(false);
             const isSinglePushModalOpen = ref(false);
             const cancelSubTarget       = ref(null);
@@ -1412,7 +1952,6 @@
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
-            // ── 新增：原本的 scheduleTabs，在 isAdmin 時才顯示第五個 tab ──
             const scheduleTabs = [
                 { id:'register',  name:'登記排班', icon:'fa-solid fa-calendar-plus',      activeClass:'bg-blue-600 text-white shadow-md',   textColor:'text-blue-600' },
                 { id:'overview',  name:'排班總覽', icon:'fa-solid fa-calendar-day',       activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' },
@@ -1421,107 +1960,53 @@
                 { id:'adminpush', name:'主控台',   icon:'fa-solid fa-satellite-dish',     activeClass:'bg-slate-800 text-white shadow-md',   textColor:'text-slate-700' },
             ];
 
-            // 管理員才顯示第 5 個 tab
-            const visibleScheduleTabs = computed(() =>
-                isAdmin.value ? scheduleTabs : scheduleTabs.slice(0, 4)
-            );
+            const visibleScheduleTabs = computed(() => isAdmin.value ? scheduleTabs : scheduleTabs.slice(0, 4));
 
-            // ── 一周結束日 (for admin panel header) ──
             const todayStr = getTodayStr();
             const weekLaterAdminDate = new Date();
             weekLaterAdminDate.setDate(weekLaterAdminDate.getDate() + 6);
             const weekLaterAdminStr = ref(toLocalDateStr(weekLaterAdminDate));
 
-            // ── 新增：主控台用的隊員資料（一周內活動 + 昨日推播結果）──
             const adminMembersData = computed(() => {
                 const yStr  = yesterdayStr.value;
                 const today = getTodayStr();
                 const d7    = new Date(); d7.setDate(d7.getDate() + 6);
                 const weekEnd = toLocalDateStr(d7);
 
-                // 昨日推播結果 map: { 姓名 -> 'sent' | 'fail' }
                 const pushMap = {};
-                pushLogs.value
-                    .filter(l => l.date === yStr)
-                    .forEach(l => {
-                        if (pushMap[l.userName] !== 'fail') pushMap[l.userName] = l.result;
-                    });
+                pushLogs.value.filter(l => l.date === yStr).forEach(l => { if (pushMap[l.userName] !== 'fail') pushMap[l.userName] = l.result; });
 
-                // 一周內公差/會議任務 id -> { title, date }
                 const dutyWeekMap    = {};
                 const meetingWeekMap = {};
-                officialTasks.value.forEach(t => {
-                    if (t.date >= today && t.date <= weekEnd) dutyWeekMap[t.id] = t;
-                });
-                meetingTasks.value.forEach(t => {
-                    if (t.date >= today && t.date <= weekEnd) meetingWeekMap[t.id] = t;
-                });
+                officialTasks.value.forEach(t => { if (t.date >= today && t.date <= weekEnd) dutyWeekMap[t.id] = t; });
+                meetingTasks.value.forEach(t => { if (t.date >= today && t.date <= weekEnd) meetingWeekMap[t.id] = t; });
 
                 return members.value.map(m => {
                     const weekActivities = [];
-
-                    // 一周內排班
                     Object.keys(userShifts.value).forEach(date => {
                         if (date >= today && date <= weekEnd) {
                             const s = (userShifts.value[date] || []).find(s => s.name === m.姓名);
                             if (s) weekActivities.push({
-                                key: 'shift_' + date,
-                                type: 'shift',
-                                date,
-                                dateLabel: `${date.slice(5, 7)}/${date.slice(8, 10)}`,
-                                label: `排班 ${s.start}-${s.end}`,
-                                chipClass: 'chip-shift',
-                                icon: 'fa-solid fa-clock',
+                                key: 'shift_' + date, type: 'shift', date, dateLabel: `${date.slice(5, 7)}/${date.slice(8, 10)}`, label: `排班 ${s.start}-${s.end}`, chipClass: 'chip-shift', icon: 'fa-solid fa-clock',
                             });
                         }
                     });
-
-                    // 一周內公差登記
                     registrations.value.forEach(r => {
                         if (r.userName !== m.姓名 || r.status === '請假') return;
                         if (r.type === 'duty' && dutyWeekMap[r.taskId]) {
                             const t = dutyWeekMap[r.taskId];
-                            weekActivities.push({
-                                key: 'duty_' + t.id,
-                                type: 'duty',
-                                date: t.date,
-                                dateLabel: `${t.date.slice(5,7)}/${t.date.slice(8,10)}`,
-                                label: t.title,
-                                chipClass: 'chip-duty',
-                                icon: 'fa-solid fa-clipboard-check',
-                                startTime: t.startTime,
-                                location: t.location || '',
-                            });
+                            weekActivities.push({ key: 'duty_' + t.id, type: 'duty', date: t.date, dateLabel: `${t.date.slice(5,7)}/${t.date.slice(8,10)}`, label: t.title, chipClass: 'chip-duty', icon: 'fa-solid fa-clipboard-check', startTime: t.startTime, location: t.location || '' });
                         }
                         if (r.type === 'meeting' && meetingWeekMap[r.taskId]) {
                             const t = meetingWeekMap[r.taskId];
-                            weekActivities.push({
-                                key: 'meeting_' + t.id,
-                                type: 'meeting',
-                                date: t.date,
-                                dateLabel: `${t.date.slice(5,7)}/${t.date.slice(8,10)}`,
-                                label: t.title,
-                                chipClass: 'chip-meeting',
-                                icon: 'fa-solid fa-users',
-                                startTime: t.startTime,
-                                location: t.location || '',
-                            });
+                            weekActivities.push({ key: 'meeting_' + t.id, type: 'meeting', date: t.date, dateLabel: `${t.date.slice(5,7)}/${t.date.slice(8,10)}`, label: t.title, chipClass: 'chip-meeting', icon: 'fa-solid fa-users', startTime: t.startTime, location: t.location || '' });
                         }
                     });
-
-                    // 依日期排序
                     weekActivities.sort((a, b) => a.date.localeCompare(b.date));
-
-                    return {
-                        ...m,
-                        hasSub:          !!m.pushSubscription,
-                        weekActivities,
-                        pushResult:      pushMap[m.姓名] || 'none',
-                    };
+                    return { ...m, hasSub: !!m.pushSubscription, weekActivities, pushResult: pushMap[m.姓名] || 'none' };
                 });
             });
 
-            // 篩選後的主控台隊員
             const filteredAdminMembers = computed(() => {
                 return adminMembersData.value.filter(m => {
                     if (adminFilter.value === 'nosub')    return !m.hasSub;
@@ -1532,7 +2017,6 @@
                 });
             });
 
-            // 主控台統計數字
             const adminStats = computed(() => ({
                 subCount:     adminMembersData.value.filter(m => m.hasSub).length,
                 noSubCount:   adminMembersData.value.filter(m => !m.hasSub).length,
@@ -1544,15 +2028,12 @@
                 if (!loginUserName.value) return [];
                 const list = [];
                 const todayStr = getTodayStr();
-                const d7 = new Date();
-                d7.setDate(d7.getDate() + 7);
+                const d7 = new Date(); d7.setDate(d7.getDate() + 7);
                 const weekLaterStr = toLocalDateStr(d7);
                 Object.keys(userShifts.value).forEach(date => {
                     if (date >= todayStr && date <= weekLaterStr) {
                         const myShift = userShifts.value[date].find(s => s.name === loginUserName.value);
-                        if (myShift) {
-                            list.push({ fullDate: date, dateDisplay: `${date.split('-')[1]}/${date.split('-')[2]}`, label: '排班協勤', timestamp: new Date(date + "T" + myShift.start + ":00:00") });
-                        }
+                        if (myShift) { list.push({ fullDate: date, dateDisplay: `${date.split('-')[1]}/${date.split('-')[2]}`, label: '排班協勤', timestamp: new Date(date + "T" + myShift.start + ":00:00") }); }
                     }
                 });
                 registrations.value.forEach(reg => {
@@ -1606,16 +2087,10 @@
             const openShiftModal = (day) => {
                 if (isPastDate(day.fullDate)) return;
                 selectedDay.value = day;
-                if (!isMyShift(day.fullDate)) {
-                    resetShiftSelection();
-                    isShiftModalOpen.value = true;
-                }
+                if (!isMyShift(day.fullDate)) { resetShiftSelection(); isShiftModalOpen.value = true; }
             };
 
-            const openDeleteShiftModal = (day) => {
-                selectedDay.value = day;
-                isDeleteShiftModalOpen.value = true;
-            };
+            const openDeleteShiftModal = (day) => { selectedDay.value = day; isDeleteShiftModalOpen.value = true; };
 
             const selectHour = (h) => {
                 if (h === tempStartTime.value) { resetShiftSelection(); return; }
@@ -1629,10 +2104,7 @@
 
             const confirmShift = async () => {
                 if (tempStartTime.value && tempEndTime.value && selectedDay.value) {
-                    try {
-                        await addDoc(collection(db, "shifts"), { name: userData.value.姓名, start: tempStartTime.value, end: tempEndTime.value, date: selectedDay.value.fullDate, timestamp: new Date() });
-                        closeShiftModal();
-                    } catch (e) { alert("登記失敗"); }
+                    try { await addDoc(collection(db, "shifts"), { name: userData.value.姓名, start: tempStartTime.value, end: tempEndTime.value, date: selectedDay.value.fullDate, timestamp: new Date() }); closeShiftModal(); } catch (e) { showAppAlert('error', '提示', "登記失敗"); }
                 }
             };
 
@@ -1644,7 +2116,7 @@
                     snap.forEach((d) => deletePromises.push(deleteDoc(doc(db, "shifts", d.id))));
                     await Promise.all(deletePromises);
                     isDeleteShiftModalOpen.value = false;
-                } catch (e) { alert("刪除失敗"); }
+                } catch (e) { showAppAlert('error', '提示', "刪除失敗"); }
             };
 
             const resetShiftSelection = () => { tempStartTime.value = null; tempEndTime.value = null; };
@@ -1691,7 +2163,7 @@
             };
 
             const handleAiParse = async () => {
-                if (!aiRawInput.value) return alert("請先貼上文字內容");
+                if (!aiRawInput.value) return showAppAlert('error', '提示', "請先貼上文字內容");
                 isAiProcessing.value = true;
                 try {
                     const response = await fetch(CLOUD_RUN_URL + 'ai-parse', {
@@ -1711,14 +2183,14 @@
                     aiRawInput.value = "";
                 } catch (e) {
                     console.error(e);
-                    alert("AI 無法解析這段文字，請檢查內容或手動輸入");
+                    showAppAlert('error', '錯誤', "AI 無法解析這段文字，請檢查內容或手動輸入");
                 } finally {
                     isAiProcessing.value = false;
                 }
             };
 
             const handlePostTask = async () => {
-                if (!newTask.value.title || !newTask.value.date) return alert('請填寫完整資訊');
+                if (!newTask.value.title || !newTask.value.date) return showAppAlert('error', '提示', '請填寫完整資訊');
                 const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
                 try {
                     await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
@@ -1737,12 +2209,8 @@
                     if (result.stats) {
                         lastPushStats.value = result.stats;
                         isSuccessStatusOpen.value = true;
-                    } else {
-                        alert("任務已發佈，但推播狀態未知。");
-                    }
-                } catch (e) {
-                    alert('發佈失敗');
-                }
+                    } else { showAppAlert('success', '完成', "任務已發佈，但推播狀態未知。"); }
+                } catch (e) { showAppAlert('error', '錯誤', '發佈失敗'); }
             };
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
@@ -1753,7 +2221,7 @@
                     const snap = await getDocs(query(collection(db, "registrations"), where("taskId", "==", task.id)));
                     snap.forEach(async (d) => await deleteDoc(doc(db, "registrations", d.id)));
                     isTaskDeleteModalOpen.value = false;
-                } catch (e) { alert("刪除失敗"); }
+                } catch (e) { showAppAlert('error', '錯誤', "刪除失敗"); }
             };
 
             const getTaskRegCount = (taskId) => registrations.value.filter(r => r.taskId === taskId).length;
@@ -1764,11 +2232,8 @@
             const toggleRegistration = async (task, type) => {
                 const targetName = userData.value.姓名;
                 if (isUserSignedUp(task.id)) {
-                    // 取消登記
                     const snap = await getDocs(query(collection(db, "registrations"), where("taskId", "==", task.id), where("userName", "==", targetName)));
                     snap.forEach(async (d) => await deleteDoc(doc(db, "registrations", d.id)));
-                    
-                    // 若為公差，次數自動 -1
                     if (type === 'duty') {
                         const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", targetName)));
                         mSnap.forEach(async (mDoc) => {
@@ -1777,11 +2242,8 @@
                         });
                     }
                 } else {
-                    // 登記
-                    if (type === 'duty' && getTaskRegCount(task.id) >= task.quota) return alert("人數已滿");
+                    if (type === 'duty' && getTaskRegCount(task.id) >= task.quota) return showAppAlert('error', '提示', "人數已滿");
                     await addDoc(collection(db, "registrations"), { taskId: task.id, userName: targetName, type, status:'出席', timestamp: new Date() });
-                    
-                    // 若為公差，次數自動 +1
                     if (type === 'duty') {
                         const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", targetName)));
                         mSnap.forEach(async (mDoc) => {
@@ -1868,7 +2330,7 @@
             });
 
             const submitAdminPriceEdit = async () => {
-                try { await updateDoc(doc(db, "registrations", editingReg.value.id), { breakdown: adminBreakdown.value, finalPrice: computedAdminTotal.value }); isAdminPriceEditOpen.value = false; } catch (e) { alert("調整失敗"); }
+                try { await updateDoc(doc(db, "registrations", editingReg.value.id), { breakdown: adminBreakdown.value, finalPrice: computedAdminTotal.value }); isAdminPriceEditOpen.value = false; } catch (e) { showAppAlert('error', '錯誤', "調整失敗"); }
             };
 
             const getCategoryClass = (cat) => {
@@ -1918,6 +2380,10 @@
             const rotationDuty = computed(() => [...members.value].sort((a, b) => (Number(a.duty_count) || 0) - (Number(b.duty_count) || 0)).slice(0, 2));
             const sortedCashHistory = computed(() => { try { let logStr = userData.value['cash_history']; return logStr ? JSON.parse(logStr).sort((a, b) => new Date(b.date) - new Date(a.date)) : []; } catch(e) { return []; } });
 
+            // ── 個人與全隊協勤紀錄 ──
+            const myAssistanceRecords = ref([]);
+            const allAssistanceRecords = ref([]);
+
             onMounted(() => {
                 if ('clearAppBadge' in navigator) {
                     navigator.clearAppBadge();
@@ -1939,16 +2405,35 @@
                 onSnapshot(collection(db, "official_tasks"), (snap) => { officialTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
                 onSnapshot(collection(db, "meeting_tasks"), (snap) => { meetingTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
                 onSnapshot(collection(db, "registrations"), (snap) => { registrations.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
-
-                // ── 新增：監聽 push_logs 集合（只拉最近 60 天，避免資料量過大）──
+                
                 onSnapshot(collection(db, "push_logs"), (snap) => {
                     pushLogs.value = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                });
+                
+                // 監聽協勤紀錄
+                onSnapshot(collection(db, "assistance_records"), (snap) => { 
+                    const allRecs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    allAssistanceRecords.value = allRecs.sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
+                    if (loginUserName.value) {
+                        myAssistanceRecords.value = allRecs.filter(r => r.userName === loginUserName.value)
+                            .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
+                    }
                 });
             });
 
             const handleLogin = () => {
                 const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-                if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; subscribeFCM(user.姓名); }
+                if (user) { 
+                    loginUserName.value = user.姓名; 
+                    currPage.value = 'dashboard'; 
+                    subscribeFCM(user.姓名); 
+                    getDocs(collection(db, "assistance_records")).then(snap => {
+                        const allRecs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        allAssistanceRecords.value = allRecs.sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
+                        myAssistanceRecords.value = allRecs.filter(r => r.userName === loginUserName.value)
+                            .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
+                    });
+                }
                 else { errMsg.value = "安全密碼錯誤"; }
             };
             const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
@@ -1956,7 +2441,6 @@
             const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
             const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; const todayStr = getTodayStr(); return Math.max(0,Math.ceil((new Date(s)-new Date(todayStr))/864e5)); };
 
-            // scrollToScheduleTab 改用 visibleScheduleTabs 來計算 index
             const scrollToTab = (index) => { if (!slider.value) return; slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:"smooth" }); activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); };
             const scrollToScheduleTab = (index) => { if (!scheduleSlider.value) return; scheduleSlider.value.scrollTo({ left: scheduleSlider.value.clientWidth * index, behavior:"smooth" }); activeScheduleTab.value = visibleScheduleTabs.value[index]?.id || scheduleTabs[index]?.id; syncTabScroll(index, scheduleTabsScrollRef.value); };
             const syncTabScroll = (index, container) => { nextTick(() => { if (!container) return; const tabEls = container.querySelectorAll('.tab-item'); if (tabEls[index]) tabEls[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }); };
@@ -1966,11 +2450,11 @@
             let touchStartY = 0;
             const onPageTouchStart = (event) => { touchStartY = event.touches[0].clientY; };
             const onPageTouchMove = (event) => { const el = event.currentTarget; const dy = event.touches[0].clientY - touchStartY; if (el.scrollTop === 0 && dy > 40 && !cardsExpanded.value) cardsExpanded.value = true; };
-            // 定義職稱權重排序 (越前面越優先)
+            
             const TITLE_ORDER_WEIGHTS = ['分隊長', '副分隊長', '幹事', '助理幹事', '小隊長', '副小隊長', '隊員'];
             const getTitleWeight = (title) => {
                 const idx = TITLE_ORDER_WEIGHTS.indexOf(title);
-                return idx === -1 ? 99 : idx; // 找不到的預設排到最後
+                return idx === -1 ? 99 : idx;
             };
 
             const filterByGroup = (g) => {
@@ -1984,21 +2468,17 @@
             const findMedalValue = (mId) => { if (!userData.value) return null; const foundKey = Object.keys(userData.value).find(k => k.startsWith('medal_') && mId.split(/[- \n]+/).every(p => k.includes(p))); return foundKey ? userData.value[foundKey] : null; };
             const isUnderHours = (val, mIdx) => { const currM = new Date().getMonth()+1; return (Number(val)||0) < 8 && mIdx <= currM; };
 
-            // ══════════════════════════════════════════════
-            //  管理員代操作：refs
-            // ══════════════════════════════════════════════
             const isAdminAddShiftOpen      = ref(false);
             const isAdminAddRegOpen        = ref(false);
             const isAdminDeleteActOpen     = ref(false);
             const isAdminDeleteConfirmOpen = ref(false);
-            const adminOpTarget            = ref(null);   // 當前操作的隊員
-            const adminRegType             = ref('duty'); // 'duty' | 'meeting'
+            const adminOpTarget            = ref(null);
+            const adminRegType             = ref('duty');
             const adminShiftForm           = ref({ date: getTodayStr(), start: null, end: null });
             const adminRegForm             = ref({ status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 });
-            const adminMeetingRegTask      = ref(null);   // 正在填寫的會議任務
-            const actToDelete              = ref(null);   // 等待確認刪除的活動
+            const adminMeetingRegTask      = ref(null);
+            const actToDelete              = ref(null);
 
-            // 小時選取器（共用給 adminShiftForm）
             const selectAdminHour = (h) => {
                 const f = adminShiftForm.value;
                 if (h === f.start) { f.start = null; f.end = null; return; }
@@ -2010,17 +2490,9 @@
                 } else { f.start = h; f.end = null; }
             };
 
-            // ── 開啟「代為新增排班」 ──
-            const openAdminAddShift = (m) => {
-                adminOpTarget.value = m;
-                adminShiftForm.value = { date: getTodayStr(), start: null, end: null };
-                isAdminAddShiftOpen.value = true;
-            };
-
-            // ── 送出代為新增排班 ──
+            const openAdminAddShift = (m) => { adminOpTarget.value = m; adminShiftForm.value = { date: getTodayStr(), start: null, end: null }; isAdminAddShiftOpen.value = true; };
             const submitAdminShift = async () => {
-                const f = adminShiftForm.value;
-                const m = adminOpTarget.value;
+                const f = adminShiftForm.value; const m = adminOpTarget.value;
                 if (!f.date || !f.start || !f.end || !m) return;
                 adminActionLoading.value = 'shift';
                 try {
@@ -2028,43 +2500,35 @@
                         name: m.姓名, start: f.start, end: f.end, date: f.date, timestamp: new Date()
                     });
                     isAdminAddShiftOpen.value = false;
-                } catch(e) { alert("新增失敗：" + e.message); }
+                } catch(e) { showAppAlert('error', '提示', "新增失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
             };
 
-            // ── 開啟「代為登記公差/會議」 ──
             const openAdminAddReg = (m, type) => {
-                adminOpTarget.value = m;
-                adminRegType.value  = type;
-                adminMeetingRegTask.value = null;
+                adminOpTarget.value = m; adminRegType.value  = type; adminMeetingRegTask.value = null;
                 adminRegForm.value = { status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 };
                 isAdminAddRegOpen.value = true;
             };
 
-            // 當前操作隊員 + 類型可以登記的任務清單
             const availableAdminRegTasks = computed(() => {
                 const list = adminRegType.value === 'duty' ? officialTasks.value : meetingTasks.value;
                 return list.filter(t => !isExpired(t.date)).sort((a, b) => a.date.localeCompare(b.date));
             });
 
-            // 當前操作隊員是否已登記某任務
             const isTargetSignedUp = (taskId) => {
                 if (!adminOpTarget.value) return false;
                 return registrations.value.some(r => r.taskId === taskId && r.userName === adminOpTarget.value.姓名);
             };
 
-            // ── 公差：直接登記 ──
-        const submitAdminReg = async (task) => {
+            const submitAdminReg = async (task) => {
                 const m = adminOpTarget.value;
                 if (!m) return;
-                if (isTargetSignedUp(task.id)) { alert(`${m.姓名} 已登記此公差`); return; }
+                if (isTargetSignedUp(task.id)) { showAppAlert('error', '提示', `${m.姓名} 已登記此公差`); return; }
                 adminActionLoading.value = 'reg';
                 try {
                     await addDoc(collection(db, "registrations"), {
                         taskId: task.id, userName: m.姓名, type: 'duty', status: '出席', timestamp: new Date()
                     });
-                    
-                    // 管理員代為登記公差，次數自動 +1
                     if (adminRegType.value === 'duty') {
                         const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
                         mSnap.forEach(async (mDoc) => {
@@ -2072,67 +2536,39 @@
                             await updateDoc(doc(db, "members", mDoc.id), { duty_count: currentCount + 1 });
                         });
                     }
-                    
                     isAdminAddRegOpen.value = false;
-                } catch(e) { alert("登記失敗：" + e.message); }
+                } catch(e) { showAppAlert('error', '提示', "登記失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
             };
 
-            // ── 會議：先展開填寫表單 ──
             const openAdminMeetingRegForm = (task) => {
                 adminMeetingRegTask.value = task;
                 adminRegForm.value = { status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 };
             };
 
-            // ── 會議：送出登記 ──
             const submitAdminMeetingReg = async () => {
-                const m    = adminOpTarget.value;
-                const task = adminMeetingRegTask.value;
+                const m = adminOpTarget.value; const task = adminMeetingRegTask.value;
                 if (!m || !task) return;
                 adminActionLoading.value = 'reg';
                 try {
                     const existing = registrations.value.find(r => r.taskId === task.id && r.userName === m.姓名);
-                    if (existing) {
-                        await updateDoc(doc(db, "registrations", existing.id), { ...adminRegForm.value, timestamp: new Date() });
-                    } else {
-                        await addDoc(collection(db, "registrations"), {
-                            ...adminRegForm.value, taskId: task.id, userName: m.姓名, type: 'meeting', timestamp: new Date()
-                        });
-                    }
-                    adminMeetingRegTask.value = null;
-                    isAdminAddRegOpen.value = false;
-                } catch(e) { alert("登記失敗：" + e.message); }
+                    if (existing) { await updateDoc(doc(db, "registrations", existing.id), { ...adminRegForm.value, timestamp: new Date() }); } 
+                    else { await addDoc(collection(db, "registrations"), { ...adminRegForm.value, taskId: task.id, userName: m.姓名, type: 'meeting', timestamp: new Date() }); }
+                    adminMeetingRegTask.value = null; isAdminAddRegOpen.value = false;
+                } catch(e) { showAppAlert('error', '提示', "登記失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
             };
 
-            // ── 開啟「刪除活動」 ──
-            const openAdminDeleteActivity = (m) => {
-                adminOpTarget.value = m;
-                actToDelete.value   = null;
-                isAdminDeleteActOpen.value = true;
-            };
+            const openAdminDeleteActivity = (m) => { adminOpTarget.value = m; actToDelete.value = null; isAdminDeleteActOpen.value = true; };
 
-            // 當前操作隊員所有可刪除的活動（排班 + 有登記的公差/會議，含過去兩個月）
             const adminDeleteableActivities = computed(() => {
                 if (!adminOpTarget.value) return [];
                 const name = adminOpTarget.value.姓名;
                 const list = [];
-
-                // 排班（所有，不限時間）
                 Object.keys(userShifts.value).forEach(date => {
                     const s = (userShifts.value[date] || []).find(s => s.name === name);
-                    if (s) {
-                        list.push({
-                            key: `shift_${date}`,
-                            type: 'shift', date,
-                            dateLabel: `${date.slice(5,7)}/${date.slice(8,10)}`,
-                            label: `排班 ${s.start}-${s.end}`,
-                            firestoreQuery: { collection: 'shifts', field: 'date', value: date, nameField: 'name' },
-                        });
-                    }
+                    if (s) { list.push({ key: `shift_${date}`, type: 'shift', date, dateLabel: `${date.slice(5,7)}/${date.slice(8,10)}`, label: `排班 ${s.start}-${s.end}`, firestoreQuery: { collection: 'shifts', field: 'date', value: date, nameField: 'name' } }); }
                 });
-
-                // 公差登記
                 const twoMonthAgo = new Date(); twoMonthAgo.setMonth(twoMonthAgo.getMonth() - 2);
                 const twoMAStr = toLocalDateStr(twoMonthAgo);
                 registrations.value.forEach(r => {
@@ -2140,28 +2576,15 @@
                     const taskList = r.type === 'duty' ? officialTasks.value : meetingTasks.value;
                     const task = taskList.find(t => t.id === r.taskId);
                     if (!task || task.date < twoMAStr) return;
-                    list.push({
-                        key: `reg_${r.id}`,
-                        type: r.type, date: task.date,
-                        dateLabel: `${task.date.slice(5,7)}/${task.date.slice(8,10)}`,
-                        label: task.title,
-                        regId: r.id,
-                    });
+                    list.push({ key: `reg_${r.id}`, type: r.type, date: task.date, dateLabel: `${task.date.slice(5,7)}/${task.date.slice(8,10)}`, label: task.title, regId: r.id });
                 });
-
                 return list.sort((a, b) => b.date.localeCompare(a.date));
             });
 
-            // ── 點擊垃圾桶：彈出確認 ──
-            const confirmAdminDeleteAct = (act) => {
-                actToDelete.value = act;
-                isAdminDeleteConfirmOpen.value = true;
-            };
+            const confirmAdminDeleteAct = (act) => { actToDelete.value = act; isAdminDeleteConfirmOpen.value = true; };
 
-            // ── 確認刪除 ──
            const executeAdminDeleteAct = async () => {
-                const act  = actToDelete.value;
-                const name = adminOpTarget.value?.姓名;
+                const act  = actToDelete.value; const name = adminOpTarget.value?.姓名;
                 if (!act || !name) return;
                 adminActionLoading.value = act.key;
                 try {
@@ -2171,8 +2594,6 @@
                         for (const d of snap.docs) await deleteDoc(doc(db, "shifts", d.id));
                     } else {
                         await deleteDoc(doc(db, "registrations", act.regId));
-                        
-                        // 管理員刪除公差紀錄，次數自動 -1
                         if (act.type === 'duty') {
                             const mSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", name)));
                             mSnap.forEach(async (mDoc) => {
@@ -2182,180 +2603,643 @@
                         }
                     }
                     isAdminDeleteConfirmOpen.value = false;
-                } catch(e) { alert("刪除失敗：" + e.message); }
+                } catch(e) { showAppAlert('error', '錯誤', "刪除失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
             };
-// ══════════════════════════════════════════════
-//  管理員編輯隊員資料
-// ══════════════════════════════════════════════
-const isAdminEditMemberOpen = ref(false);
-const adminEditTarget       = ref(null);
-const adminEditForm         = ref(null);
-const showEditPassword      = ref(false);
-// 處理請假月份的切換
-const toggleLeaveMonth = (monthStr) => {
-    if (!adminEditForm.value.leave_month) adminEditForm.value.leave_month = [];
-    const idx = adminEditForm.value.leave_month.indexOf(monthStr);
-    if (idx > -1) {
-        adminEditForm.value.leave_month.splice(idx, 1);
-    } else {
-        adminEditForm.value.leave_month.push(monthStr);
-    }
-};
 
-// 判斷該成員某月是否請假
-const isMonthOnLeave = (member, monthIndex) => {
-    const leaveData = member.leave_month;
-    if (!leaveData) return false;
-    const monthStr = monthIndex + '月';
-    if (Array.isArray(leaveData)) return leaveData.includes(monthStr);
-    if (typeof leaveData === 'string') return leaveData.includes(monthStr);
-    return false;
-};
-const openAdminEditMember = (m) => {
-    adminEditTarget.value = m;
+            const isAdminEditMemberOpen = ref(false);
+            const adminEditTarget       = ref(null);
+            const adminEditForm         = ref(null);
+            const showEditPassword      = ref(false);
 
-    const toInputDate = (dStr) => {
-        if (!dStr || dStr === '無' || dStr.includes('-/-')) return '';
-        const d = new Date(dStr);
-        if (isNaN(d.getTime())) return '';
-        const y = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${month}-${day}`;
-    };
+            const toggleLeaveMonth = (monthStr) => {
+                if (!adminEditForm.value.leave_month) adminEditForm.value.leave_month = [];
+                const idx = adminEditForm.value.leave_month.indexOf(monthStr);
+                if (idx > -1) { adminEditForm.value.leave_month.splice(idx, 1); } 
+                else { adminEditForm.value.leave_month.push(monthStr); }
+            };
 
-    // 處理請假月份相容性 (轉為陣列)
-    let currentLeaves = [];
-    if (Array.isArray(m.leave_month)) {
-        currentLeaves = [...m.leave_month];
-    } else if (typeof m.leave_month === 'string' && m.leave_month.trim() !== '') {
-        currentLeaves = m.leave_month.split(',').map(s => s.trim());
-    }
+            const isMonthOnLeave = (member, monthIndex) => {
+                const leaveData = member.leave_month;
+                if (!leaveData) return false;
+                const monthStr = monthIndex + '月';
+                if (Array.isArray(leaveData)) return leaveData.includes(monthStr);
+                if (typeof leaveData === 'string') return leaveData.includes(monthStr);
+                return false;
+            };
 
-    adminEditForm.value = {
-        duty_group:   m.duty_group   || '幹部',
-        duty_title:   m.duty_title   || '隊員',
-        join_date:    toInputDate(m.join_date),
-        emt_expiry:   toInputDate(m.emt_expiry),
-        honor_expiry: toInputDate(m.honor_expiry),
-        
-        // 賦值為陣列
-        leave_month:  currentLeaves, 
-        duty_count:   Number(m.duty_count) || 0,
-        emt_level:    (m.emt_level || '初級技術員').trim(),
-        newPassword:  '',
-    };
-    
-    
-    
-    showEditPassword.value = false;
-    isAdminEditMemberOpen.value = true;
-};
+            const openAdminEditMember = (m) => {
+                adminEditTarget.value = m;
+                const toInputDate = (dStr) => {
+                    if (!dStr || dStr === '無' || dStr.includes('-/-')) return '';
+                    const d = new Date(dStr);
+                    if (isNaN(d.getTime())) return '';
+                    const y = d.getFullYear(); const month = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${month}-${day}`;
+                };
+                let currentLeaves = [];
+                if (Array.isArray(m.leave_month)) { currentLeaves = [...m.leave_month]; } 
+                else if (typeof m.leave_month === 'string' && m.leave_month.trim() !== '') { currentLeaves = m.leave_month.split(',').map(s => s.trim()); }
 
-const submitAdminEditMember = async () => {
-    const m = adminEditTarget.value;
-    const f = adminEditForm.value;
-    if (!m || !f) return;
-    adminActionLoading.value = 'edit';
-    try {
-        const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
-       const updateData = {
-            duty_group:   f.duty_group,
-            duty_title:   f.duty_title,
-            join_date:    f.join_date,
-            
-            // 移除協勤時數更新，儲存請假月份
-            leave_month:  f.leave_month,
-            duty_count:   Number(f.duty_count) || 0,
-            
-            emt_level:    f.emt_level,
-            emt_expiry:   f.emt_expiry,
-            honor_expiry: f.honor_expiry,
-        };
-        // 只有填了新密碼才更新
-        if (f.newPassword && f.newPassword.trim() !== '') {
-            updateData.password = f.newPassword.trim();
-        }
-        for (const d of snap.docs) {
-            await updateDoc(doc(db, "members", d.id), updateData);
-        }
-        isAdminEditMemberOpen.value = false;
-        // 簡單成功提示
-        const toast = document.createElement("div");
-        toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:800;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.2);";
-        toast.textContent = `✅ ${m.姓名} 的資料已更新`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    } catch(e) {
-        alert("儲存失敗：" + e.message);
-    } finally {
-        adminActionLoading.value = '';
-    }
-};
-            // ── 新增：取消訂閱 ──
+                adminEditForm.value = {
+                    duty_group:   m.duty_group   || '幹部',
+                    duty_title:   m.duty_title   || '隊員',
+                    join_date:    toInputDate(m.join_date),
+                    emt_expiry:   toInputDate(m.emt_expiry),
+                    honor_expiry: toInputDate(m.honor_expiry),
+                    leave_month:  currentLeaves, 
+                    duty_count:   Number(m.duty_count) || 0,
+                    emt_level:    (m.emt_level || '初級技術員').trim(),
+                    newPassword:  '',
+                };
+                showEditPassword.value = false;
+                isAdminEditMemberOpen.value = true;
+            };
+
+            const submitAdminEditMember = async () => {
+                const m = adminEditTarget.value; const f = adminEditForm.value;
+                if (!m || !f) return;
+                adminActionLoading.value = 'edit';
+                try {
+                    const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
+                    const updateData = { duty_group: f.duty_group, duty_title: f.duty_title, join_date: f.join_date, leave_month: f.leave_month, duty_count: Number(f.duty_count) || 0, emt_level: f.emt_level, emt_expiry: f.emt_expiry, honor_expiry: f.honor_expiry };
+                    if (f.newPassword && f.newPassword.trim() !== '') { updateData.password = f.newPassword.trim(); }
+                    for (const d of snap.docs) { await updateDoc(doc(db, "members", d.id), updateData); }
+                    isAdminEditMemberOpen.value = false;
+                    showAppAlert('success', '儲存成功', `✅ ${m.姓名} 的資料已更新`);
+                } catch(e) { showAppAlert('error', '提示', "儲存失敗：" + e.message); } 
+                finally { adminActionLoading.value = ''; }
+            };
+
             const confirmCancelSub = (m) => { cancelSubTarget.value = m; isCancelSubModalOpen.value = true; };
             const executeCancelSub = async () => {
-                const m = cancelSubTarget.value;
-                if (!m) return;
+                const m = cancelSubTarget.value; if (!m) return;
                 adminActionLoading.value = m.姓名 + '_cancel';
                 try {
                     const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
-                    for (const d of snap.docs) {
-                        await updateDoc(doc(db, "members", d.id), { pushSubscription: null });
-                    }
+                    for (const d of snap.docs) { await updateDoc(doc(db, "members", d.id), { pushSubscription: null }); }
                     isCancelSubModalOpen.value = false;
-                } catch(e) { alert("取消訂閱失敗：" + e.message); }
+                } catch(e) { showAppAlert('error', '錯誤', "取消訂閱失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
             };
 
-            // ── 新增：開啟單獨推播彈窗 ──
-            const openSinglePushModal = (m) => {
-                singlePushTarget.value = m;
-                singlePushForm.value = { title: '', body: '' };
-                isSinglePushModalOpen.value = true;
-            };
-
-            // ── 新增：從活動快速填入推播內容 ──
+            const openSinglePushModal = (m) => { singlePushTarget.value = m; singlePushForm.value = { title: '', body: '' }; isSinglePushModalOpen.value = true; };
             const fillSinglePushFromActivity = (act) => {
                 const dateLabel = act.dateLabel;
-                if (act.type === 'shift') {
-                    singlePushForm.value.title = `📅 協勤提醒`;
-                    singlePushForm.value.body  = `【協勤】${dateLabel} 有班：${act.label.replace('排班 ', '')}，請準時出席！`;
-                } else if (act.type === 'duty') {
-                    singlePushForm.value.title = `🚨 公差任務提醒`;
-                    singlePushForm.value.body  = `【公差】${dateLabel} ${act.label}${act.startTime ? '，時間：' + act.startTime : ''}${act.location ? '，地點：' + act.location : ''}`;
-                } else {
-                    singlePushForm.value.title = `🔔 活動提醒`;
-                    singlePushForm.value.body  = `【活動】${dateLabel} ${act.label}${act.startTime ? '，時間：' + act.startTime : ''}${act.location ? '，地點：' + act.location : ''}`;
-                }
+                if (act.type === 'shift') { singlePushForm.value.title = `📅 協勤提醒`; singlePushForm.value.body  = `【協勤】${dateLabel} 有班：${act.label.replace('排班 ', '')}，請準時出席！`; } 
+                else if (act.type === 'duty') { singlePushForm.value.title = `🚨 公差任務提醒`; singlePushForm.value.body  = `【公差】${dateLabel} ${act.label}${act.startTime ? '，時間：' + act.startTime : ''}${act.location ? '，地點：' + act.location : ''}`; } 
+                else { singlePushForm.value.title = `🔔 活動提醒`; singlePushForm.value.body  = `【活動】${dateLabel} ${act.label}${act.startTime ? '，時間：' + act.startTime : ''}${act.location ? '，地點：' + act.location : ''}`; }
             };
 
-            // ── 新增：執行單獨推播 ──
             const executeSinglePush = async () => {
                 const m = singlePushTarget.value;
                 if (!m || !m.pushSubscription || !singlePushForm.value.title || !singlePushForm.value.body) return;
                 adminActionLoading.value = m.姓名 + '_push';
                 try {
-                    const response = await fetch(CLOUD_RUN_URL + 'push-single', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userName:     m.姓名,
-                            subscription: m.pushSubscription,
-                            title:        singlePushForm.value.title,
-                            body:         singlePushForm.value.body,
-                        })
-                    });
+                    const response = await fetch(CLOUD_RUN_URL + 'push-single', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userName: m.姓名, subscription: m.pushSubscription, title: singlePushForm.value.title, body: singlePushForm.value.body }) });
                     const result = await response.json();
-                    if (result.ok) {
-                        isSinglePushModalOpen.value = false;
-                        alert(`✅ 已成功發送推播給 ${m.姓名}`);
-                    } else {
-                        alert(`推播失敗：${result.error || '未知錯誤'}`);
-                    }
-                } catch(e) { alert("發送失敗：" + e.message); }
+                    if (result.ok) { isSinglePushModalOpen.value = false; showAppAlert('success', '推播成功', `✅ 已成功發送推播給 ${m.姓名}`); } 
+                    else { showAppAlert('error', '提示', `推播失敗：${result.error || '未知錯誤'}`); }
+                } catch(e) { showAppAlert('error', '提示', "發送失敗：" + e.message); }
                 finally { adminActionLoading.value = ''; }
+            };
+
+            // ── 協勤登記、搜尋篩選與匯出邏輯 (民國年與+1/-1分鐘優化) ──
+            
+            const assistSearchQuery = ref('');
+            const assistFilterYear = ref(new Date().getFullYear().toString());
+            const assistFilterMonth = ref((new Date().getMonth() + 1).toString().padStart(2, '0'));
+
+            const toMinguoDate = (ds) => {
+                if (!ds) return '';
+                const [y, m, d] = ds.split('-');
+                return `${parseInt(y) - 1911}-${m}-${d}`;
+            };
+
+            const adjustTime = (ts, offsetMins) => {
+                if (!ts || !ts.includes(':')) return ts;
+                const [h, m] = ts.split(':').map(Number);
+                let date = new Date(2000, 0, 1, h, m);
+                date.setMinutes(date.getMinutes() + offsetMins);
+                return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            };
+const exportAssistanceToExcel = () => {
+    if (filteredAllAssistanceRecords.value.length === 0) return showAppAlert('error', '提示', '目前沒有資料可供匯出');
+
+    let html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:x="urn:schemas-microsoft-com:office:excel"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+    <meta charset="utf-8">
+    <style>
+        table { border-collapse: collapse; font-family: 'DFKai-SB', '標楷體', serif; }
+        th { background-color: #f8cbad; border: 1px solid #000000; font-size: 12pt; font-weight: bold; text-align: center; height: 30px; white-space: nowrap; }
+        td { background-color: #fce4d6; border: 1px solid #000000; text-align: center; font-size: 12pt; vertical-align: middle; height: 25px; white-space: nowrap; }
+    </style>
+    </head>
+    <body>
+    <table>
+        <thead>
+            <tr>
+                <th>協勤種類</th>
+                <th>服勤類別</th>
+                <th>事件日期</th>
+                <th>事件名稱</th>
+                <th>事件地點</th>
+                <th>簽到日期(起)</th>
+                <th>簽到時間(起)</th>
+                <th>簽到日期(迄)</th>
+                <th>簽到時間(迄)</th>
+                <th>身分證字號</th>
+                <th>人員姓名</th>
+                <th>救出人數</th>
+                <th>救護種類</th>
+                <th>備註</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    // 建立單列資料的輔助函式 (移除單引號，改用 inline CSS 強制轉為純文字格式)
+    const makeRow = (col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12, col13, col14) => {
+        // mso-number-format:'\@' 是 Excel HTML 專用，用來強制該儲存格為「文字格式」
+        const textStyle = "mso-number-format:'\\@';"; 
+        
+        return `<tr>
+            <td>${col1}</td>
+            <td>${col2}</td>
+            <td style="${textStyle}">${col3}</td>
+            <td>${col4}</td>
+            <td>${col5}</td>
+            <td style="${textStyle}">${col6}</td>
+            <td style="${textStyle}">${col7 || ''}</td>
+            <td style="${textStyle}">${col8}</td>
+            <td style="${textStyle}">${col9 || ''}</td>
+            <td style="${textStyle}">${col10}</td>
+            <td>${col11}</td>
+            <td>${col12}</td>
+            <td>${col13}</td>
+            <td>${col14}</td>
+        </tr>`;
+    };
+
+    filteredAllAssistanceRecords.value.forEach(r => {
+        const member = members.value.find(m => m.姓名 === r.userName);
+        const idNo = member ? (member.id_no || member.身分證字號 || '') : '';
+        const defaultPlace = "新北市板橋區英士路151號";
+        const mDate = toMinguoDate(r.date);
+        
+        if (r.cases && r.cases.length > 0) {
+            const firstCase = r.cases[0];
+
+            // 1. 協勤開始記錄
+            if (r.shiftStart !== firstCase.caseStart) {
+                html += makeRow(
+                    "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
+                    mDate, r.shiftStart, mDate, adjustTime(firstCase.caseStart, -1),
+                    idNo, r.userName, "0", "", "協勤開始記錄"
+                );
+            }
+
+            // 2. 處理救護案件
+            r.cases.forEach((c, idx) => {
+                let caseRemark = `第 ${idx + 1} 件救護案件詳情`;
+                if (idx > 0) {
+                    const prevCase = r.cases[idx - 1];
+                    if (prevCase.caseEnd === c.caseStart) {
+                        caseRemark += "返隊後立刻出勤";
+                    }
+                }
+
+                // 處理地址：確保開頭有「新北市」
+                let rawAddress = c.address.replace(/,/g, ' ');
+                let fullLocation = c.district + rawAddress;
+                if (!fullLocation.startsWith('新北市')) {
+                    fullLocation = '新北市' + fullLocation;
+                }
+
+                html += makeRow(
+                    "協勤", "緊急救護-救護勤務", mDate, fullLocation, fullLocation,
+                    mDate, c.caseStart, mDate, c.caseEnd,
+                    idNo, r.userName, c.rescuedCount, c.caseType, caseRemark
+                );
+
+                // 處理案件間的待命
+                if (idx < r.cases.length - 1) {
+                    const nextCase = r.cases[idx + 1];
+                    if (c.caseEnd !== nextCase.caseStart) {
+                        html += makeRow(
+                            "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
+                            mDate, c.caseEnd, mDate, adjustTime(nextCase.caseStart, -1),
+                            idNo, r.userName, "0", "", `第 ${idx + 1} 與 ${idx + 2} 件救護間待命協勤`
+                        );
+                    }
+                }
+            });
+
+            // 3. 協勤結束邏輯
+            const lastCase = r.cases[r.cases.length - 1];
+            if (lastCase.caseEnd === r.shiftEnd) {
+                html += makeRow(
+                    "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
+                    mDate, r.shiftEnd, mDate, r.shiftEnd,
+                    idNo, r.userName, "0", "", "返隊後退勤"
+                );
+            } else {
+                html += makeRow(
+                    "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
+                    mDate, adjustTime(lastCase.caseEnd, 1), mDate, r.shiftEnd,
+                    idNo, r.userName, "0", "", "協勤待命記錄"
+                );
+                html += makeRow(
+                    "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
+                    mDate, r.shiftEnd, mDate, r.shiftEnd,
+                    idNo, r.userName, "0", "", "協勤結束記錄"
+                );
+            }
+
+        } else {
+            // 無案件純待命
+            html += makeRow(
+                "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
+                mDate, r.shiftStart, mDate, r.shiftEnd,
+                idNo, r.userName, "0", "", "協勤待命記錄"
+            );
+        }
+    });
+    
+    html += `</tbody></table></body></html>`;
+    
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `海山救護義消勤務報表_${assistFilterYear.value}_${assistFilterMonth.value || '整年'}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+            const filteredAllAssistanceRecords = computed(() => {
+                if (!allAssistanceRecords.value) return [];
+                return allAssistanceRecords.value.filter(r => {
+                    const search = assistSearchQuery.value.trim().toLowerCase();
+                    const matchSearch = !search || r.userName.toLowerCase().includes(search) || (r.cases && r.cases.some(c => c.address.toLowerCase().includes(search)));
+                    const [y, m] = r.date.split('-');
+                    const matchYear = !assistFilterYear.value || y === assistFilterYear.value;
+                    const matchMonth = !assistFilterMonth.value || m === assistFilterMonth.value;
+                    return matchSearch && matchYear && matchMonth;
+                });
+            });
+
+            const streetList = [
+                '文化路一段', '文化路二段', '四川路一段', '四川路二段', '中山路一段', '中山路二段', '縣民大道一段', '縣民大道二段', '民生路一段', '民生路二段', '民生路三段', '光武街', '中正路', '南雅南路一段', '南雅南路二段', '大觀路一段', '大觀路二段', '大觀路三段', '民權路', '建國街', '公館街', '漢生東路', '漢生西路', '雙十路一段', '雙十路二段', '雙十路三段', '三民路一段', '三民路二段', '萬板路', '長江路一段', '長江路二段', '長江路三段', '華江一路', '華江二路', '華江三路', '華江四路', '莊敬路', '莒光路', '民治街', '仁化街', '文聖街', '陽明街', '互助街', '新海路', '雨農路', '英士路', '宏國路', '板新路', '重慶路', '和平路', '廣權路', '信義路', '國慶路', '忠孝路', '館前西路', '館前東路', '實踐路', '南雅東路',
+                '干城路', '文德路', '四維路', '江寧路', '自由路', '自強新村', '吳鳳路', '幸福路', '南雅西路', '海山路', '貴興路', '新站路', '新興路', '環河西路', '大仁街', '大智街', '介壽街', '北門街', '民有街', '民享街', '永豐街', '光正街', '東興街', '金華街', '國建街', '國光街', '富山街', '復興街', '裕民街', '僑中一街', '龍泉街', '藝文街', '懷德街', '僑中二街', '民族路', '溪頭街', '板城路', '國光路', '民德路', '大同街', '懷仁街', '新生街', '華興街', '中港路', '公園路', '化成路', '後港一路', '思源路', '復興路', '新泰路', '新莊路', '瓊林路', '瓊濱路', '仁愛街', '永寧街', '昌隆街', '建中街', '碧江街', '福海街', '豐年街', '豐年路', '豐林街', '新興街', '大觀街', '中華路', '景德路', '建興街', '重新路'
+            ];
+            
+            const activeAssistTab = ref('new');
+            const baseAssistTabs = [
+                { id: 'new', name: '新增紀錄', icon: 'fa-solid fa-plus', activeClass: 'bg-blue-600 text-white shadow-md', textColor: 'text-blue-600' },
+                { id: 'history', name: '我的紀錄', icon: 'fa-solid fa-clock-rotate-left', activeClass: 'bg-emerald-600 text-white shadow-md', textColor: 'text-emerald-600' }
+            ];
+            
+            const visibleAssistTabs = computed(() => {
+                if (isAdmin.value) {
+                    return [...baseAssistTabs, { id: 'admin_all', name: '全隊紀錄', icon: 'fa-solid fa-users-gear', activeClass: 'bg-rose-600 text-white shadow-md', textColor: 'text-rose-600' }];
+                }
+                return baseAssistTabs;
+            });
+
+            const assistSlider = ref(null);
+            const assistTabsScrollRef = ref(null);
+
+            const scrollToAssistTab = (index) => {
+                if (!assistSlider.value) return;
+                assistSlider.value.scrollTo({ left: assistSlider.value.clientWidth * index, behavior: "smooth" });
+                activeAssistTab.value = visibleAssistTabs.value[index].id;
+                syncTabScroll(index, assistTabsScrollRef.value);
+            };
+
+            const onAssistSliderScroll = () => {
+                if (!assistSlider.value) return;
+                const index = Math.round(assistSlider.value.scrollLeft / assistSlider.value.clientWidth);
+                if (visibleAssistTabs.value[index]) {
+                    activeAssistTab.value = visibleAssistTabs.value[index].id;
+                    syncTabScroll(index, assistTabsScrollRef.value);
+                }
+            };
+
+            const assistanceStep = ref(1);
+            const assistanceForm = ref({
+                date: getTodayStr(),
+                startTime: null,
+                endTime: null,
+                cases: []
+            });
+const isAssistTimeModalOpen = ref(false);
+            const assistTempStart = ref(null);
+            const assistTempEnd = ref(null);
+
+            const openAssistTimeModal = () => {
+                // 開啟時載入目前已選的數字（去掉 :00）
+                assistTempStart.value = assistanceForm.value.startTime ? assistanceForm.value.startTime.replace(':00', '') : null;
+                assistTempEnd.value = assistanceForm.value.endTime ? assistanceForm.value.endTime.replace(':00', '') : null;
+                isAssistTimeModalOpen.value = true;
+            };
+
+            const resetAssistTimeSelection = () => {
+                assistTempStart.value = null;
+                assistTempEnd.value = null;
+            };
+
+            const selectAssistHour = (h) => {
+                // 如果點擊已選的時間，則取消
+                if (h === assistTempStart.value) { resetAssistTimeSelection(); return; }
+                if (h === assistTempEnd.value) { assistTempEnd.value = null; return; }
+                
+                if (!assistTempStart.value) {
+                    assistTempStart.value = h;
+                } else if (!assistTempEnd.value) {
+                    if (parseInt(h) > parseInt(assistTempStart.value)) {
+                        assistTempEnd.value = h;
+                    } else {
+                        assistTempStart.value = h;
+                    }
+                } else {
+                    // 若起訖都有了，重新點擊視為重新選擇起點
+                    assistTempStart.value = h;
+                    assistTempEnd.value = null;
+                }
+            };
+
+            const isAssistHourDisabled = (h) => {
+                // 如果選了起點還沒選終點，比起點小的禁用
+                if (assistTempStart.value && !assistTempEnd.value) {
+                    return parseInt(h) <= parseInt(assistTempStart.value);
+                }
+                return false;
+            };
+
+            const confirmAssistTime = () => {
+                if (!assistTempStart.value || !assistTempEnd.value) return;
+                assistanceForm.value.startTime = assistTempStart.value + ':00';
+                assistanceForm.value.endTime = assistTempEnd.value + ':00';
+                isAssistTimeModalOpen.value = false;
+            };
+
+            // 新增時間轉換輔助函數 (放在 handleTimeInput 之前)
+// --- 從這裡開始取代 ---
+// --- 核心邏輯修改：支援 24:00 與 跨案件接續檢查 ---
+
+const timeToMin = (t) => {
+    if (!t || !t.includes(':')) return -1;
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+};
+
+// 核心驗證函式
+const validateAssistanceForm = (form) => {
+    if (!form || !form.cases) return true;
+    
+    // 取得協勤整體的起訖時間
+    const shiftStartMin = timeToMin(form.startTime || form.shiftStart);
+    const shiftEndMin = timeToMin(form.endTime || form.shiftEnd);
+    let allValid = true;
+
+    form.cases.forEach((c, idx) => {
+        // 重置狀態
+        c.errStart = false; 
+        c.errEnd = false; 
+        c.errMsg = '';
+
+        // 相容不同模式的欄位名
+        const cStartStr = c.startTime || c.caseStart;
+        const cEndStr = c.endTime || c.caseEnd;
+        
+        const cStart = timeToMin(cStartStr);
+        const cEnd = timeToMin(cEndStr);
+        
+        if (cStart === -1 || cEnd === -1) return;
+
+        // 1. 嚴格檢查：開始必須「小於」結束 (不能等於)
+        if (cStart >= cEnd) {
+            c.errEnd = true; 
+            c.errMsg = '開始時間必須「小於」結束時間';
+            allValid = false;
+        }
+
+        // 2. 邊界檢查：不可早於協勤開始
+        if (idx === 0 && cStart < shiftStartMin) {
+            c.errStart = true; 
+            c.errMsg = `首件需晚於協勤開始 (${form.startTime || form.shiftStart})`;
+            allValid = false;
+        }
+
+        // 3. 跨案件重疊檢查：目前案件開始 必須 >= 前一件的結束
+        if (idx > 0) {
+            const prevCase = form.cases[idx - 1];
+            const prevEndStr = prevCase.endTime || prevCase.caseEnd;
+            const prevEndMin = timeToMin(prevEndStr);
+            
+            if (prevEndMin !== -1 && cStart < prevEndMin) {
+                c.errStart = true; 
+                c.errMsg = `時間重疊！需晚於前件結束 (${prevEndStr})`;
+                allValid = false;
+            }
+        }
+
+        // 4. 邊界檢查：不可晚於協勤結束
+        if (idx === form.cases.length - 1 && cEnd > shiftEndMin) {
+            c.errEnd = true; 
+            c.errMsg = `末件需早於協勤結束 (${form.endTime || form.shiftEnd})`;
+            allValid = false;
+        }
+    });
+    
+    return allValid;
+};
+
+// 處理數字轉時間格式 (如 1230 -> 12:30)
+const handleTimeInput = (item, field, formType) => {
+    let val = item[field];
+    if (!val) return;
+    val = val.replace(/\D/g, ''); 
+    if (val.length > 4) val = val.substring(0, 4);
+    if (val.length === 3) val = '0' + val; 
+    
+    if (val.length === 4) {
+        const h = parseInt(val.substring(0, 2));
+        const m = parseInt(val.substring(2, 4));
+        
+        // 允許 00:00~23:59 或 24:00
+        const isValidTime = (h >= 0 && h <= 23 && m >= 0 && m <= 59) || (h === 24 && m === 0);
+        
+        if (isValidTime) {
+            item[field] = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            item.errMsg = '';
+            
+            // 重要：每次輸入完畢，立刻重新驗證整個表單，這樣才能觸發跨案件的重疊警告
+            const targetForm = formType === 'edit' ? editingAssistRecord.value : assistanceForm.value;
+            validateAssistanceForm(targetForm);
+            
+        } else {
+            item.errMsg = '時間格式錯誤 (最高 24:00)';
+            item[field] = ''; 
+        }
+    }
+};
+
+
+            const handleAddressInput = (c, isEdit = false) => {
+                c.errAddress = false;
+                if (!c.address) {
+                    c.showSuggestions = false;
+                    return;
+                }
+                const keyword = c.address.trim();
+                const matches = streetList.filter(s => s.includes(keyword)).slice(0, 5);
+                c.suggestions = matches;
+                c.showSuggestions = matches.length > 0;
+            };
+
+            const selectStreet = (c, street, isEdit = false) => {
+                c.address = street;
+                c.showSuggestions = false;
+            };
+
+            const hideSuggestions = (c) => {
+                setTimeout(() => { c.showSuggestions = false; }, 200);
+            };
+
+            const goToAddCase = () => {
+                if(!assistanceForm.value.startTime || !assistanceForm.value.endTime) return showAppAlert('error', '提示', '請先選擇協勤起訖時間');
+                if(assistanceForm.value.cases.length === 0) addCase();
+                assistanceStep.value = 2;
+            };
+// --- 從這裡開始取代 ---
+const goToConfirmStep = (onlyShift = false) => {
+    if (onlyShift) {
+        assistanceForm.value.cases = [];
+        assistanceStep.value = 3;
+        return;
+    }
+
+    let hasEmptyField = false;
+    // 必填欄位檢查：地點、區域、種類、時間
+    assistanceForm.value.cases.forEach(c => {
+        c.errDistrict = false; c.errAddress = false; c.errType = false;
+        if (!c.district) { c.errDistrict = true; hasEmptyField = true; }
+        if (!c.address || c.address.trim() === '') { c.errAddress = true; hasEmptyField = true; }
+        if (!c.type) { c.errType = true; hasEmptyField = true; }
+        if (!c.startTime) { c.errStart = true; hasEmptyField = true; }
+        if (!c.endTime) { c.errEnd = true; hasEmptyField = true; }
+    });
+
+    if (hasEmptyField) {
+        showAppAlert('error', '資料未填齊', '請檢查標註紅框的必填欄位。');
+        return;
+    }
+
+    const isLogicOk = validateAssistanceForm(assistanceForm.value);
+    if (!isLogicOk) {
+        showAppAlert('error', '時間邏輯錯誤', '請修正標註紅色的案件時間或順序。');
+        return;
+    }
+    assistanceStep.value = 3;
+};
+
+            const addCase = () => {
+                assistanceForm.value.cases.push({
+                    startTime: '', endTime: '', district: '板橋區', address: '', type: '', description: '', rescuedCount: 0,
+                    errStart: false, errEnd: false, errType: false, errDistrict: false, errAddress: false, errMsg: '',
+                    showSuggestions: false, suggestions: []
+                });
+            };
+
+            const removeCase = (idx) => {
+                assistanceForm.value.cases.splice(idx, 1);
+                if(assistanceForm.value.cases.length === 0) assistanceStep.value = 1;
+            };
+
+            const submitAssistanceToFirebase = async () => {
+                try {
+                    const timestampStr = formatDateTime(new Date());
+                    const baseData = {
+                        userName: userData.value.姓名,
+                        date: assistanceForm.value.date,
+                        shiftStart: assistanceForm.value.startTime,
+                        shiftEnd: assistanceForm.value.endTime,
+                        timestamp: timestampStr
+                    };
+
+                    if (assistanceForm.value.cases.length === 0) {
+                        await addDoc(collection(db, "assistance_records"), { ...baseData, recordType: '待命協勤' });
+                    } else {
+                        baseData.recordType = '急救護-救護勤務';
+                        baseData.cases = assistanceForm.value.cases.map(c => ({
+                            caseStart: c.startTime,
+                            caseEnd: c.endTime,
+                            district: c.district,
+                            address: c.address || '',
+                            caseType: c.type,
+                            description: c.description || '',
+                            rescuedCount: c.rescuedCount
+                        }));
+                        await addDoc(collection(db, "assistance_records"), baseData);
+                    }
+
+                    showAppAlert('success', '上傳成功', "✅ 紀錄已寫入！");
+                    assistanceStep.value = 1;
+                    assistanceForm.value = { date: getTodayStr(), startTime: null, endTime: null, cases: [] };
+                    scrollToAssistTab(1);
+                } catch (e) { showAppAlert('error', '提示', "失敗：" + e.message); }
+            };
+
+            const isAssistEditModalOpen = ref(false);
+            const editingAssistRecord = ref(null);
+
+            const openAssistEditModal = (record) => {
+                let r = JSON.parse(JSON.stringify(record));
+                if (r.cases) {
+                    r.cases.forEach(c => {
+                        c.errStart = false; c.errEnd = false; c.errType = false; c.errDistrict = false; c.errAddress = false; c.errMsg = '';
+                        c.showSuggestions = false; c.suggestions = [];
+                    });
+                }
+                editingAssistRecord.value = r;
+                isAssistEditModalOpen.value = true;
+            };
+
+            const submitAssistEdit = async () => {
+    // 先執行校驗
+    const isLogicOk = validateAssistanceForm(editingAssistRecord.value);
+    if (!isLogicOk) {
+        showAppAlert('error', '儲存失敗', '時間邏輯有誤，請修正紅框處。');
+        return;
+    }
+    try {
+        const r = editingAssistRecord.value;
+        const updateData = {
+            date: r.date, shiftStart: r.shiftStart, shiftEnd: r.shiftEnd,
+            recordType: r.cases && r.cases.length > 0 ? '急救護-救護勤務' : '待命協勤',
+            cases: (r.cases || []).map(c => {
+                const { errStart, errEnd, errType, errDistrict, errAddress, errMsg, showSuggestions, suggestions, ...rest } = c;
+                return rest;
+            })
+        };
+        await updateDoc(doc(db, "assistance_records", r.id), updateData);
+        isAssistEditModalOpen.value = false;
+        showAppAlert('success', '修改成功', '✅ 紀錄已更新');
+    } catch(e) { showAppAlert('error', '提示', "失敗：" + e.message); }
+};
+
+            const deleteAssistRecord = async (id) => {
+                showAppConfirm('確認刪除', '確定要移除這筆紀錄嗎？', async () => {
+                    try {
+                        await deleteDoc(doc(db, "assistance_records", id));
+                        showAppAlert('success', '已刪除', '紀錄已移除');
+                    } catch(e) { showAppAlert('error', '錯誤', "失敗：" + e.message); }
+                });
             };
 
             return {
@@ -2375,21 +3259,29 @@ const submitAdminEditMember = async () => {
                 scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
                 activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen, aiRawInput, isAiProcessing, handleAiParse,
                 lastPushStats, isAdminEditMemberOpen, adminEditTarget, adminEditForm, showEditPassword,
-openAdminEditMember, submitAdminEditMember,
-                // ── 新增 export ──
+                openAdminEditMember, submitAdminEditMember,
                 pushLogs, yesterdayStr, adminFilter, adminFilters, adminMembersData, filteredAdminMembers, adminStats,
                 todayStr, weekLaterAdminStr,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
                 adminActionLoading, singlePushForm,
                 confirmCancelSub, executeCancelSub,
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
-                // ── 代操作 export ──
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
                 selectAdminHour, openAdminAddShift, submitAdminShift,
                 openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,
                 submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,
                 openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
+                
+                // 協勤專屬
+                assistanceStep, assistanceForm, goToAddCase, addCase, removeCase, goToConfirmStep, submitAssistanceToFirebase,
+                isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
+                activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll,
+                myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
+                
+                // 全域 UI 工具與搜尋
+                appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions,
+                assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
     }).mount('#app');
