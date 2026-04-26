@@ -2938,6 +2938,7 @@ const exportAssistanceToExcel = () => {
             });
 
             // 3. 協勤結束邏輯
+          // 3. 協勤結束邏輯
             const lastCase = r.cases[r.cases.length - 1];
             if (lastCase.caseEnd === r.shiftEnd) {
                 html += makeRow(
@@ -2946,14 +2947,10 @@ const exportAssistanceToExcel = () => {
                     idNo, r.userName, "0", "", "返隊後退勤"
                 );
             } else {
+                // 案件結束後，到退勤之間的時段直接列為「協勤結束記錄」，不用多拆一筆待命
                 html += makeRow(
                     "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
                     mDate, adjustTime(lastCase.caseEnd, 1), mDate, r.shiftEnd,
-                    idNo, r.userName, "0", "", "協勤待命記錄"
-                );
-                html += makeRow(
-                    "備勤", "待命協勤", mDate, "待命協勤", defaultPlace,
-                    mDate, r.shiftEnd, mDate, r.shiftEnd,
                     idNo, r.userName, "0", "", "協勤結束記錄"
                 );
             }
