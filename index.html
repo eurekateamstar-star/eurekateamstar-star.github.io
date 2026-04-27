@@ -175,8 +175,8 @@
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
                     <div class="bank-card bg-card-blue">
-                        <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div><div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-num tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div></div>
-                        <div class="grid grid-cols-3 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-[15px] font-num">{{ userData['出勤次數'] || 0 }} <span class="text-[9px] font-normal">次</span></p></div><div class="border-r border-white/10 text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-[15px] font-num">{{ cleanValue(userData['救出人數']) }} <span class="text-[9px] font-normal">人</span></p></div><div class="text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">服務年資</p><p class="text-[14px] font-bold whitespace-nowrap">{{ calculateSeniority(userData['join_date']) }}</p></div></div>
+                        <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div><div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-num tracking-tighter">{{ cleanValue(dynamicMemberHours[userData.姓名]?.total || 0) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div></div>
+                        <div class="grid grid-cols-3 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-[15px] font-num">{{ personalYearlyStats.dispatchCount }} <span class="text-[9px] font-normal">次</span></p></div><div class="border-r border-white/10 text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-[15px] font-num">{{ personalYearlyStats.rescueCount }} <span class="text-[9px] font-normal">人</span></p></div><div class="text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">服務年資</p><p class="text-[14px] font-bold whitespace-nowrap">{{ calculateSeniority(userData['join_date']) }}</p></div></div>
                     </div>
                     <div class="bank-card bg-card-emerald">
                         <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div><div class="mb-6 mt-2"><h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 <span class="font-num">{{ calculateDays(userData['honor_expiry']) }}</span> 天</p></div></div>
@@ -252,25 +252,43 @@
                         <template v-if="i === 4">
                             <div class="pt-2 pb-10">
                                 <div class="mb-4 px-1"><h3 class="text-xl font-black text-slate-800">隊員協勤時數明細</h3></div>
-                                <div class="space-y-4">
-                                    <div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-personal-blue ring-4 ring-blue-100 scale-[1.02] i-10' : 'bg-white border-slate-100'">
-                                        <div class="flex items-center justify-between mb-4"><div class="flex flex-col"><span class="text-lg font-black leading-none">{{ m.姓名 }}</span><span class="text-[10px] font-bold opacity-60 mt-1 uppercase tracking-wider">{{ m.duty_title || '隊員' }}</span></div><div class="text-right"><span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span><span class="text-2xl font-num leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span></div></div>
-                                   <div class="horizontal-scroll pb-1">
-    <div class="flex gap-6">
-        <div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]">
-            <span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span>
-            
-            <!-- 若為請假，顯示請假標籤 -->
-            <span v-if="isMonthOnLeave(m, i)" class="text-[10px] font-black text-amber-500 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">請假</span>
-            
-           
-          <!-- 若無請假，顯示時數數字 -->
-            <span v-else class="text-base font-num" :class="isUnderHours(m['m'+i], i) ? 'text-red-500 font-black' : ''">{{ m['m'+i] || 0 }}</span>
+                               <div class="space-y-4">
+    <div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-personal-blue ring-4 ring-blue-100 scale-[1.02] i-10' : 'bg-white border-slate-100'">
+        
+        <!-- 上方：姓名與年度總計 -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex flex-col">
+                <span class="text-lg font-black leading-none">{{ m.姓名 }}</span>
+                <span class="text-[10px] font-bold opacity-60 mt-1 uppercase tracking-wider">{{ m.duty_title || '隊員' }}</span>
+            </div>
+            <div class="text-right">
+                <span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span>
+                <!-- 動態讀取年度總計 -->
+                <span class="text-2xl font-num leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">
+                    {{ cleanValue(dynamicMemberHours[m.姓名]?.total || 0) }}
+                </span>
+            </div>
         </div>
+        
+        <!-- 下方：1~12 月橫向滾動 -->
+        <div class="horizontal-scroll pb-1">
+            <div class="flex gap-6">
+                <div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]">
+                    <span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span>
+                    
+                    <!-- 若為請假，顯示請假標籤 -->
+                    <span v-if="isMonthOnLeave(m, i)" class="text-[10px] font-black text-amber-500 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shadow-sm whitespace-nowrap">請假</span>
+                    
+                    <!-- 若無請假，動態顯示該月時數數字 -->
+                    <span v-else class="text-base font-num" :class="isUnderHours(dynamicMemberHours[m.姓名]?.months[i], i) ? 'text-red-500 font-black' : ''">
+                        {{ dynamicMemberHours[m.姓名]?.months[i] || 0 }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
-                                    </div>
-                                </div>
                             </div>
                         </template>
                        <template v-if="i === 5">
@@ -914,16 +932,41 @@
                                 <h3 class="text-xl font-black text-slate-800">我的協勤紀錄</h3>
                                 <p class="text-[10px] text-blue-500 font-bold uppercase tracking-widest">MY ASSISTANCE HISTORY</p>
                             </div>
-                            <span class="text-[10px] font-black bg-blue-100 text-blue-600 px-2 py-1 rounded-lg">共 {{ myAssistanceRecords.length }} 筆</span>
                         </div>
 
-                        <div v-if="myAssistanceRecords.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                        <!-- 加入：我的紀錄 搜尋篩選區域 -->
+                        <div class="search-filter-box space-y-3">
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" v-model="myAssistSearchQuery" placeholder="搜尋地點或案件類型(如:車禍)..." class="w-full bg-slate-50 border-0 rounded-xl py-3 pl-11 pr-4 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none">
+                            </div>
+                            <div class="flex gap-2">
+                                <div class="flex-1 relative">
+                                    <select v-model="myAssistFilterYear" class="filter-select w-full">
+                                        <option v-for="y in Array.from({length:5}, (_,i)=>2024+i)" :key="y" :value="y.toString()">{{y}} 年</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                                </div>
+                                <div class="flex-1 relative">
+                                    <select v-model="myAssistFilterMonth" class="filter-select w-full">
+                                        <option value="">全部月份</option>
+                                        <option v-for="m in 12" :key="m" :value="m.toString().padStart(2, '0')">{{m}} 月</option>
+                                    </select>
+                                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]"></i>
+                                </div>
+                                <div class="px-4 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center text-[11px] font-black whitespace-nowrap">
+                                    共 {{ filteredMyAssistanceRecords.length }} 筆
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="filteredMyAssistanceRecords.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
                             <i class="fa-solid fa-folder-open text-4xl mb-4"></i>
-                            <p class="font-black text-sm">尚未有任何協勤紀錄</p>
+                            <p class="font-black text-sm">找不到符合條件的紀錄</p>
                         </div>
 
                         <div class="space-y-4">
-                            <div v-for="record in myAssistanceRecords" :key="record.id" class="list-card border border-slate-100 bg-white shadow-sm overflow-hidden">
+                            <div v-for="record in filteredMyAssistanceRecords" :key="record.id" class="list-card border border-slate-100 bg-white shadow-sm overflow-hidden">
                                 <div class="bg-slate-50/80 px-4 py-3 border-b border-slate-100 flex justify-between items-center">
                                     <div class="flex items-center gap-2">
                                         <span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="record.recordType === '待命協勤' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'">
@@ -2513,10 +2556,14 @@ const sortedCashHistory = computed(() => {
             const isCaseDetailModalOpen = ref(false);
             const selectedCaseType = ref('');
 
-            // 1. 動態計算每個案件的總數
+            // 1. 動態計算每個案件的總數 (加入跨年自動歸零)
             const personalCaseCounts = computed(() => {
                 const counts = {};
+                const targetYear = new Date().getFullYear().toString(); // 永遠抓取系統今年
+                
                 myAssistanceRecords.value.forEach(record => {
+                    if (!record.date || !record.date.startsWith(targetYear)) return; // 👈 核心：不是今年的直接跳過！
+
                     if (record.cases && record.cases.length > 0) {
                         record.cases.forEach(c => {
                             if (c.caseType) {
@@ -2528,6 +2575,31 @@ const sortedCashHistory = computed(() => {
                     }
                 });
                 return counts;
+            });
+
+            // 2. 動態計算首頁大卡的「出勤次數」與「救出人數」 (加入跨年自動歸零)
+            const personalYearlyStats = computed(() => {
+                const targetYear = new Date().getFullYear().toString();
+                let dispatchCount = 0;
+                let rescueCount = 0;
+
+                myAssistanceRecords.value.forEach(record => {
+                    if (!record.date || !record.date.startsWith(targetYear)) return; // 只算今年的
+                    
+                    if (record.cases && record.cases.length > 0) {
+                        // 👈 核心修改：將案件的數量直接加上去 (有 2 件就加 2 次)
+                        dispatchCount += record.cases.length; 
+                        
+                        record.cases.forEach(c => {
+                            rescueCount += Number(c.rescuedCount) || 0;
+                        });
+                    } else if (record.caseType) { // 相容舊版資料
+                        dispatchCount += 1;
+                        rescueCount += Number(record.rescuedCount) || 0;
+                    }
+                });
+
+                return { dispatchCount, rescueCount };
             });
 
             // 2. 點擊卡片時觸發
@@ -2573,6 +2645,51 @@ const sortedCashHistory = computed(() => {
                 return details.sort((a, b) => new Date(b.date) - new Date(a.date));
             });
             // 👆 新增代碼結束 👆
+
+// --- 動態計算隊員協勤時數 (按月、按年加總) ---
+            const dynamicMemberHours = computed(() => {
+                const result = {};
+                // 取得當前年份 (若您測試的假資料是 2026 年，這裡可以暫時寫死為 '2026'，正式上線請用下方這行)
+                const targetYear = new Date().getFullYear().toString(); 
+                // 若要配合截圖的 2026 測試資料，請改用： const targetYear = '2026';
+
+                // 1. 初始化所有人的資料 (確保每個人都有 1~12 月的預設值 0)
+                members.value.forEach(m => {
+                    result[m.姓名] = { total: 0, months: {} };
+                    for (let i = 1; i <= 12; i++) {
+                        result[m.姓名].months[i] = 0;
+                    }
+                });
+
+                // 2. 計算時數的輔助函式 (例如 08:00 到 20:00 -> 12小時)
+                const calcHours = (start, end) => {
+                    if (!start || !end || !start.includes(':') || !end.includes(':')) return 0;
+                    const [h1, m1] = start.split(':').map(Number);
+                    const [h2, m2] = end.split(':').map(Number);
+                    return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+                };
+
+                // 3. 遍歷所有協勤紀錄進行累加
+                allAssistanceRecords.value.forEach(record => {
+                    if (!record.date || !record.shiftStart || !record.shiftEnd || !record.userName) return;
+                    
+                    const [y, m, d] = record.date.split('-');
+                    if (y !== targetYear) return; // 只計算當年度的資料
+
+                    const monthInt = parseInt(m, 10);
+                    const hours = calcHours(record.shiftStart, record.shiftEnd);
+
+                    // 如果該人員存在於名單中，則加上去
+                    if (result[record.userName]) {
+                        result[record.userName].months[monthInt] += hours;
+                        result[record.userName].total += hours;
+                    }
+                });
+
+                return result;
+            });
+
+
             onMounted(() => {
                 if ('clearAppBadge' in navigator) {
                     navigator.clearAppBadge();
@@ -3109,6 +3226,35 @@ const exportAssistanceToExcel = () => {
     document.body.removeChild(link);
 };
 
+// ── 「我的紀錄」專用的搜尋與過濾狀態 ──
+            const myAssistSearchQuery = ref('');
+            const myAssistFilterYear = ref(new Date().getFullYear().toString());
+            const myAssistFilterMonth = ref(''); // 預設全部月份
+
+            // 動態過濾我的紀錄
+            const filteredMyAssistanceRecords = computed(() => {
+                if (!myAssistanceRecords.value) return [];
+                return myAssistanceRecords.value.filter(r => {
+                    const search = myAssistSearchQuery.value.trim().toLowerCase();
+                    
+                    // 針對「我的紀錄」，搜尋關鍵字對準：地點、案件種類 (因為名字一定都是自己)
+                    const matchSearch = !search || 
+                        (r.cases && r.cases.some(c => 
+                            (c.address && c.address.toLowerCase().includes(search)) ||
+                            (c.caseType && c.caseType.toLowerCase().includes(search))
+                        )) ||
+                        (r.address && r.address.toLowerCase().includes(search)) || // 兼容舊資料
+                        (r.caseType && r.caseType.toLowerCase().includes(search)); // 兼容舊資料
+
+                    const [y, m] = r.date.split('-');
+                    const matchYear = !myAssistFilterYear.value || y === myAssistFilterYear.value;
+                    const matchMonth = !myAssistFilterMonth.value || m === myAssistFilterMonth.value;
+                    
+                    return matchSearch && matchYear && matchMonth;
+                });
+            });
+
+
             const filteredAllAssistanceRecords = computed(() => {
                 if (!allAssistanceRecords.value) return [];
                 return allAssistanceRecords.value.filter(r => {
@@ -3503,14 +3649,14 @@ const goToConfirmStep = (onlyShift = false) => {
                 openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
                 
                 // 協勤專屬
-                assistanceStep, assistanceForm, goToAddCase, addCase, removeCase, goToConfirmStep, submitAssistanceToFirebase,
+                assistanceStep, assistanceForm, goToAddCase, addCase, removeCase, goToConfirmStep, submitAssistanceToFirebase, myAssistSearchQuery, myAssistFilterYear, myAssistFilterMonth, filteredMyAssistanceRecords,
                 isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
-                activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll,
+                activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll, dynamicMemberHours,
                 myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
                  
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
-    selectedCaseDetails, openCaseDetailModal,
+    selectedCaseDetails, openCaseDetailModal, personalYearlyStats,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
