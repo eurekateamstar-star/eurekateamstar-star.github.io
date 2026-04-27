@@ -202,13 +202,28 @@
                 <div class="content-slider" ref="slider" @scroll="onSliderScroll">
                     <div v-for="i in [0,1,2,3,4,5]" :key="i" class="slide-page" @scroll="onPageScroll($event, i)" @touchstart="onPageTouchStart($event)" @touchmove="onPageTouchMove($event)">
                         <template v-if="i === 0">
-                            <div class="grid grid-cols-3 gap-3 mt-2 pb-10">
-                                <div v-for="item in caseTypes" :key="item.name" class="list-card p-4 flex flex-col items-center text-center shadow-sm" :class="userData[item.name]>0 ? 'bg-white border-blue-100' : 'opacity-40'">
-                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-2" :class="userData[item.name]>0 ? 'bg-blue-50 text-blue-500' : 'bg-slate-100 text-slate-300'"><i :class="['fa-solid', item.icon]" class="text-xl"></i></div>
-                                    <p class="text-[12px] font-black text-slate-700 leading-tight h-6 flex items-center justify-center">{{ item.name }}</p>
-                                    <p class="text-xl font-num mt-1" :class="userData[item.name]>0 ? 'text-blue-600' : 'text-slate-300'">{{ userData[item.name] || 0 }}</p>
-                                </div>
-                            </div>
+                            <!-- 替換這段 v-if="i === 0" 裡面的 grid 區塊 -->
+<div class="grid grid-cols-3 gap-3 mt-2 pb-10">
+    <div v-for="item in caseTypes" :key="item.name" 
+         @click="openCaseDetailModal(item.name)"
+         class="list-card p-4 flex flex-col items-center text-center shadow-sm cursor-pointer active:scale-95 transition-transform" 
+         :class="personalCaseCounts[item.name] > 0 ? 'bg-white border-blue-100' : 'opacity-40'">
+        
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-2" 
+             :class="personalCaseCounts[item.name] > 0 ? 'bg-blue-50 text-blue-500' : 'bg-slate-100 text-slate-300'">
+            <i :class="['fa-solid', item.icon]" class="text-xl"></i>
+        </div>
+        
+        <p class="text-[12px] font-black text-slate-700 leading-tight h-6 flex items-center justify-center">
+            {{ item.name }}
+        </p>
+        
+        <!-- 改由 personalCaseCounts 動態計算 -->
+        <p class="text-xl font-num mt-1" :class="personalCaseCounts[item.name] > 0 ? 'text-blue-600' : 'text-slate-300'">
+            {{ personalCaseCounts[item.name] || 0 }}
+        </p>
+    </div>
+</div>
                         </template>
                         <template v-if="i === 1">
                             <div class="space-y-3 pb-10">
@@ -1297,6 +1312,59 @@
                 </div>
             </div>
         </div>
+
+<!-- 年度統計：案件詳細列表 Modal -->
+<div class="bottom-sheet-overlay" :class="{ active: isCaseDetailModalOpen }" @click="isCaseDetailModalOpen = false"></div>
+<div class="bottom-sheet" :class="{ active: isCaseDetailModalOpen }">
+    <div class="flex justify-between items-center mb-6 shrink-0 px-1">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl shadow-sm border border-blue-100">
+                <i :class="['fa-solid', caseTypes.find(c => c.name === selectedCaseType)?.icon || 'fa-truck-medical']"></i>
+            </div>
+            <div>
+                <h4 class="text-xl font-black text-slate-800">{{ selectedCaseType }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">
+                    累計執行 <span class="text-blue-600 font-num text-sm mx-1">{{ selectedCaseDetails.length }}</span> 件
+                </p>
+            </div>
+        </div>
+        <button @click="isCaseDetailModalOpen = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 active:scale-95 transition-transform">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <div class="modal-scroll-area space-y-3">
+        <div v-if="selectedCaseDetails.length === 0" class="py-10 text-center text-slate-300">
+            <i class="fa-solid fa-folder-open text-4xl mb-3"></i>
+            <p class="text-sm font-black">無此類別的歷史紀錄</p>
+        </div>
+
+        <div v-for="(detail, idx) in selectedCaseDetails" :key="idx" class="list-card p-4 bg-white border border-slate-100 shadow-sm relative">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-black bg-slate-800 text-white px-2 py-0.5 rounded shadow-sm">{{ detail.date }}</span>
+                    <span class="text-xs font-num text-slate-500">
+                        <i class="fa-solid fa-clock text-blue-400 mr-1"></i>{{ detail.caseStart || '--:--' }} - {{ detail.caseEnd || '--:--' }}
+                    </span>
+                </div>
+                <span class="text-[10px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded border border-emerald-100">
+                    救出 {{ detail.rescuedCount }} 人
+                </span>
+            </div>
+
+            <div class="flex gap-2 text-xs font-bold text-slate-600">
+                <i class="fa-solid fa-location-dot text-rose-400 w-3 text-center mt-0.5"></i>
+                <span class="flex-1">{{ detail.district }} {{ detail.address }}</span>
+            </div>
+
+            <div v-if="detail.description" class="mt-3 pt-3 border-t border-slate-100">
+                <p class="text-[10px] font-black text-slate-400 uppercase mb-1">狀況及處置</p>
+                <p class="text-[11px] text-slate-600 font-bold leading-relaxed">{{ detail.description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
         <!-- ===== 單獨推播彈窗 ===== -->
         <div class="bottom-sheet-overlay" :class="{ active: isSinglePushModalOpen }" @click="isSinglePushModalOpen = false"></div>
@@ -2441,7 +2509,70 @@ const sortedCashHistory = computed(() => {
             // ── 個人與全隊協勤紀錄 ──
             const myAssistanceRecords = ref([]);
             const allAssistanceRecords = ref([]);
+// --- 年度統計 (個人紀錄計算) 相關邏輯 ---
+            const isCaseDetailModalOpen = ref(false);
+            const selectedCaseType = ref('');
 
+            // 1. 動態計算每個案件的總數
+            const personalCaseCounts = computed(() => {
+                const counts = {};
+                myAssistanceRecords.value.forEach(record => {
+                    if (record.cases && record.cases.length > 0) {
+                        record.cases.forEach(c => {
+                            if (c.caseType) {
+                                counts[c.caseType] = (counts[c.caseType] || 0) + 1;
+                            }
+                        });
+                    } else if (record.caseType) { // 相容舊資料
+                        counts[record.caseType] = (counts[record.caseType] || 0) + 1;
+                    }
+                });
+                return counts;
+            });
+
+            // 2. 點擊卡片時觸發
+            const openCaseDetailModal = (typeName) => {
+                selectedCaseType.value = typeName;
+                isCaseDetailModalOpen.value = true;
+            };
+
+            // 3. 過濾出所選類別的所有詳細紀錄
+            const selectedCaseDetails = computed(() => {
+                if (!selectedCaseType.value) return [];
+                const details = [];
+                
+                myAssistanceRecords.value.forEach(record => {
+                    if (record.cases && record.cases.length > 0) {
+                        record.cases.forEach(c => {
+                            if (c.caseType === selectedCaseType.value) {
+                                details.push({
+                                    date: record.date,
+                                    caseStart: c.caseStart,
+                                    caseEnd: c.caseEnd,
+                                    district: c.district,
+                                    address: c.address,
+                                    rescuedCount: c.rescuedCount || 0,
+                                    description: c.description || ''
+                                });
+                            }
+                        });
+                    } else if (record.caseType === selectedCaseType.value) { // 相容舊資料
+                         details.push({
+                             date: record.date,
+                             caseStart: record.caseStart,
+                             caseEnd: record.caseEnd,
+                             district: record.district,
+                             address: record.address,
+                             rescuedCount: record.rescuedCount || 0,
+                             description: record.description || ''
+                         });
+                    }
+                });
+                
+                // 依據日期新到舊排序
+                return details.sort((a, b) => new Date(b.date) - new Date(a.date));
+            });
+            // 👆 新增代碼結束 👆
             onMounted(() => {
                 if ('clearAppBadge' in navigator) {
                     navigator.clearAppBadge();
@@ -2467,6 +2598,8 @@ const sortedCashHistory = computed(() => {
                 onSnapshot(collection(db, "push_logs"), (snap) => {
                     pushLogs.value = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 });
+
+
                 
 // 監聽零用金 (Squad Fund)
 onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
@@ -3374,9 +3507,10 @@ const goToConfirmStep = (onlyShift = false) => {
                 isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
                 activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll,
                 myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
-                
+                 
                 // 全域 UI 工具與搜尋
-                appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory,
+                appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
+    selectedCaseDetails, openCaseDetailModal,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
