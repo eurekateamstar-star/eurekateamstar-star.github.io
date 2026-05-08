@@ -2111,7 +2111,6 @@
         const rawData = atob(base64);
         return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     }
-
 onMessage(messaging, (payload) => {
         const n = payload.notification;
         if (!n) return;
@@ -2132,7 +2131,7 @@ onMessage(messaging, (payload) => {
         // 3. 存入瀏覽器記憶體
         localStorage.setItem('latest_system_news', JSON.stringify(newsObj));
         
-        // 4. 🌟 直接呼叫 Vue 裡面的專線函數 (100% 觸發更新)
+        // 4. 🌟 直接呼叫 Vue 裡面的專線函數 (確保鈴鐺資料更新)
         if (typeof window.triggerNewPush === 'function') {
             window.triggerNewPush(newsObj);
         }
@@ -2195,7 +2194,7 @@ onMessage(messaging, (payload) => {
                 id: '' 
             });
 
-            // 🌟 建立全域專線，讓外面的推播可以直接把資料傳進來
+            // 🌟 建立全域專線，讓推播可以直接把資料傳進來
             window.triggerNewPush = (newsObj) => {
                 latestNews.value = newsObj;
                 hasUnreadNews.value = true;
@@ -2235,9 +2234,6 @@ onMessage(messaging, (payload) => {
                 isNewsModalOpen.value = false;
             };
 
-const closeNewsModal = () => {
-    isNewsModalOpen.value = false;
-};
             const currPage = ref('login');
             const activeDashboardTab = ref('stats');
             const activeScheduleTab = ref('register');
