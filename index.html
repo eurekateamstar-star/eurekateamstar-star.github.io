@@ -2852,43 +2852,7 @@ onMessage(messaging, (payload) => {
                     totalExpectedCash: totalCash
                 };
             };
-<!-- ===== 收款明細總表 Modal ===== -->
-        <div class="bottom-sheet-overlay" :class="{ active: isCollectionSummaryModalOpen }" @click="isCollectionSummaryModalOpen = false"></div>
-        <div class="bottom-sheet" :class="{ active: isCollectionSummaryModalOpen }">
-            <div class="flex justify-between items-center mb-4 shrink-0">
-                <div>
-                    <h4 class="text-xl font-black text-slate-800">收款明細總表</h4>
-                    <p class="text-xs font-bold text-slate-400 mt-1">任務：{{ currentTask?.title }}</p>
-                </div>
-                <button @click="isCollectionSummaryModalOpen = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 active:scale-95 transition-transform"><i class="fa-solid fa-xmark"></i></button>
-            </div>
 
-            <!-- 總計大字 -->
-            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-4 flex justify-between items-center shrink-0">
-                <span class="font-black text-indigo-800">全隊應收總計</span>
-                <span class="font-num text-2xl text-indigo-600 font-black">$ {{ formatNumber(getMeetingSummary(currentTask?.id).totalExpectedCash) }}</span>
-            </div>
-
-            <div class="modal-scroll-area space-y-2 pr-1">
-                <div v-if="collectionSummaryList.length === 0" class="py-10 text-center text-slate-300">
-                    <i class="fa-solid fa-file-invoice-dollar text-3xl mb-3"></i>
-                    <p class="text-sm font-bold">目前尚無需要收費的名單</p>
-                </div>
-
-                <!-- 單筆人員收費明細 -->
-                <div v-for="item in collectionSummaryList" :key="item.name" class="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col gap-2">
-                    <div class="flex justify-between items-end border-b border-dashed border-slate-100 pb-2">
-                        <span class="font-black text-slate-800 text-[15px]">{{ item.name }}</span>
-                        <span class="font-num font-black text-lg text-rose-500">$ {{ formatNumber(item.total) }}</span>
-                    </div>
-                    <!-- 細項解說 (例如：本人 $0、大人 $4100、小孩 $2000) -->
-                    <div class="text-[11px] font-bold text-slate-400 leading-relaxed">
-                        <span v-if="item.detailText === '無須收費'" class="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded">無須收費</span>
-                        <span v-else>{{ item.detailText }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
             const openAdminPriceEdit = (reg) => {
                 if (!isAdmin.value) return;
                 editingReg.value = reg;
