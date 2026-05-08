@@ -2952,12 +2952,13 @@ const sortedCashHistory = computed(() => {
 
 
             onMounted(() => {
-   // 👇👇👇 監聽 Firestore 的最新公告 (支援多筆、隔天消失、手動刪除) 👇👇👇
-                const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(10));
+  // 👇👇👇 監聽 Firestore 的最新公告 (支援多筆、隔天消失、隱私過濾) 👇👇👇
+                // 多抓幾筆，以免被別人的私人推播洗掉版面
+                const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
                 
                 onSnapshot(newsQuery, (snap) => {
                     const readIds = getReadNewsIds();
-                    const dismissedIds = getDismissedNewsIds(); // 取得已隱藏名單
+                    const dismissedIds = getDismissedNewsIds();
                     const fetchedNews = [];
                     let unread = 0;
                     
@@ -2967,8 +2968,11 @@ const sortedCashHistory = computed(() => {
                         const data = docData.data();
                         const msgTime = data.timestamp ? data.timestamp.toDate().getTime() : Date.now();
                         
-                        // 只保留兩天內，且「沒有被手動刪除」的公告
-                        if (msgTime > twoDaysAgo && !dismissedIds.includes(docData.id)) {
+                        // ✨ 隱私過濾：這則訊息必須是「發給全隊的」或是「發給我的」
+                        const isForMe = !data.targetUser || data.targetUser === 'ALL' || data.targetUser === loginUserName.value;
+                        
+                        // 只保留兩天內、未被手動刪除、且屬於我的公告
+                        if (msgTime > twoDaysAgo && !dismissedIds.includes(docData.id) && isForMe) {
                             const isRead = readIds.includes(docData.id);
                             if (!isRead) unread++;
                             
@@ -2982,7 +2986,8 @@ const sortedCashHistory = computed(() => {
                         }
                     });
                     
-                    newsList.value = fetchedNews;
+                    // 畫面上最多只顯示前 10 筆
+                    newsList.value = fetchedNews.slice(0, 10);
                     unreadCount.value = unread;
                 });
                 // 👆👆👆 監聽結束 👆👆👆
