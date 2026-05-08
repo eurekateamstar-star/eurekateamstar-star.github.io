@@ -1297,24 +1297,53 @@
                 <span class="text-white font-black text-sm">本次任務估計收款總額</span>
                 <span class="text-white font-num text-2xl">$ {{ formatNumber(getMeetingSummary(currentTask?.id).totalExpectedCash) }}</span>
             </div>
-            <div class="max-h-[50vh] overflow-y-auto space-y-2 pb-6 px-1">
-                <div v-for="r in getDetailedRegs(currentTask?.id)" :key="r.userName" class="p-4 rounded-2xl border border-slate-100 bg-white flex justify-between items-center">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-0.5"><span class="font-black text-slate-800">{{ r.userName }}</span><span class="text-[10px] font-black px-2 py-0.5 rounded-full" :class="r.status === '出席' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'">{{ r.status }}</span></div>
-                        <p class="text-[10px] font-bold text-slate-400"><template v-if="r.status === '出席'"><span v-if="currentTask?.category === '一般會議'">餐飲：{{ r.diet }}</span><span v-else>攜伴：{{ r.plusAdult }}大 {{ r.plusChild }}小</span></template><template v-else>請假不參加</template></p>
-                    </div>
-                    <div v-if="isAdmin && r.status === '出席' && (currentTask?.category === '旅遊' || currentTask?.category === '聚餐')" class="text-right">
-                        <div @click="openAdminPriceEdit(r)" class="cursor-pointer bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 active:scale-95 transition-transform">
-                            <p class="text-[9px] font-black text-indigo-400 uppercase leading-none mb-1">應付金額</p>
-                            <p class="text-base font-num text-indigo-600 underline decoration-indigo-200 decoration-2 underline-offset-4 leading-none">${{ formatNumber(r.finalPrice !== undefined ? r.finalPrice : calculateBasePrice(r)) }}</p>
+          <!-- 👇👇👇 替換成這裡的網格排版設計 👇👇👇 -->
+            <div class="max-h-[60vh] overflow-y-auto pb-6 px-1" style="scrollbar-width: none;">
+                
+                <!-- 已填寫的網格 (一排3個卡片) -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div v-for="r in getDetailedRegs(currentTask?.id)" :key="r.userName" class="rounded-xl border border-slate-100 bg-white shadow-sm flex flex-col items-center justify-between text-center overflow-hidden relative pt-3 pb-2 transition-all">
+                        
+                        <!-- 頂部顏色條指示狀態 -->
+                        <div class="absolute top-0 left-0 w-full h-1" :class="r.status === '出席' ? 'bg-emerald-400' : 'bg-rose-400'"></div>
+                        
+                        <!-- 姓名與狀態 -->
+                        <span class="font-black text-slate-800 text-[13px]">{{ r.userName }}</span>
+                        <span class="text-[9px] font-black px-1.5 py-0.5 rounded mt-1 mb-1" :class="r.status === '出席' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'">
+                            {{ r.status }}
+                        </span>
+                        
+                        <!-- 詳細資訊 (餐點/攜伴) -->
+                        <p class="text-[9px] font-bold text-slate-400">
+                            <template v-if="r.status === '出席'">
+                                <span v-if="currentTask?.category === '一般會議'">{{ r.diet }}</span>
+                                <span v-else>+{{ r.plusAdult }}大 {{ r.plusChild }}小</span>
+                            </template>
+                            <template v-else>不參加</template>
+                        </p>
+
+                        <!-- 管理員專屬：應付金額 (放在卡片最底部) -->
+                        <div v-if="isAdmin && r.status === '出席' && (currentTask?.category === '旅遊' || currentTask?.category === '聚餐')" 
+                             @click="openAdminPriceEdit(r)" 
+                             class="cursor-pointer w-full mt-2 pt-1.5 pb-1 border-t border-dashed border-indigo-100 bg-indigo-50/50 hover:bg-indigo-100 transition-colors">
+                            <p class="text-[11px] font-num text-indigo-600 font-black tracking-tighter">${{ formatNumber(r.finalPrice !== undefined ? r.finalPrice : calculateBasePrice(r)) }}</p>
                         </div>
                     </div>
                 </div>
-                <div class="mt-8 mb-2 px-1 border-t border-slate-100 pt-6">
-                    <h5 class="text-sm font-black text-slate-400 uppercase mb-3">尚未填寫 ({{ unfilledMembers.length }})</h5>
-                    <div class="flex flex-wrap gap-2"><span v-for="name in unfilledMembers" :key="name" class="px-3 py-1.5 bg-slate-50 text-slate-400 text-xs font-bold rounded-xl border border-slate-100/50">{{ name }}</span></div>
+
+                <!-- 尚未填寫的網格 (一排4個，最省空間) -->
+                <div class="mt-6 mb-2 border-t border-slate-100 pt-5">
+                    <h5 class="text-xs font-black text-slate-400 uppercase mb-3 text-center tracking-widest">
+                        尚未填寫 ({{ unfilledMembers.length }})
+                    </h5>
+                    <div class="grid grid-cols-4 gap-2">
+                        <span v-for="name in unfilledMembers" :key="name" class="py-2 text-center bg-slate-50 text-slate-400 text-[11px] font-black rounded-xl border border-slate-100/50 shadow-sm">
+                            {{ name }}
+                        </span>
+                    </div>
                 </div>
             </div>
+            <!-- 👆👆👆 替換結束 👆👆👆 -->
         </div>
 
         <div class="bottom-sheet-overlay" :class="{ active: isAdminPriceEditOpen }" @click="isAdminPriceEditOpen = false"></div>
