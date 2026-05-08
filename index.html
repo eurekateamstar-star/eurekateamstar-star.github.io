@@ -2060,10 +2060,15 @@
                 
                 <!-- 多筆消息清單 -->
                 <div v-else class="space-y-3 pt-1">
-                    <div v-for="news in newsList" :key="news.id" class="relative bg-white rounded-[24px] p-4 shadow-sm border border-slate-100/80 overflow-hidden transition-all">
+                    <div v-for="news in newsList" :key="news.id" class="relative bg-white rounded-[24px] p-4 shadow-sm border border-slate-100/80 overflow-hidden transition-all group">
                         
+                        <!-- ✖ 隱藏/刪除按鈕 -->
+                        <button @click.stop="dismissNews(news.id)" class="absolute top-3 right-3 w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 active:scale-95 transition-transform z-20">
+                            <i class="fa-solid fa-xmark text-[11px]"></i>
+                        </button>
+
                         <!-- 動態呼吸紅點 (未讀) -->
-                        <div v-if="!news.isRead" class="absolute top-4 right-4 flex items-center justify-center z-10">
+                        <div v-if="!news.isRead" class="absolute top-4 right-12 flex items-center justify-center z-10">
                             <span class="relative flex h-2.5 w-2.5">
                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                               <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
@@ -2077,9 +2082,8 @@
                                 <i class="fa-solid text-lg" :class="news.title.includes('公差') ? 'fa-clipboard-check' : (news.title.includes('會議') || news.title.includes('活動') || news.title.includes('聚餐')) ? 'fa-users' : 'fa-bell'"></i>
                             </div>
 
-                            <div class="flex-1 min-w-0 pr-3">
-                                <!-- 過濾冗長標題文字 -->
-                                <h3 class="text-[14px] font-black text-slate-800 leading-tight mb-1.5">
+                            <div class="flex-1 min-w-0 pr-1">
+                                <h3 class="text-[14px] font-black text-slate-800 leading-tight mb-1.5 pr-5">
                                     {{ news.title.replace('🚨 海山救護義消 — ', '').replace('發佈', '') }}
                                 </h3>
                                 <p class="text-[12px] font-bold text-slate-500 leading-relaxed whitespace-pre-line">{{ news.body }}</p>
@@ -2219,9 +2223,14 @@ onMessage(messaging, (payload) => {
 
             // 取得已經讀過的推播 ID 陣列
             const getReadNewsIds = () => {
-                try {
-                    return JSON.parse(localStorage.getItem('read_news_ids_array')) || [];
-                } catch(e) { return []; }
+                try { return JSON.parse(localStorage.getItem('read_news_ids_array')) || []; } 
+                catch(e) { return []; }
+            };
+
+            // 取得已經被手動刪除(隱藏)的推播 ID 陣列
+            const getDismissedNewsIds = () => {
+                try { return JSON.parse(localStorage.getItem('dismissed_news_ids_array')) || []; } 
+                catch(e) { return []; }
             };
 
             const openNewsModal = () => {
@@ -2242,6 +2251,20 @@ onMessage(messaging, (payload) => {
 
             const closeNewsModal = () => {
                 isNewsModalOpen.value = false;
+            };
+
+            // 手動刪除單則消息
+            const dismissNews = (newsId) => {
+                // 1. 存入已隱藏清單
+                const dismissedIds = getDismissedNewsIds();
+                if (!dismissedIds.includes(newsId)) {
+                    dismissedIds.push(newsId);
+                    localStorage.setItem('dismissed_news_ids_array', JSON.stringify(dismissedIds));
+                }
+                // 2. 從畫面上即時移除
+                newsList.value = newsList.value.filter(n => n.id !== newsId);
+                // 3. 重新計算剩餘未讀數量
+                unreadCount.value = newsList.value.filter(n => !n.isRead).length;
             };
 
             const currPage = ref('login');
@@ -2929,25 +2952,23 @@ const sortedCashHistory = computed(() => {
 
 
             onMounted(() => {
-    // 👇👇👇 監聽 Firestore 的最新公告 (支援多筆與隔天消失) 👇👇👇
-                // 抓取最新的 10 筆系統公告
+   // 👇👇👇 監聽 Firestore 的最新公告 (支援多筆、隔天消失、手動刪除) 👇👇👇
                 const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(10));
                 
                 onSnapshot(newsQuery, (snap) => {
                     const readIds = getReadNewsIds();
+                    const dismissedIds = getDismissedNewsIds(); // 取得已隱藏名單
                     const fetchedNews = [];
                     let unread = 0;
                     
-                    // 設定時間閥值：超過 48 小時 (兩天前) 的公告不顯示 (達成隔天消失效果)
                     const twoDaysAgo = Date.now() - (48 * 60 * 60 * 1000);
 
                     snap.forEach((docData) => {
                         const data = docData.data();
-                        // 轉換 Firestore 時間為 JS 毫秒，若無則以當下時間代替
                         const msgTime = data.timestamp ? data.timestamp.toDate().getTime() : Date.now();
                         
-                        // 只保留兩天內的公告
-                        if (msgTime > twoDaysAgo) {
+                        // 只保留兩天內，且「沒有被手動刪除」的公告
+                        if (msgTime > twoDaysAgo && !dismissedIds.includes(docData.id)) {
                             const isRead = readIds.includes(docData.id);
                             if (!isRead) unread++;
                             
@@ -4061,7 +4082,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 todayStr, weekLaterAdminStr,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
                 adminActionLoading, singlePushForm,
-                confirmCancelSub, executeCancelSub, isNewsModalOpen, unreadCount, newsList, openNewsModal, closeNewsModal,
+                confirmCancelSub, executeCancelSub, isNewsModalOpen, unreadCount, newsList, openNewsModal, closeNewsModal, dismissNews,
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
