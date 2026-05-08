@@ -2171,25 +2171,20 @@ onMessage(messaging, (payload) => {
         
         // 顯示上方黑色提示
         const toast = document.createElement("div");
-        // 加上 cursor:pointer 讓它看起來可以點擊
         toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:14px 20px;border-radius:16px;font-size:13px;font-weight:700;z-index:9999;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.3);line-height:1.5;cursor:pointer;";
         
-        // 標題旁加上 (點擊查看) 提示
         toast.innerHTML = `<div style="font-size:11px;opacity:0.6;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">🚨 新通知 (點擊查看)</div><div>${n.title}</div><div style="opacity:0.7;font-size:12px;margin-top:4px;">${n.body}</div>`;
         
-        // 👇👇👇 新增：點擊黑色提示框時的動作 👇👇👇
+        // 👇 改用直接呼叫全域函數的方式，保證 100% 觸發
         toast.onclick = () => {
-            toast.remove(); // 點擊後立刻隱藏黑色提示
-            window.dispatchEvent(new Event('trigger-open-news')); // 呼叫 Vue 打開鈴鐺視窗
+            toast.remove();
+            if (typeof window.forceOpenNews === 'function') {
+                window.forceOpenNews();
+            }
         };
-        // 👆👆👆 新增結束 👆👆👆
 
         document.body.appendChild(toast);
-        
-        // 5秒後自動消失
-        setTimeout(() => {
-            if (toast.parentNode) toast.remove();
-        }, 5000);
+        setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
     });
 
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
@@ -2268,7 +2263,13 @@ onMessage(messaging, (payload) => {
             const closeNewsModal = () => {
                 isNewsModalOpen.value = false;
             };
-
+// 👇👇👇 插入這裡：提供給上方黑框點擊用的強制打開函數 👇👇👇
+            window.forceOpenNews = () => {
+                if (currPage.value !== 'login') {
+                    openNewsModal();
+                }
+            };
+            // 👆👆👆 插入結束 👆👆👆
             // 手動刪除單則消息
             const dismissNews = (newsId) => {
                 // 1. 存入已隱藏清單
@@ -3091,20 +3092,31 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 });
             });
 
-            const handleLogin = () => {
+           const handleLogin = () => {
                 const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
                 if (user) { 
                     loginUserName.value = user.姓名; 
                     currPage.value = 'dashboard'; 
                     subscribeFCM(user.姓名); 
+                    
                     getDocs(collection(db, "assistance_records")).then(snap => {
                         const allRecs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                         allAssistanceRecords.value = allRecs.sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
                         myAssistanceRecords.value = allRecs.filter(r => r.userName === loginUserName.value)
                             .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
                     });
+
+                    // 👇👇👇 新增：登入成功後，若有未讀消息，自動彈出公告視窗 👇👇👇
+                    if (unreadCount.value > 0) {
+                        setTimeout(() => {
+                            openNewsModal();
+                        }, 600); // 延遲 0.6 秒，等畫面切換的動畫跑完再彈出，視覺更順暢
+                    }
+                    // 👆👆👆 新增結束 👆👆👆
+
+                } else { 
+                    errMsg.value = "安全密碼錯誤"; 
                 }
-                else { errMsg.value = "安全密碼錯誤"; }
             };
             const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
             const expandCards = () => { cardsExpanded.value = true; };
