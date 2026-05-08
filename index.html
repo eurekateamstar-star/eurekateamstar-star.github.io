@@ -1811,7 +1811,7 @@
             </div>
         </div>
 
-        <!-- 協勤專用的「修改紀錄 Modal」 -->
+       <!-- 協勤專用的「修改紀錄 Modal」 -->
         <div class="bottom-sheet-overlay" :class="{ active: isAssistEditModalOpen }" @click="isAssistEditModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isAssistEditModalOpen }">
             <div class="flex justify-between items-center mb-4 shrink-0">
@@ -1846,22 +1846,31 @@
                 <!-- 編輯多筆案件 -->
                 <template v-if="editingAssistRecord.cases && editingAssistRecord.cases.length > 0">
                     <div v-for="(c, cIdx) in editingAssistRecord.cases" :key="'edit-c-'+cIdx" class="mb-4 border border-slate-200 p-4 rounded-xl bg-white shadow-sm">
-                        <div class="admin-edit-section-title mt-0 border-b-0 mb-2"><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</div>
+                        
+                        <!-- 🌟 標題列加入刪除按鈕 -->
+                        <div class="admin-edit-section-title mt-0 border-b-0 mb-2 flex justify-between items-center">
+                            <span><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</span>
+                            <button v-if="editingAssistRecord.cases.length > 1" @click="removeCaseFromEdit(cIdx)" class="text-rose-400 hover:text-rose-600 active:scale-95 transition-transform p-1">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
                         
                         <div class="grid grid-cols-2 gap-3 mb-3">
-    <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errStart ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
-        <span class="admin-edit-label" :class="c.errStart ? 'text-rose-600' : ''">救護開始 (如1230)</span>
-        <input v-model="c.caseStart" type="tel" @blur="handleTimeInput(c, 'caseStart', 'edit')" placeholder="12:30" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errStart ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
-    </div>
-    <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errEnd ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
-        <span class="admin-edit-label" :class="c.errEnd ? 'text-rose-600' : ''">救護結束 (如1345)</span>
-        <input v-model="c.caseEnd" type="tel" @blur="handleTimeInput(c, 'caseEnd', 'edit')" placeholder="13:45" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errEnd ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
-    </div>
-</div>
-<!-- 錯誤提示 -->
-<p v-if="c.errMsg" class="text-rose-600 text-[11px] font-black mb-3 px-2 py-1 bg-rose-50 rounded-lg">
-    <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ c.errMsg }}
-</p>
+                            <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errStart ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
+                                <span class="admin-edit-label" :class="c.errStart ? 'text-rose-600' : ''">救護開始 (如1230)</span>
+                                <input v-model="c.caseStart" type="tel" @blur="handleTimeInput(c, 'caseStart', 'edit')" placeholder="12:30" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errStart ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
+                            </div>
+                            <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errEnd ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
+                                <span class="admin-edit-label" :class="c.errEnd ? 'text-rose-600' : ''">救護結束 (如1345)</span>
+                                <input v-model="c.caseEnd" type="tel" @blur="handleTimeInput(c, 'caseEnd', 'edit')" placeholder="13:45" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errEnd ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
+                            </div>
+                        </div>
+                        
+                        <!-- 錯誤提示 -->
+                        <p v-if="c.errMsg" class="text-rose-600 text-[11px] font-black mb-3 px-2 py-1 bg-rose-50 rounded-lg">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ c.errMsg }}
+                        </p>
+                        
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <div class="admin-edit-field !bg-transparent !p-0 !border-0">
                                 <span class="admin-edit-label" :class="{'text-rose-600': c.errType}">案件種類</span>
@@ -1894,7 +1903,6 @@
                                    @focus="handleAddressInput(c, true)" 
                                    @blur="hideSuggestions(c)"
                                    class="admin-edit-input" :class="c.errAddress ? 'border-rose-300 text-rose-600 input-error' : ''">
-                            <!-- Edit Autocomplete Dropdown -->
                             <ul v-if="c.showSuggestions && c.suggestions.length > 0" 
                                 class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
                                 <li v-for="street in c.suggestions" :key="street" 
@@ -1908,13 +1916,13 @@
                             <span class="admin-edit-label">狀況及處置 (選填)</span>
                             <textarea v-model="c.description" placeholder="請簡述..." class="admin-edit-input h-16"></textarea>
                         </div>
-
-                        <div v-if="c.errMsg" class="bg-rose-50 text-rose-600 text-xs font-bold p-3 rounded-xl border border-rose-100 mt-3 flex items-start gap-2">
-                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
-                            <span>{{ c.errMsg }}</span>
-                        </div>
                     </div>
                 </template>
+
+                <!-- 🌟 新增一件案件按鈕 -->
+                <button @click="addCaseToEdit" class="w-full py-3 rounded-xl border-2 border-dashed border-blue-200 text-blue-500 font-black text-sm bg-blue-50/50 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> 新增一件案件
+                </button>
 
                 <div class="flex gap-3 pt-4">
                     <button @click="isAssistEditModalOpen = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
@@ -3772,7 +3780,7 @@ const goToConfirmStep = (onlyShift = false) => {
             const isAssistEditModalOpen = ref(false);
             const editingAssistRecord = ref(null);
 
-            const openAssistEditModal = (record) => {
+           const openAssistEditModal = (record) => {
                 let r = JSON.parse(JSON.stringify(record));
                 if (r.cases) {
                     r.cases.forEach(c => {
@@ -3785,28 +3793,59 @@ const goToConfirmStep = (onlyShift = false) => {
             };
 
             const submitAssistEdit = async () => {
-    // 先執行校驗
-    const isLogicOk = validateAssistanceForm(editingAssistRecord.value);
-    if (!isLogicOk) {
-        showAppAlert('error', '儲存失敗', '時間邏輯有誤，請修正紅框處。');
-        return;
-    }
-    try {
-        const r = editingAssistRecord.value;
-        const updateData = {
-            date: r.date, shiftStart: r.shiftStart, shiftEnd: r.shiftEnd,
-            recordType: r.cases && r.cases.length > 0 ? '急救護-救護勤務' : '待命協勤',
-            cases: (r.cases || []).map(c => {
-                const { errStart, errEnd, errType, errDistrict, errAddress, errMsg, showSuggestions, suggestions, ...rest } = c;
-                return rest;
-            })
-        };
-        await updateDoc(doc(db, "assistance_records", r.id), updateData);
-        isAssistEditModalOpen.value = false;
-        showAppAlert('success', '修改成功', '✅ 紀錄已更新');
-    } catch(e) { showAppAlert('error', '提示', "失敗：" + e.message); }
-};
+                let hasEmptyField = false;
+                
+                // 1. 必填欄位檢查
+                if (editingAssistRecord.value.cases && editingAssistRecord.value.cases.length > 0) {
+                    editingAssistRecord.value.cases.forEach(c => {
+                        // 先重置錯誤狀態
+                        c.errStart = false; 
+                        c.errEnd = false; 
+                        c.errType = false; 
+                        c.errDistrict = false; 
+                        c.errAddress = false;
+                        
+                        // 檢查是否有空值
+                        if (!c.caseStart) { c.errStart = true; hasEmptyField = true; }
+                        if (!c.caseEnd) { c.errEnd = true; hasEmptyField = true; }
+                        if (!c.caseType) { c.errType = true; hasEmptyField = true; }
+                        if (!c.district) { c.errDistrict = true; hasEmptyField = true; }
+                        if (!c.address || c.address.trim() === '') { c.errAddress = true; hasEmptyField = true; }
+                    });
+                }
 
+                if (hasEmptyField) {
+                    showAppAlert('error', '資料未填齊', '請檢查標註紅框的必填欄位。');
+                    return;
+                }
+
+                // 2. 時間邏輯校驗 (檢查是否重疊或倒退)
+                const isLogicOk = validateAssistanceForm(editingAssistRecord.value);
+                if (!isLogicOk) {
+                    showAppAlert('error', '儲存失敗', '時間邏輯有誤，請修正紅框處。');
+                    return;
+                }
+                
+                try {
+                    const r = editingAssistRecord.value;
+                    const updateData = {
+                        date: r.date, shiftStart: r.shiftStart, shiftEnd: r.shiftEnd,
+                        recordType: r.cases && r.cases.length > 0 ? '急救護-救護勤務' : '待命協勤',
+                        cases: (r.cases || []).map(c => {
+                            // 存入資料庫前，把前端用的錯誤狀態欄位剔除掉
+                            const { errStart, errEnd, errType, errDistrict, errAddress, errMsg, showSuggestions, suggestions, ...rest } = c;
+                            return rest;
+                        })
+                    };
+                    await updateDoc(doc(db, "assistance_records", r.id), updateData);
+                    isAssistEditModalOpen.value = false;
+                    showAppAlert('success', '修改成功', '✅ 紀錄已更新');
+                } catch(e) { 
+                    showAppAlert('error', '提示', "失敗：" + e.message); 
+                }
+            };
+
+            // ⚠️ 剛剛被不小心刪除的函式補回來了：
             const deleteAssistRecord = async (id) => {
                 showAppConfirm('確認刪除', '確定要移除這筆紀錄嗎？', async () => {
                     try {
@@ -3816,6 +3855,24 @@ const goToConfirmStep = (onlyShift = false) => {
                 });
             };
 
+            // 🌟 編輯模式下新增一件案件
+            const addCaseToEdit = () => {
+                if (!editingAssistRecord.value.cases) {
+                    editingAssistRecord.value.cases = [];
+                }
+                editingAssistRecord.value.cases.push({
+                    caseStart: '', caseEnd: '', district: '板橋區', address: '', caseType: '', description: '', rescuedCount: 0,
+                    errStart: false, errEnd: false, errType: false, errDistrict: false, errAddress: false, errMsg: '',
+                    showSuggestions: false, suggestions: []
+                });
+                validateAssistanceForm(editingAssistRecord.value);
+            };
+
+            // 🌟 編輯模式下刪除一件案件
+            const removeCaseFromEdit = (idx) => {
+                editingAssistRecord.value.cases.splice(idx, 1);
+                validateAssistanceForm(editingAssistRecord.value);
+            };
             return {
                 isAdmin, currPage, activeDashboardTab, activeScheduleTab, cardsExpanded, dashboardTabs, scheduleTabs, visibleScheduleTabs,
                 members, loginForm, userData, errMsg, caseTypes, medalList, slider, scheduleSlider, tabsScrollRef, scheduleTabsScrollRef,
@@ -3842,7 +3899,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
-                selectAdminHour, openAdminAddShift, submitAdminShift,
+                selectAdminHour, openAdminAddShift, submitAdminShift, addCaseToEdit, removeCaseFromEdit,
                 openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList,
                 submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,rankingCaseType,
                 openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
