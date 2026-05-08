@@ -478,6 +478,17 @@
                                             <div class="text-right shrink-0"><p class="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">已報名/名額</p><p class="text-xl font-num text-slate-800">{{ getTaskRegCount(t.id) }} <span class="text-xs text-slate-300">/ {{ t.quota }}</span></p></div>
                                         </div>
                                         <template v-if="!isExpired(t.date)">
+                                          <template v-if="!isExpired(t.date)">
+                                            <!-- 🌟 公差缺額全隊推播按鈕 (僅管理員可見且有缺額時顯示) -->
+                                            <button v-if="isAdmin && getTaskRegCount(t.id) < t.quota" 
+                                                    @click="remindDutyShortage(t)" 
+                                                    :disabled="isReminding === t.id"
+                                                    class="w-full mb-3 py-3 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 font-black text-[13px] active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+                                                <i v-if="isReminding === t.id" class="fa-solid fa-spinner fa-spin"></i>
+                                                <i v-else class="fa-solid fa-bullhorn"></i>
+                                                {{ isReminding === t.id ? '推播發送中...' : `全隊廣播：尚缺 ${t.quota - getTaskRegCount(t.id)} 人` }}
+                                            </button>
+
                                             <button v-if="!isUserSignedUp(t.id)" @click="toggleRegistration(t, 'duty')" :disabled="getTaskRegCount(t.id) >= t.quota" class="w-full py-4 rounded-2xl bg-rose-500 text-white font-black text-sm shadow-lg shadow-rose-200 active:scale-[0.98] transition-all disabled:opacity-30">{{ getTaskRegCount(t.id) >= t.quota ? '名額已滿' : '立即登記公差' }}</button>
                                             <button v-else @click="toggleRegistration(t, 'duty')" class="w-full py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm active:scale-[0.98] transition-all">取消登記</button>
                                         </template>
@@ -523,7 +534,19 @@
                                                 <div class="flex items-baseline gap-1"><span class="text-green-600">素食：</span><span class="text-lg font-num">{{ getMeetingSummary(t.id).veggie }}</span><span class="text-[9px] opacity-40">份</span></div>
                                             </template>
                                         </div>
-                                        <template v-if="!isExpired(t.date)"><button @click="openMeetingRegModal(t)" class="w-full py-4 rounded-2xl bg-purple-600 text-white font-black text-sm shadow-lg shadow-purple-200 active:scale-[0.98] transition-all">{{ isUserSignedUp(t.id) ? '修改登記資訊' : '填寫出席調查' }}</button></template>
+                                        <template v-if="!isExpired(t.date)">
+                                            <!-- 🌟 會議未填寫私訊按鈕 (僅管理員可見) -->
+                                            <button v-if="isAdmin && getUnfilledMembersList(t.id).length > 0" 
+                                                    @click="remindUnfilledMeeting(t)" 
+                                                    :disabled="isReminding === t.id"
+                                                    class="w-full mb-3 py-3 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200 font-black text-[13px] active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+                                                <i v-if="isReminding === t.id" class="fa-solid fa-spinner fa-spin"></i>
+                                                <i v-else class="fa-solid fa-paper-plane-top"></i>
+                                                {{ isReminding === t.id ? '批次發送中...' : `一鍵私訊：提醒未填寫的 ${getUnfilledMembersList(t.id).length} 人` }}
+                                            </button>
+
+                                            <button @click="openMeetingRegModal(t)" class="w-full py-4 rounded-2xl bg-purple-600 text-white font-black text-sm shadow-lg shadow-purple-200 active:scale-[0.98] transition-all">{{ isUserSignedUp(t.id) ? '修改登記資訊' : '填寫出席調查' }}</button>
+                                        </template>
                                         <div v-else class="w-full py-3 bg-slate-100 text-slate-400 text-center font-black text-xs rounded-xl uppercase tracking-widest">會議已結束</div>
                                     </div>
                                 </div>
@@ -2604,7 +2627,87 @@ onMessage(messaging, (payload) => {
                     showAppAlert('success', '批次發送完成', `✅ 成功發送 ${successCount} 人\n❌ 失敗或未訂閱 ${failCount} 人`);
                 });
             };
-            
+
+            // ===== 催收推播功能 (公差缺額全隊 / 會議未填私訊) =====
+            const isReminding = ref('');
+
+            // 取得某個會議「尚未填寫」的人員名單 (給按鈕動態顯示人數用)
+            const getUnfilledMembersList = (taskId) => {
+                const filledNames = registrations.value.filter(r => r.taskId === taskId).map(r => r.userName);
+                return members.value.map(m => m.姓名).filter(name => !filledNames.includes(name));
+            };
+
+            // 🌟 1. 公差：廣播缺額給全隊
+            const remindDutyShortage = (task) => {
+                const shortage = task.quota - getTaskRegCount(task.id);
+                if (shortage <= 0) return;
+
+                showAppConfirm('發送缺額廣播', `即將向全隊發送「${task.title} 尚缺 ${shortage} 人」的推播通知，確定執行嗎？`, async () => {
+                    isReminding.value = task.id;
+                    try {
+                        const title = `🚨 缺額強力募集：${task.title}`;
+                        const body = `各位學長姐好，本公差任務尚缺 ${shortage} 名人員，再麻煩有空的學長姐踴躍至 App 內登記報名！`;
+
+                        const response = await fetch(CLOUD_RUN_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ title, body })
+                        });
+                        const result = await response.json();
+                        if (result.stats) {
+                            showAppAlert('success', '全隊提醒已發送', `✅ 成功觸發推播指令！`);
+                        }
+                    } catch (e) {
+                        showAppAlert('error', '發送失敗', e.message);
+                    } finally {
+                        isReminding.value = '';
+                    }
+                });
+            };
+
+            // 🌟 2. 會議：單獨私訊給未填寫的人
+            const remindUnfilledMeeting = (task) => {
+                const unfilledNames = getUnfilledMembersList(task.id);
+                if (unfilledNames.length === 0) return;
+
+                showAppConfirm('提醒未填寫人員', `即將在背景逐一發送私訊推播給尚未填寫的 ${unfilledNames.length} 人，確定執行嗎？`, async () => {
+                    isReminding.value = task.id;
+                    let successCount = 0;
+                    let failCount = 0;
+
+                    for (const name of unfilledNames) {
+                        const targetMember = members.value.find(m => m.姓名 === name);
+                        if (!targetMember || !targetMember.pushSubscription) {
+                            failCount++;
+                            continue; // 沒訂閱直接跳過
+                        }
+
+                        const title = `🔔 尚未填寫提醒：${task.title}`;
+                        const body = `您尚未填寫「${task.title}」的出席調查表，為了方便幹部統計人數，請盡速至 App 內完成登記，謝謝！`;
+
+                        try {
+                            const response = await fetch(CLOUD_RUN_URL + 'push-single', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userName: name,
+                                    subscription: targetMember.pushSubscription,
+                                    title: title,
+                                    body: body
+                                })
+                            });
+                            const result = await response.json();
+                            if (result.ok) successCount++;
+                            else failCount++;
+                        } catch (e) {
+                            failCount++;
+                        }
+                    }
+
+                    isReminding.value = '';
+                    showAppAlert('success', '批次提醒完成', `✅ 成功傳送給 ${successCount} 人\n❌ 未開啟通知或失效 ${failCount} 人`);
+                });
+            };
             const selectedMemberDutyHistory = computed(() => {
                 if (!selectedDutyMember.value) return [];
                 const targetName = selectedDutyMember.value.姓名;
@@ -4377,7 +4480,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 lastPushStats, isAdminEditMemberOpen, adminEditTarget, adminEditForm, showEditPassword,
                 openAdminEditMember, submitAdminEditMember,
                 pushLogs, yesterdayStr, adminFilter, adminFilters, adminMembersData, filteredAdminMembers, adminStats,
-                todayStr, weekLaterAdminStr,
+                todayStr, weekLaterAdminStr, isReminding, getUnfilledMembersList, remindDutyShortage, remindUnfilledMeeting,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
                 adminActionLoading, singlePushForm,
                 confirmCancelSub, executeCancelSub, isNewsModalOpen, unreadCount, newsList, openNewsModal, closeNewsModal, dismissNews,
