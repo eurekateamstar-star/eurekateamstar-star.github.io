@@ -1547,17 +1547,17 @@
                     <p class="text-sm font-bold">目前尚無需要收費的名單</p>
                 </div>
 
-                <!-- 單筆人員收費明細 -->
-                <div v-for="item in collectionSummaryList" :key="item.name" class="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm flex flex-col gap-2">
-                    <div class="flex justify-between items-end border-b border-dashed border-slate-100 pb-2">
-                        <span class="font-black text-slate-800 text-[15px]">{{ item.name }}</span>
-                        <span class="font-num font-black text-lg text-rose-500">$ {{ formatNumber(item.total) }}</span>
+                <!-- 單筆人員收費明細 (緊湊單行設計) -->
+                <div v-for="item in collectionSummaryList" :key="item.name" class="px-4 py-3 bg-white border border-slate-100 rounded-xl shadow-sm flex justify-between items-center gap-3">
+                    <div class="flex items-center flex-wrap gap-x-2 gap-y-1 min-w-0 flex-1">
+                        <!-- 姓名 -->
+                        <span class="font-black text-slate-800 text-[14px] shrink-0">{{ item.name }}</span>
+                        <!-- 緊接在姓名後面的細項 -->
+                        <span v-if="item.detailText === '無須收費'" class="text-[9px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0 border border-emerald-100/50">無須收費</span>
+                        <span v-else class="text-[10px] font-bold text-slate-400 leading-none truncate border-l border-slate-200 pl-2 py-0.5">{{ item.detailText }}</span>
                     </div>
-                    <!-- 細項解說 (例如：本人 $0、大人 $4100、小孩 $2000) -->
-                    <div class="text-[11px] font-bold text-slate-400 leading-relaxed">
-                        <span v-if="item.detailText === '無須收費'" class="text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded">無須收費</span>
-                        <span v-else>{{ item.detailText }}</span>
-                    </div>
+                    <!-- 總金額放在最右邊 -->
+                    <span class="font-num font-black text-[15px] text-rose-500 shrink-0">$ {{ formatNumber(item.total) }}</span>
                 </div>
             </div>
         </div>
