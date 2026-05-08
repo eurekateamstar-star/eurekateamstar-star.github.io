@@ -2231,57 +2231,75 @@ onMessage(messaging, (payload) => {
             const isNewsModalOpen = ref(false);
             const unreadCount = ref(0);
             const newsList = ref([]);
+            const rawSystemNews = ref([]); // 🌟 暫存從資料庫抓下來的所有原始資料
 
-            // 取得已經讀過的推播 ID 陣列
             const getReadNewsIds = () => {
                 try { return JSON.parse(localStorage.getItem('read_news_ids_array')) || []; } 
                 catch(e) { return []; }
             };
 
-            // 取得已經被手動刪除(隱藏)的推播 ID 陣列
             const getDismissedNewsIds = () => {
                 try { return JSON.parse(localStorage.getItem('dismissed_news_ids_array')) || []; } 
                 catch(e) { return []; }
             };
 
+            // 🌟 核心過濾機制：每次登入、標記已讀、刪除時都會呼叫這個來更新畫面
+            const processNews = () => {
+                const readIds = getReadNewsIds();
+                const dismissedIds = getDismissedNewsIds();
+                const fetchedNews = [];
+                let unread = 0;
+                const twoDaysAgo = Date.now() - (48 * 60 * 60 * 1000);
+
+                rawSystemNews.value.forEach((data) => {
+                    // 判斷是否為我的訊息 (未登入時 loginUserName 是空的)
+                    const isForMe = !data.targetUser || data.targetUser === 'ALL' || data.targetUser === loginUserName.value;
+                    
+                    if (data.msgTime > twoDaysAgo && !dismissedIds.includes(data.id) && isForMe) {
+                        const isRead = readIds.includes(data.id);
+                        if (!isRead) unread++;
+                        
+                        fetchedNews.push({
+                            id: data.id,
+                            title: data.title,
+                            body: data.body,
+                            date: data.date || '',
+                            isRead: isRead
+                        });
+                    }
+                });
+                newsList.value = fetchedNews.slice(0, 10);
+                unreadCount.value = unread;
+            };
+
             const openNewsModal = () => {
                 isNewsModalOpen.value = true;
-                
-                // 標記所有目前抓到的消息為「已讀」，並存入 LocalStorage
                 if (newsList.value.length > 0) {
                     const currentIds = newsList.value.map(n => n.id);
                     const readIds = getReadNewsIds();
                     const newReadIds = [...new Set([...readIds, ...currentIds])]; // 合併並去重
                     localStorage.setItem('read_news_ids_array', JSON.stringify(newReadIds));
-                    
-                    // 更新畫面：紅點歸零、清單內的紅點消退
-                    newsList.value.forEach(n => n.isRead = true);
-                    unreadCount.value = 0;
+                    processNews(); // 重新計算未讀與紅點
                 }
             };
 
             const closeNewsModal = () => {
                 isNewsModalOpen.value = false;
             };
-// 👇👇👇 插入這裡：提供給上方黑框點擊用的強制打開函數 👇👇👇
+
             window.forceOpenNews = () => {
                 if (currPage.value !== 'login') {
                     openNewsModal();
                 }
             };
-            // 👆👆👆 插入結束 👆👆👆
-            // 手動刪除單則消息
+
             const dismissNews = (newsId) => {
-                // 1. 存入已隱藏清單
                 const dismissedIds = getDismissedNewsIds();
                 if (!dismissedIds.includes(newsId)) {
                     dismissedIds.push(newsId);
                     localStorage.setItem('dismissed_news_ids_array', JSON.stringify(dismissedIds));
                 }
-                // 2. 從畫面上即時移除
-                newsList.value = newsList.value.filter(n => n.id !== newsId);
-                // 3. 重新計算剩餘未讀數量
-                unreadCount.value = newsList.value.filter(n => !n.isRead).length;
+                processNews(); // 重新過濾畫面
             };
 
             const currPage = ref('login');
@@ -2969,48 +2987,31 @@ const sortedCashHistory = computed(() => {
 
 
             onMounted(() => {
-  // 👇👇👇 監聽 Firestore 的最新公告 (支援多筆、隔天消失、隱私過濾) 👇👇👇
-                // 多抓幾筆，以免被別人的私人推播洗掉版面
-
-                // 👇👇👇 新增：監聽黑色提示框的點擊事件 👇👇👇
+    // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
                 window.addEventListener('trigger-open-news', () => {
-                    openNewsModal(); // 觸發打開小鈴鐺
+                    if (typeof window.forceOpenNews === 'function') {
+                        window.forceOpenNews(); // 觸發打開小鈴鐺
+                    }
                 });
+                
+                // 👇👇👇 監聽 Firestore 的最新公告 👇👇👇
                 const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
                 
                 onSnapshot(newsQuery, (snap) => {
-                    const readIds = getReadNewsIds();
-                    const dismissedIds = getDismissedNewsIds();
-                    const fetchedNews = [];
-                    let unread = 0;
-                    
-                    const twoDaysAgo = Date.now() - (48 * 60 * 60 * 1000);
-
+                    const arr = [];
                     snap.forEach((docData) => {
                         const data = docData.data();
-                        const msgTime = data.timestamp ? data.timestamp.toDate().getTime() : Date.now();
-                        
-                        // ✨ 隱私過濾：這則訊息必須是「發給全隊的」或是「發給我的」
-                        const isForMe = !data.targetUser || data.targetUser === 'ALL' || data.targetUser === loginUserName.value;
-                        
-                        // 只保留兩天內、未被手動刪除、且屬於我的公告
-                        if (msgTime > twoDaysAgo && !dismissedIds.includes(docData.id) && isForMe) {
-                            const isRead = readIds.includes(docData.id);
-                            if (!isRead) unread++;
-                            
-                            fetchedNews.push({
-                                id: docData.id,
-                                title: data.title,
-                                body: data.body,
-                                date: data.date || '',
-                                isRead: isRead
-                            });
-                        }
+                        arr.push({
+                            id: docData.id,
+                            ...data,
+                            msgTime: data.timestamp ? data.timestamp.toDate().getTime() : Date.now()
+                        });
                     });
+                    // 把資料存進原始陣列
+                    rawSystemNews.value = arr; 
                     
-                    // 畫面上最多只顯示前 10 筆
-                    newsList.value = fetchedNews.slice(0, 10);
-                    unreadCount.value = unread;
+                    // 呼叫我們剛剛在上面寫好的 processNews() 來更新畫面
+                    processNews();             
                 });
                 // 👆👆👆 監聽結束 👆👆👆
                 if ('clearAppBadge' in navigator) {
@@ -3092,10 +3093,14 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 });
             });
 
-           const handleLogin = () => {
+          const handleLogin = () => {
                 const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
                 if (user) { 
                     loginUserName.value = user.姓名; 
+                    
+                    // 🌟 登入成功後，立刻重新計算專屬於這個人的推播訊息！
+                    processNews();
+
                     currPage.value = 'dashboard'; 
                     subscribeFCM(user.姓名); 
                     
@@ -3106,13 +3111,13 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                             .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
                     });
 
-                    // 👇👇👇 新增：登入成功後，若有未讀消息，自動彈出公告視窗 👇👇👇
+                    // 👇👇👇 登入成功後，若有未讀消息，自動彈出公告視窗 👇👇👇
                     if (unreadCount.value > 0) {
                         setTimeout(() => {
                             openNewsModal();
-                        }, 600); // 延遲 0.6 秒，等畫面切換的動畫跑完再彈出，視覺更順暢
+                        }, 600); // 延遲 0.6 秒，等畫面切換的動畫跑完再彈出
                     }
-                    // 👆👆👆 新增結束 👆👆👆
+                    // 👆👆👆 自動彈出結束 👆👆👆
 
                 } else { 
                     errMsg.value = "安全密碼錯誤"; 
