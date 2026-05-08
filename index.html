@@ -2168,12 +2168,28 @@
 onMessage(messaging, (payload) => {
         const n = payload.notification;
         if (!n) return;
+        
         // 顯示上方黑色提示
         const toast = document.createElement("div");
-        toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:14px 20px;border-radius:16px;font-size:13px;font-weight:700;z-index:9999;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.3);line-height:1.5;";
-        toast.innerHTML = `<div style="font-size:11px;opacity:0.6;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">🚨 新通知</div><div>${n.title}</div><div style="opacity:0.7;font-size:12px;margin-top:4px;">${n.body}</div>`;
+        // 加上 cursor:pointer 讓它看起來可以點擊
+        toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:14px 20px;border-radius:16px;font-size:13px;font-weight:700;z-index:9999;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.3);line-height:1.5;cursor:pointer;";
+        
+        // 標題旁加上 (點擊查看) 提示
+        toast.innerHTML = `<div style="font-size:11px;opacity:0.6;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">🚨 新通知 (點擊查看)</div><div>${n.title}</div><div style="opacity:0.7;font-size:12px;margin-top:4px;">${n.body}</div>`;
+        
+        // 👇👇👇 新增：點擊黑色提示框時的動作 👇👇👇
+        toast.onclick = () => {
+            toast.remove(); // 點擊後立刻隱藏黑色提示
+            window.dispatchEvent(new Event('trigger-open-news')); // 呼叫 Vue 打開鈴鐺視窗
+        };
+        // 👆👆👆 新增結束 👆👆👆
+
         document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 5000);
+        
+        // 5秒後自動消失
+        setTimeout(() => {
+            if (toast.parentNode) toast.remove();
+        }, 5000);
     });
 
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
@@ -2954,6 +2970,11 @@ const sortedCashHistory = computed(() => {
             onMounted(() => {
   // 👇👇👇 監聽 Firestore 的最新公告 (支援多筆、隔天消失、隱私過濾) 👇👇👇
                 // 多抓幾筆，以免被別人的私人推播洗掉版面
+
+                // 👇👇👇 新增：監聽黑色提示框的點擊事件 👇👇👇
+                window.addEventListener('trigger-open-news', () => {
+                    openNewsModal(); // 觸發打開小鈴鐺
+                });
                 const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
                 
                 onSnapshot(newsQuery, (snap) => {
