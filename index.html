@@ -1546,8 +1546,7 @@
                     <i class="fa-solid fa-file-invoice-dollar text-3xl mb-3"></i>
                     <p class="text-sm font-bold">目前尚無需要收費的名單</p>
                 </div>
-
-                <!-- 單筆人員收費明細 (緊湊單行設計) -->
+<!-- 單筆人員收費明細 (緊湊單行設計 + 一鍵推播) -->
                 <div v-for="item in collectionSummaryList" :key="item.name" class="px-4 py-3 bg-white border border-slate-100 rounded-xl shadow-sm flex justify-between items-center gap-3">
                     <div class="flex items-center flex-wrap gap-x-2 gap-y-1 min-w-0 flex-1">
                         <!-- 姓名 -->
@@ -1556,10 +1555,21 @@
                         <span v-if="item.detailText === '無須收費'" class="text-[9px] font-black text-emerald-500 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0 border border-emerald-100/50">無須收費</span>
                         <span v-else class="text-[10px] font-bold text-slate-400 leading-none truncate border-l border-slate-200 pl-2 py-0.5">{{ item.detailText }}</span>
                     </div>
-                    <!-- 總金額放在最右邊 -->
-                    <span class="font-num font-black text-[15px] text-rose-500 shrink-0">$ {{ formatNumber(item.total) }}</span>
+                    
+                    <!-- 右側：總金額 與 推播按鈕 -->
+                    <div class="flex items-center gap-3 shrink-0">
+                        <span class="font-num font-black text-[15px] text-rose-500">$ {{ formatNumber(item.total) }}</span>
+                        
+                        <!-- 🌟 一鍵推播按鈕 -->
+                        <button @click="pushPaymentReminder(item)" 
+                                :disabled="paymentPushLoading === item.name || item.detailText === '無須收費'"
+                                class="w-8 h-8 rounded-full flex items-center justify-center transition-all border"
+                                :class="item.detailText === '無須收費' ? 'bg-slate-50 text-slate-300 border-slate-100' : 'bg-indigo-50 text-indigo-500 border-indigo-100 active:scale-95 active:bg-indigo-100 shadow-sm'">
+                            <i v-if="paymentPushLoading === item.name" class="fa-solid fa-spinner fa-spin text-[10px]"></i>
+                            <i v-else class="fa-solid fa-paper-plane text-[10px]"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
         </div>
 <!-- 年度統計：案件詳細列表 Modal -->
 <div class="bottom-sheet-overlay" :class="{ active: isCaseDetailModalOpen }" @click="isCaseDetailModalOpen = false"></div>
@@ -2481,6 +2491,52 @@ onMessage(messaging, (payload) => {
                     };
                 }).sort((a, b) => b.total - a.total); // 金額高的排前面
             });
+
+// 追蹤推播讀取狀態
+            const paymentPushLoading = ref('');
+
+            // 🌟 針對個人發送費用推播
+            const pushPaymentReminder = async (item) => {
+                // 1. 找尋該員的訂閱資料
+                const targetMember = members.value.find(m => m.姓名 === item.name);
+                if (!targetMember || !targetMember.pushSubscription) {
+                    showAppAlert('error', '無法推播', `找不到 ${item.name} 的裝置訂閱紀錄，請請他開啟 App。`);
+                    return;
+                }
+
+                // 2. 組合推播訊息
+                const taskName = currentTask.value?.title || '活動';
+                const title = `💰 費用繳交提醒：${taskName}`;
+                const body = `您好，本次活動您的應繳總額為 $${formatNumber(item.total)}。\n費用細項：${item.detailText}\n再麻煩您留意繳交，謝謝！`;
+
+                paymentPushLoading.value = item.name; // 按鈕轉圈圈
+
+                // 3. 呼叫後端單獨推播 API
+                try {
+                    const response = await fetch(CLOUD_RUN_URL + 'push-single', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userName: item.name,
+                            subscription: targetMember.pushSubscription,
+                            title: title,
+                            body: body
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.ok) {
+                        showAppAlert('success', '推播成功', `已將費用提醒發送給 ${item.name}！`);
+                    } else {
+                        showAppAlert('error', '推播失敗', result.error || '未知錯誤');
+                    }
+                } catch (e) {
+                    showAppAlert('error', '推播失敗', e.message);
+                } finally {
+                    paymentPushLoading.value = ''; // 停止轉圈圈
+                }
+            };
+            
             const selectedMemberDutyHistory = computed(() => {
                 if (!selectedDutyMember.value) return [];
                 const targetName = selectedDutyMember.value.姓名;
@@ -4259,7 +4315,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 confirmCancelSub, executeCancelSub, isNewsModalOpen, unreadCount, newsList, openNewsModal, closeNewsModal, dismissNews,
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
-                adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete,
+                adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete, paymentPushLoading, pushPaymentReminder,
                 selectAdminHour, openAdminAddShift, submitAdminShift, addCaseToEdit, removeCaseFromEdit, isCollectionSummaryModalOpen, collectionSummaryList,
                 openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList,
                 submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,rankingCaseType,
