@@ -2066,7 +2066,7 @@
 </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, updateDoc, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getMessaging, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
     const firebaseConfig = { apiKey:"AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q", authDomain:"star-c5e91.firebaseapp.com", projectId:"star-c5e91", storageBucket:"star-c5e91.firebasestorage.app", messagingSenderId:"804810488246", appId:"1:804810488246:web:477340ff049b90ed68e917" };
@@ -2114,29 +2114,7 @@
 onMessage(messaging, (payload) => {
         const n = payload.notification;
         if (!n) return;
-        
-        // 1. 取得當前時間
-        const now = new Date();
-        const pad = (num) => String(num).padStart(2, '0');
-        const timeStr = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-        
-        // 2. 打包訊息內容
-        const newsObj = { 
-            title: n.title, 
-            body: n.body, 
-            date: timeStr, 
-            id: Date.now().toString() 
-        };
-        
-        // 3. 存入瀏覽器記憶體
-        localStorage.setItem('latest_system_news', JSON.stringify(newsObj));
-        
-        // 4. 🌟 直接呼叫 Vue 裡面的專線函數 (確保鈴鐺資料更新)
-        if (typeof window.triggerNewPush === 'function') {
-            window.triggerNewPush(newsObj);
-        }
-
-        // 5. 顯示上方黑色提示
+        // 顯示上方黑色提示
         const toast = document.createElement("div");
         toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:14px 20px;border-radius:16px;font-size:13px;font-weight:700;z-index:9999;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.3);line-height:1.5;";
         toast.innerHTML = `<div style="font-size:11px;opacity:0.6;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">🚨 新通知</div><div>${n.title}</div><div style="opacity:0.7;font-size:12px;margin-top:4px;">${n.body}</div>`;
@@ -2184,7 +2162,7 @@ onMessage(messaging, (payload) => {
                     }
                 };
             };
-// ===== 最新消息狀態 =====
+// ===== 最新消息狀態 (改用 Firestore 即時連線) =====
             const isNewsModalOpen = ref(false);
             const hasUnreadNews = ref(false);
             const latestNews = ref({ 
@@ -2194,35 +2172,7 @@ onMessage(messaging, (payload) => {
                 id: '' 
             });
 
-            // 🌟 建立全域專線，讓推播可以直接把資料傳進來
-            window.triggerNewPush = (newsObj) => {
-                latestNews.value = newsObj;
-                hasUnreadNews.value = true;
-            };
-
-            const checkLatestNews = () => {
-                const storedNews = localStorage.getItem('latest_system_news');
-                if (storedNews) {
-                    try {
-                        const parsed = JSON.parse(storedNews);
-                        latestNews.value = parsed;
-                        const readId = localStorage.getItem('last_read_news_id');
-                        if (readId !== parsed.id) {
-                            hasUnreadNews.value = true;
-                        }
-                    } catch(e) {}
-                }
-            };
-
             const openNewsModal = () => {
-                // 點擊打開時，再強制去 LocalStorage 抓一次資料
-                const storedNews = localStorage.getItem('latest_system_news');
-                if (storedNews) {
-                    try {
-                        latestNews.value = JSON.parse(storedNews);
-                    } catch(e) {}
-                }
-                
                 hasUnreadNews.value = false;
                 if(latestNews.value.id) {
                     localStorage.setItem('last_read_news_id', latestNews.value.id);
@@ -2919,13 +2869,26 @@ const sortedCashHistory = computed(() => {
 
 
             onMounted(() => {
- // 👇👇👇 新增的：最新消息監聽 👇👇👇
-                checkLatestNews();
-                window.addEventListener('new-push-message', (e) => {
-                    latestNews.value = e.detail;
-                    hasUnreadNews.value = true;
+    // 👇👇👇 監聽 Firestore 的最新公告 👇👇👇
+                const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(1));
+                onSnapshot(newsQuery, (snap) => {
+                    if (!snap.empty) {
+                        const docData = snap.docs[0];
+                        const data = docData.data();
+                        latestNews.value = {
+                            id: docData.id,
+                            title: data.title,
+                            body: data.body,
+                            date: data.date || ''
+                        };
+                        // 檢查是否已讀
+                        const readId = localStorage.getItem('last_read_news_id');
+                        if (readId !== docData.id) {
+                            hasUnreadNews.value = true; // 亮起紅點
+                        }
+                    }
                 });
-                // 👆👆👆 新增結束 👆👆👆
+                // 👆👆👆 監聽結束 👆👆👆
                 if ('clearAppBadge' in navigator) {
                     navigator.clearAppBadge();
                 }
