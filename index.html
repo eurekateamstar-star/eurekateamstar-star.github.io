@@ -1535,11 +1535,20 @@
                 <button @click="isCollectionSummaryModalOpen = false" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 active:scale-95 transition-transform"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <!-- 總計大字 -->
-            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-4 flex justify-between items-center shrink-0">
+           <!-- 總計大字 -->
+            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-3 flex justify-between items-center shrink-0">
                 <span class="font-black text-indigo-800">全隊應收總計</span>
                 <span class="font-num text-2xl text-indigo-600 font-black">$ {{ formatNumber(getMeetingSummary(currentTask?.id).totalExpectedCash) }}</span>
             </div>
+
+            <!-- 🌟 一鍵發送所有人按鈕 -->
+            <button @click="pushPaymentReminderToAll" 
+                    :disabled="paymentPushAllLoading || collectionSummaryList.filter(i => i.total > 0).length === 0"
+                    class="w-full py-3.5 mb-4 rounded-xl bg-indigo-600 text-white font-black text-[14px] shadow-lg shadow-indigo-200 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0">
+                <i v-if="paymentPushAllLoading" class="fa-solid fa-spinner fa-spin"></i>
+                <i v-else class="fa-solid fa-paper-plane-top"></i>
+                {{ paymentPushAllLoading ? '批次發送中，請稍候...' : '一鍵提醒所有需繳費人員' }}
+            </button>
 
             <div class="modal-scroll-area space-y-2 pr-1">
                 <div v-if="collectionSummaryList.length === 0" class="py-10 text-center text-slate-300">
@@ -2536,6 +2545,64 @@ onMessage(messaging, (payload) => {
                 } finally {
                     paymentPushLoading.value = ''; // 停止轉圈圈
                 }
+            };
+
+            // 追蹤批次推播狀態
+            const paymentPushAllLoading = ref(false);
+
+            // 🌟 批次發送給所有需要收費的人
+            const pushPaymentReminderToAll = async () => {
+                // 1. 過濾出需要繳費的人
+                const targetList = collectionSummaryList.value.filter(item => item.total > 0 && item.detailText !== '無須收費');
+                
+                if (targetList.length === 0) {
+                    showAppAlert('error', '無法發送', '目前沒有需要發送繳費提醒的名單。');
+                    return;
+                }
+
+                // 2. 跳出確認視窗防呆
+                showAppConfirm('確認一鍵發送', `即將發送「專屬繳費金額」提醒推播給 ${targetList.length} 人，確定要執行嗎？`, async () => {
+                    paymentPushAllLoading.value = true;
+                    let successCount = 0;
+                    let failCount = 0;
+
+                    // 3. 逐一發送推播
+                    for (const item of targetList) {
+                        const targetMember = members.value.find(m => m.姓名 === item.name);
+                        
+                        if (!targetMember || !targetMember.pushSubscription) {
+                            failCount++;
+                            continue; // 沒訂閱的人直接跳過
+                        }
+
+                        const taskName = currentTask.value?.title || '活動';
+                        const title = `💰 費用繳交提醒：${taskName}`;
+                        const body = `您好，本次活動您的應繳總額為 $${formatNumber(item.total)}。\n費用細項：${item.detailText}\n再麻煩您留意繳交，謝謝！`;
+
+                        try {
+                            const response = await fetch(CLOUD_RUN_URL + 'push-single', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userName: item.name,
+                                    subscription: targetMember.pushSubscription,
+                                    title: title,
+                                    body: body
+                                })
+                            });
+                            const result = await response.json();
+                            if (result.ok) successCount++;
+                            else failCount++;
+                        } catch (e) {
+                            failCount++;
+                        }
+                    }
+
+                    paymentPushAllLoading.value = false;
+                    
+                    // 4. 發送完成報告
+                    showAppAlert('success', '批次發送完成', `✅ 成功發送 ${successCount} 人\n❌ 失敗或未訂閱 ${failCount} 人`);
+                });
             };
             
             const selectedMemberDutyHistory = computed(() => {
@@ -4319,7 +4386,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete, paymentPushLoading, pushPaymentReminder,
                 selectAdminHour, openAdminAddShift, submitAdminShift, addCaseToEdit, removeCaseFromEdit, isCollectionSummaryModalOpen, collectionSummaryList,
                 openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList,
-                submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,rankingCaseType,
+                submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,rankingCaseType, paymentPushAllLoading, pushPaymentReminderToAll,
                 openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
                 
                 // 協勤專屬
