@@ -2112,33 +2112,33 @@
         return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     }
 
-  onMessage(messaging, (payload) => {
-    const n = payload.notification;
-    if (!n) return;
-    
-    // 1. 將最新推播存入瀏覽器快取 (LocalStorage)
-    const now = new Date();
-    const pad = (num) => String(num).padStart(2, '0');
-    const timeStr = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    
-    const newsObj = { 
-        title: n.title, 
-        body: n.body, 
-        date: timeStr, 
-        id: Date.now().toString() 
-    };
-    localStorage.setItem('latest_system_news', JSON.stringify(newsObj));
-    
-    // 2. 通知 Vue 元件有新訊息
-    window.dispatchEvent(new CustomEvent('new-push-message', { detail: newsObj }));
+onMessage(messaging, (payload) => {
+        const n = payload.notification;
+        if (!n) return;
+        
+        // 1. 將最新推播存入瀏覽器快取 (LocalStorage)
+        const now = new Date();
+        const pad = (num) => String(num).padStart(2, '0');
+        const timeStr = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+        
+        const newsObj = { 
+            title: n.title, 
+            body: n.body, 
+            date: timeStr, 
+            id: Date.now().toString() 
+        };
+        localStorage.setItem('latest_system_news', JSON.stringify(newsObj));
+        
+        // 2. 通知 Vue 有新訊息 (觸發紅點)
+        window.dispatchEvent(new CustomEvent('new-push-message', { detail: newsObj }));
 
-    // 3. 原本的上方 Toast 提示
-    const toast = document.createElement("div");
-    toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:14px 20px;border-radius:16px;font-size:13px;font-weight:700;z-index:9999;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.3);line-height:1.5;";
-    toast.innerHTML = `<div style="font-size:11px;opacity:0.6;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">🚨 新通知</div><div>${n.title}</div><div style="opacity:0.7;font-size:12px;margin-top:4px;">${n.body}</div>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 5000);
-});
+        // 3. 上方的黑色 Toast 提示
+        const toast = document.createElement("div");
+        toast.style.cssText = "position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%);background:#1e293b;color:white;padding:14px 20px;border-radius:16px;font-size:13px;font-weight:700;z-index:9999;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,0.3);line-height:1.5;";
+        toast.innerHTML = `<div style="font-size:11px;opacity:0.6;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">🚨 新通知</div><div>${n.title}</div><div style="opacity:0.7;font-size:12px;margin-top:4px;">${n.body}</div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+    });
 
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
@@ -2206,6 +2206,14 @@ const checkLatestNews = () => {
 };
 
 const openNewsModal = () => {
+    // 雙重保險：打開視窗的瞬間，強制再去儲存區抓一次最新資料
+    const storedNews = localStorage.getItem('latest_system_news');
+    if (storedNews) {
+        try {
+            latestNews.value = JSON.parse(storedNews);
+        } catch(e) {}
+    }
+    
     hasUnreadNews.value = false; // 點開就消除紅點
     if(latestNews.value.id) {
         localStorage.setItem('last_read_news_id', latestNews.value.id); // 記錄為已讀
