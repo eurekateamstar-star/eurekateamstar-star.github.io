@@ -2369,32 +2369,46 @@
                     </div>
 
                     <!-- 時間與地點 -->
-                    <div class="grid grid-cols-1 gap-4 px-1">
-                        <div class="flex items-start gap-4">
-                            <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-500 border border-blue-100">
-                                <i class="fa-solid fa-clock"></i>
-                            </div>
-                            <div class="flex-1">
-                                <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動時間</span>
-                                <span class="text-[15px] font-num font-black text-slate-700">
-                                    {{ extractInfo(selectedNewsDetail?.body, '時間') }}
-                                </span>
-                            </div>
-                        </div>
+                    <div class="space-y-4 px-1">
+    <!-- 1. 活動日期 -->
+    <div class="flex items-start gap-4">
+        <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 text-indigo-500 border border-indigo-100">
+            <i class="fa-solid fa-calendar-day"></i>
+        </div>
+        <div class="flex-1">
+            <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動日期</span>
+            <span class="text-[15px] font-num font-black text-slate-700">
+                {{ extractInfo(selectedNewsDetail?.body, '日期') }}
+            </span>
+        </div>
+    </div>
 
-                        <div class="flex items-start gap-4">
-                            <div class="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 text-rose-500 border border-rose-100">
-                                <i class="fa-solid fa-location-dot"></i>
-                            </div>
-                            <div class="flex-1">
-                                <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動地點</span>
-                                <span class="text-[15px] font-bold text-slate-700 leading-snug">
-                                    {{ extractInfo(selectedNewsDetail?.body, '地點') }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- 2. 活動時間 -->
+    <div class="flex items-start gap-4">
+        <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-500 border border-blue-100">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+        <div class="flex-1">
+            <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動時間</span>
+            <span class="text-[15px] font-num font-black text-slate-700">
+                {{ extractInfo(selectedNewsDetail?.body, '時間') }}
+            </span>
+        </div>
+    </div>
 
+    <!-- 3. 活動地點 -->
+    <div class="flex items-start gap-4">
+        <div class="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 text-rose-500 border border-rose-100">
+            <i class="fa-solid fa-location-dot"></i>
+        </div>
+        <div class="flex-1">
+            <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動地點</span>
+            <span class="text-[15px] font-bold text-slate-700 leading-snug">
+                {{ extractInfo(selectedNewsDetail?.body, '地點') }}
+            </span>
+        </div>
+    </div>
+</div>
                     <!-- 備註事項 -->
                     <div>
                         <div class="bg-amber-50/50 border border-amber-200/50 rounded-[24px] p-4 relative overflow-hidden">
@@ -2556,25 +2570,23 @@ const openNewsDetail = (news) => {
 const extractInfo = (body, type) => {
     if (!body) return type === '備註' ? '' : '未提供';
 
-    // 1. 活動名稱：抓取 【活動】 之後直到第一個逗號或「時間」標籤前
     if (type === '活動') {
-        const match = body.match(/【活動】\s*(.*?)(?=，|時間|地点|地點|[:：]|$)/);
+        const match = body.match(/【活動】\s*(.*?)(?=，|日期|時間|[:：]|$)/);
         return match ? match[1].trim() : '系統訊息';
     }
-
-    // 2. 時間：支持各種時間標籤
+    // 🌟 解析日期資訊
+    if (type === '日期') {
+        const match = body.match(/日期[:：]\s*(.*?)(?=，|時間|地點|$)/);
+        return match ? match[1].trim() : '詳見公告';
+    }
     if (type === '時間') {
-        const match = body.match(/時間[:：]\s*(.*?)(?=，|地點|地点|$)/);
+        const match = body.match(/時間[:：]\s*(.*?)(?=，|地點|$)/);
         return match ? match[1].trim() : '依公告為準';
     }
-    
-    // 3. 地點
     if (type === '地點') {
-        const match = body.match(/地點[:：]\s*(.*?)(?=，|備註|备注|$)/);
+        const match = body.match(/地點[:：]\s*(.*?)(?=，|備註|$)/);
         return match ? match[1].trim() : '詳見公告內容';
     }
-
-    // 4. 備註
     if (type === '備註') {
         const match = body.match(/備註[:：]\s*(.*?)(?=。|$)/);
         return match ? match[1].trim() : '無特殊備註';
@@ -3340,73 +3352,56 @@ const isCancelSubModalOpen  = ref(false);
                 }
             };
 
-   const handlePostTask = async () => {
+ const handlePostTask = async () => {
     if (!newTask.value.title || !newTask.value.date) return showAppAlert('error', '提示', '請填寫完整資訊');
     
     const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
     const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-    const dateStr = newTask.value.date.replace(/-/g, '/'); // 格式化日期
+    const dateStr = newTask.value.date.replace(/-/g, '/'); // 格式化日期為 YYYY/MM/DD
 
-    // 🌟 統一組合訊息內容的格式 (這決定了小鈴鐺詳情能不能看到時間與備註)
-    const formattedBody = `【活動】${newTask.value.title}，時間：${newTask.value.startTime}-${newTask.value.endTime}，地點：${newTask.value.location || '待確認'}，備註：${newTask.value.note || '無'}。`;
+    // 🌟 組合包含「日期：」標籤的字串
+    const formattedBody = `【活動】${newTask.value.title}，日期：${dateStr}，時間：${newTask.value.startTime}-${newTask.value.endTime}，地點：${newTask.value.location || '待確認'}，備註：${newTask.value.note || '無'}。`;
 
     try {
         if (editingTaskId.value) {
-            // ================= 編輯模式 (異動) =================
+            // 編輯模式
             await updateDoc(doc(db, collName, editingTaskId.value), { ...newTask.value });
             isPostModalOpen.value = false;
-
             if (sendEditPush.value) {
                 const regs = registrations.value.filter(r => r.taskId === editingTaskId.value && r.status === '出席');
-                if (regs.length > 0) {
-                    showAppAlert('success', '處理中', `正在通知 ${regs.length} 位成員...`);
-                    
-                    const pushTitle = `✏️ 內容異動：${newTask.value.title}`;
-                    
-                    for (const reg of regs) {
-                        const targetMember = members.value.find(m => m.姓名 === reg.userName);
-                        if (targetMember && targetMember.pushSubscription) {
-                            await fetch(CLOUD_RUN_URL + 'push-single', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    userName: targetMember.姓名,
-                                    subscription: targetMember.pushSubscription,
-                                    title: pushTitle,
-                                    body: formattedBody
-                                })
-                            });
-                        }
+                for (const reg of regs) {
+                    const targetMember = members.value.find(m => m.姓名 === reg.userName);
+                    if (targetMember?.pushSubscription) {
+                        await fetch(CLOUD_RUN_URL + 'push-single', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                userName: targetMember.姓名,
+                                subscription: targetMember.pushSubscription,
+                                title: `✏️ 內容異動：${newTask.value.title}`,
+                                body: formattedBody
+                            })
+                        });
                     }
-                    showAppAlert('success', '異動通知完成', '已儲存並通知相關人員');
                 }
-            } else {
-                showAppAlert('success', '編輯成功', '任務已更新');
+                showAppAlert('success', '異動通知完成', '已儲存並通知相關人員');
             }
         } else {
-            // ================= 新增模式 (發佈) =================
+            // 新增模式
             await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
             isPostModalOpen.value = false;
-
-            const pushTitle = `🚨 海山救護義消 — ${typeLabel}發佈`;
-            
             const response = await fetch(CLOUD_RUN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title: pushTitle,
+                    title: `🚨 海山救護義消 — ${typeLabel}發佈`,
                     body: formattedBody
                 })
             });
             const result = await response.json();
-            if (result.stats) {
-                lastPushStats.value = result.stats;
-                isSuccessStatusOpen.value = true;
-            }
+            if (result.stats) { isSuccessStatusOpen.value = true; }
         }
-    } catch (e) {
-        showAppAlert('error', '錯誤', '操作失敗');
-    }
+    } catch (e) { showAppAlert('error', '錯誤', '操作失敗'); }
 };
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
