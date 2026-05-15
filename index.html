@@ -589,7 +589,8 @@
                                 </div>
                             </div>
 
-                            <!-- 篩選按鈕 -->
+                           
+<!-- 篩選按鈕 -->
                             <div class="admin-filter-tabs mb-3">
                                 <button
                                     v-for="f in adminFilters" :key="f.key"
@@ -598,7 +599,14 @@
                                     @click="adminFilter = f.key"
                                 >{{ f.label }}</button>
                             </div>
-
+<!-- 👇👇👇 新增：發送群體推播按鈕 👇👇👇 -->
+                            <div class="mb-3 px-1">
+                                <button @click="openBatchPushModal" class="w-full py-3.5 rounded-2xl bg-slate-800 text-white font-black text-[13px] shadow-lg shadow-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-bullhorn"></i>
+                                    自訂群體推播 (可選全體或特定人員)
+                                </button>
+                            </div>
+                            <!-- 👆👆👆 新增結束 👆👆👆 -->
                             <!-- 隊員列表 -->
                             <div class="admin-panel-card">
                                 <div
@@ -1702,6 +1710,72 @@
         </div>
         <!-- ===== 單獨推播彈窗結束 ===== -->
 
+
+        <!-- 👇👇👇 新增：群體推播/批次推播彈窗 👇👇👇 -->
+        <div class="bottom-sheet-overlay" :class="{ active: isBatchPushModalOpen }" @click="!batchPushLoading && (isBatchPushModalOpen = false)"></div>
+        <div class="bottom-sheet" :class="{ active: isBatchPushModalOpen }">
+            <div class="flex justify-between items-center mb-5 shrink-0">
+                <div>
+                    <h4 class="text-xl font-black text-slate-800">自訂群組推播</h4>
+                    <p class="text-xs font-bold text-slate-400 mt-0.5">自訂訊息與發送對象</p>
+                </div>
+                <button v-if="!batchPushLoading" @click="isBatchPushModalOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="modal-scroll-area space-y-4 pr-1">
+                <!-- 推播內容輸入 -->
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1">推播標題</label>
+                    <input v-model="batchPushForm.title" type="text" placeholder="例如：🚨 勤務緊急通報" class="med-input w-full" :disabled="batchPushLoading">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-black text-slate-400 ml-1">推播內容</label>
+                    <textarea v-model="batchPushForm.body" placeholder="請輸入要傳送的訊息內容..." class="med-input w-full h-20" :disabled="batchPushLoading"></textarea>
+                </div>
+
+                <!-- 🌟 發送對象選擇區 -->
+                <div class="pt-2 border-t border-slate-100">
+                    <label class="text-[10px] font-black text-slate-400 ml-1 uppercase mb-2 block">發送對象</label>
+                    <div class="flex gap-2 mb-3">
+                        <button @click="pushTargetMode = 'all'" :disabled="batchPushLoading" class="flex-1 py-2.5 rounded-xl text-xs font-black border-2 transition-all" :class="pushTargetMode === 'all' ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm' : 'border-slate-100 text-slate-400'">全體已訂閱人員</button>
+                        <button @click="pushTargetMode = 'custom'" :disabled="batchPushLoading" class="flex-1 py-2.5 rounded-xl text-xs font-black border-2 transition-all" :class="pushTargetMode === 'custom' ? 'border-blue-500 bg-blue-50 text-blue-600 shadow-sm' : 'border-slate-100 text-slate-400'">自訂勾選特定人員</button>
+                    </div>
+
+                    <!-- 人員勾選清單 (僅在自訂模式顯示) -->
+                    <div v-if="pushTargetMode === 'custom'" class="bg-slate-50 border border-slate-200 rounded-xl p-2 max-h-48 overflow-y-auto space-y-1 shadow-inner">
+                        <div v-if="subscribableMembers.length === 0" class="text-center py-4 text-xs font-bold text-slate-400">目前無任何人訂閱推播</div>
+                        <label v-for="m in subscribableMembers" :key="m.姓名" class="flex items-center p-2.5 hover:bg-white rounded-lg cursor-pointer transition-colors border border-transparent hover:border-slate-200 hover:shadow-sm">
+                            <input type="checkbox" :value="m.姓名" v-model="selectedPushMembers" :disabled="batchPushLoading" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                            <span class="ml-3 text-sm font-black text-slate-700 flex-1">{{ m.姓名 }}</span>
+                            <span class="text-[10px] font-bold text-slate-400">{{ m.duty_group || '隊員' }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 進度條 (發送中顯示) -->
+                <div v-if="batchPushLoading" class="mt-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div class="flex justify-between text-[11px] font-black text-slate-500 mb-2">
+                        <span class="flex items-center gap-1"><i class="fa-solid fa-paper-plane text-blue-500"></i> 發送進度</span>
+                        <span>{{ batchPushProgress.current }} / {{ batchPushProgress.total }}</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                        <div class="bg-blue-500 h-2.5 transition-all duration-300 rounded-full" :style="{ width: (batchPushProgress.current / batchPushProgress.total * 100) + '%' }"></div>
+                    </div>
+                </div>
+
+                <!-- 送出按鈕 -->
+                <div class="pt-4 pb-2">
+                    <button @click="executeBatchPush" :disabled="isBatchPushDisabled" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-[15px] shadow-lg shadow-blue-200 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2">
+                        <i v-if="batchPushLoading" class="fa-solid fa-spinner fa-spin"></i>
+                        {{ batchPushBtnText }}
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- 👆👆👆 群體推播彈窗結束 👆👆👆 -->
+
+        
+
         <!-- ===== 代為新增排班 Modal ===== -->
         <div class="bottom-sheet-overlay" :class="{ active: isAdminAddShiftOpen }" @click="isAdminAddShiftOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isAdminAddShiftOpen }">
@@ -2755,12 +2829,100 @@ onMessage(messaging, (payload) => {
                 { key: 'pushok',   label: '昨日成功' },
             ];
 
-            const isCancelSubModalOpen  = ref(false);
+           
+const isCancelSubModalOpen  = ref(false);
             const isSinglePushModalOpen = ref(false);
             const cancelSubTarget       = ref(null);
             const singlePushTarget      = ref(null);
             const adminActionLoading    = ref('');
             const singlePushForm        = ref({ title: '', body: '' });
+
+            // 👇👇👇 新增：群體推播的相關狀態與邏輯 👇👇👇
+            const isBatchPushModalOpen = ref(false);
+            const batchPushForm = ref({ title: '', body: '' });
+            const batchPushLoading = ref(false);
+            const batchPushProgress = ref({ current: 0, total: 0, success: 0, fail: 0 });
+            
+            // 新增：切換模式與勾選名單
+            const pushTargetMode = ref('all'); // 'all' (全體) 或 'custom' (自訂)
+            const selectedPushMembers = ref([]);
+
+            // 取出「全隊所有已訂閱」的人員名單 (給勾選清單使用)
+            const subscribableMembers = computed(() => {
+                return adminMembersData.value.filter(m => m.hasSub);
+            });
+
+            // 計算當前按鈕的禁用狀態
+            const isBatchPushDisabled = computed(() => {
+                if (batchPushLoading.value) return true;
+                if (!batchPushForm.value.title || !batchPushForm.value.body) return true;
+                if (pushTargetMode.value === 'custom' && selectedPushMembers.value.length === 0) return true;
+                if (pushTargetMode.value === 'all' && subscribableMembers.value.length === 0) return true;
+                return false;
+            });
+
+            // 動態顯示按鈕文字
+            const batchPushBtnText = computed(() => {
+                if (batchPushLoading.value) return '批次發送中，請勿關閉...';
+                if (pushTargetMode.value === 'all') return `發送給全體已訂閱的 ${subscribableMembers.value.length} 人`;
+                return `確認發送給選定的 ${selectedPushMembers.value.length} 人`;
+            });
+
+            const openBatchPushModal = () => {
+                batchPushForm.value = { title: '', body: '' };
+                batchPushProgress.value = { current: 0, total: 0, success: 0, fail: 0 };
+                pushTargetMode.value = 'all';
+                selectedPushMembers.value = []; // 清空之前的勾選
+                isBatchPushModalOpen.value = true;
+            };
+
+            const executeBatchPush = async () => {
+                // 根據模式決定要發給誰
+                let targets = [];
+                if (pushTargetMode.value === 'all') {
+                    targets = subscribableMembers.value;
+                } else {
+                    targets = subscribableMembers.value.filter(m => selectedPushMembers.value.includes(m.姓名));
+                }
+
+                if (targets.length === 0) return;
+
+                showAppConfirm('確認群組發送', `即將發送推播給 ${targets.length} 人，確定要執行嗎？`, async () => {
+                    batchPushLoading.value = true;
+                    batchPushProgress.value = { current: 0, total: targets.length, success: 0, fail: 0 };
+
+                    // 依序逐一發送
+                    for (const m of targets) {
+                        try {
+                            const response = await fetch(CLOUD_RUN_URL + 'push-single', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userName: m.姓名,
+                                    subscription: m.pushSubscription,
+                                    title: batchPushForm.value.title,
+                                    body: batchPushForm.value.body
+                                })
+                            });
+                            const result = await response.json();
+                            if (result.ok) {
+                                batchPushProgress.value.success++;
+                            } else {
+                                batchPushProgress.value.fail++;
+                            }
+                        } catch (e) {
+                            batchPushProgress.value.fail++;
+                        }
+                        batchPushProgress.value.current++;
+                    }
+
+                    batchPushLoading.value = false;
+                    isBatchPushModalOpen.value = false;
+                    showAppAlert('success', '推播發送完成', `✅ 成功送達：${batchPushProgress.value.success} 人\n❌ 失敗或裝置失效：${batchPushProgress.value.fail} 人`);
+                });
+            };
+            // 👆👆👆 新增結束 👆👆👆
+
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
@@ -4482,7 +4644,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 pushLogs, yesterdayStr, adminFilter, adminFilters, adminMembersData, filteredAdminMembers, adminStats,
                 todayStr, weekLaterAdminStr, isReminding, getUnfilledMembersList, remindDutyShortage, remindUnfilledMeeting,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
-                adminActionLoading, singlePushForm,
+                adminActionLoading, singlePushForm,isBatchPushModalOpen, batchPushForm, batchPushLoading, batchPushProgress, openBatchPushModal, executeBatchPush, pushTargetMode, selectedPushMembers, subscribableMembers, isBatchPushDisabled, batchPushBtnText,
                 confirmCancelSub, executeCancelSub, isNewsModalOpen, unreadCount, newsList, openNewsModal, closeNewsModal, dismissNews,
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
