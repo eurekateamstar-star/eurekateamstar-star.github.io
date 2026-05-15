@@ -2284,7 +2284,7 @@
                 
                 <!-- 多筆消息清單 -->
                 <div v-else class="space-y-3 pt-1">
-                    <div v-for="news in newsList" :key="news.id" class="relative bg-white rounded-[24px] p-4 shadow-sm border border-slate-100/80 overflow-hidden transition-all group">
+                   <div v-for="news in newsList" :key="news.id" @click="openNewsDetail(news)" class="relative bg-white rounded-[24px] p-4 shadow-sm border border-slate-100/80 overflow-hidden transition-all group cursor-pointer active:scale-[0.98] hover:border-blue-200">
                         
                         <!-- ✖ 隱藏/刪除按鈕 -->
                         <button @click.stop="dismissNews(news.id)" class="absolute top-3 right-3 w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 active:scale-95 transition-transform z-20">
@@ -2331,6 +2331,94 @@
         </div>
     </div>
 </transition>
+
+<!-- ===== 消息詳細內容視窗 ===== -->
+<transition name="fade-scale">
+    <div v-if="isNewsDetailOpen" class="fixed inset-0 z-[1100] flex items-center justify-center px-6" style="background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(8px);" @click.self="isNewsDetailOpen = false">
+        <div class="bg-white w-full max-w-[360px] rounded-[32px] shadow-2xl relative overflow-hidden flex flex-col">
+            
+            <!-- 頂部裝飾條 -->
+            <div class="h-2 w-full bg-indigo-600"></div>
+            
+            <div class="p-6">
+                <!-- 標題區域 -->
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-indigo-50 text-indigo-600">
+                            <i class="fa-solid fa-calendar-check text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[18px] font-black text-slate-800 leading-tight">活動提醒</h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">發佈日期：{{ selectedNewsDetail?.date }}</p>
+                        </div>
+                    </div>
+                    <button @click="isNewsDetailOpen = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- 內容欄位 -->
+                <div class="space-y-5">
+                    
+                    <!-- 活動名稱 (大標題感) -->
+                    <div class="flex flex-col">
+                        <span class="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-star"></i> 活動名稱
+                        </span>
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-snug">
+                            {{ extractInfo(selectedNewsDetail?.body, '活動') }}
+                        </div>
+                    </div>
+
+                    <!-- 時間與地點 -->
+                    <div class="grid grid-cols-1 gap-4 px-1">
+                        <div class="flex items-start gap-4">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-500 border border-blue-100">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動時間</span>
+                                <span class="text-[15px] font-num font-black text-slate-700">
+                                    {{ extractInfo(selectedNewsDetail?.body, '時間') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 text-rose-500 border border-rose-100">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動地點</span>
+                                <span class="text-[15px] font-bold text-slate-700 leading-snug">
+                                    {{ extractInfo(selectedNewsDetail?.body, '地點') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 備註事項 -->
+                    <div>
+                        <div class="bg-amber-50/50 border border-amber-200/50 rounded-[24px] p-4 relative overflow-hidden">
+                            <div class="absolute -right-2 -bottom-2 p-3 opacity-[0.05]">
+                                <i class="fa-solid fa-circle-info text-5xl"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-amber-600 uppercase flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-comment-dots"></i> 補充說明
+                            </span>
+                            <p class="text-[13px] font-bold text-slate-600 leading-relaxed relative z-10">
+                                {{ extractInfo(selectedNewsDetail?.body, '備註') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="isNewsDetailOpen = false" class="w-full mt-8 py-4 rounded-2xl bg-slate-900 text-white font-black text-sm active:scale-95 transition-transform shadow-lg tracking-widest">
+                    我知道了
+                </button>
+            </div>
+        </div>
+    </div>
+</transition>
+
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
             <div class="flex justify-around items-center h-full px-4">
                 <div @click="currPage='dashboard';scrollToTab(0);expandCards()" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
@@ -2454,6 +2542,56 @@ onMessage(messaging, (payload) => {
 // ===== 最新消息狀態 (支援多筆與數字提示) =====
             const isNewsModalOpen = ref(false);
             const unreadCount = ref(0);
+const isNewsDetailOpen = ref(false); // 控制詳情視窗開關
+const selectedNewsDetail = ref(null); // 儲存被點擊的那則消息內容
+
+// 新增：打開詳情的函數
+const openNewsDetail = (news) => {
+    selectedNewsDetail.value = news;
+    isNewsDetailOpen.value = true;
+};
+
+
+// 智慧解析函式 V4 - 修復空格切斷問題，支援複雜字串解析
+const extractInfo = (body, type) => {
+    if (!body) return type === '備註' ? '' : '未提供';
+
+    // 1. 解析活動名稱：抓取 【活動】 到 「，時間」 或 「時間:」 之間的所有內容
+    if (type === '活動') {
+        const match = body.match(/【活動】\s*(.*?)(?=，時間|時間[:：]|$)/);
+        return match ? match[1].trim() : '系統訊息';
+    }
+
+    // 2. 解析時間：抓取 「時間:」 到 「，地點」 或 「地點:」 之間的所有內容
+    if (type === '時間') {
+        const match = body.match(/時間[:：]\s*(.*?)(?=，地點|地點[:：]|$)/);
+        return match ? match[1].trim() : '依公告為準';
+    }
+    
+    // 3. 解析地點：抓取 「地點:」 到 「，備註」 或 「備註:」 之間的所有內容
+    if (type === '地點') {
+        const match = body.match(/地點[:：]\s*(.*?)(?=，備註|備註[:：]|$)/);
+        return match ? match[1].trim() : '詳見公告內容';
+    }
+
+    // 4. 解析備註：抓取 「備註:」 之後的所有內容，若無標籤則回傳剩餘描述
+    if (type === '備註') {
+        const explicitMatch = body.match(/備註[:：]\s*(.*)/);
+        if (explicitMatch) return explicitMatch[1].trim();
+
+        // 自動模式：如果沒有「備註:」標籤，則顯示除了活動、時間、地點以外的內容
+        // 在您的截圖案例中，通常這部分會是空的，或者顯示一些補充說明
+        let cleanBody = body
+            .replace(/【活動】.*?((?=，時間|時間[:：]|$))/, '')
+            .replace(/時間[:：].*?((?=，地點|地點[:：]|$))/, '')
+            .replace(/地點[:：].*?((?=，備註|備註[:：]|$))/, '')
+            .replace(/[，,]/g, ' ')
+            .trim();
+        
+        return cleanBody || '無特殊備註';
+    }
+    return '';
+};
             const newsList = ref([]);
             const rawSystemNews = ref([]); // 🌟 暫存從資料庫抓下來的所有原始資料
 
@@ -4754,11 +4892,11 @@ const goToConfirmStep = (onlyShift = false) => {
                 openAdminEditMember, submitAdminEditMember,
                 pushLogs, yesterdayStr, adminFilter, adminFilters, adminMembersData, filteredAdminMembers, adminStats,
                 todayStr, weekLaterAdminStr, isReminding, getUnfilledMembersList, remindDutyShortage, remindUnfilledMeeting,
-                isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,
+                isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,  isNewsDetailOpen, selectedNewsDetail, openNewsDetail, extractInfo,
                 adminActionLoading, singlePushForm,isBatchPushModalOpen, batchPushForm, batchPushLoading, batchPushProgress, openBatchPushModal, executeBatchPush, pushTargetMode, selectedPushMembers, subscribableMembers, isBatchPushDisabled, batchPushBtnText,
                 confirmCancelSub, executeCancelSub, isNewsModalOpen, unreadCount, newsList, openNewsModal, closeNewsModal, dismissNews,
                 openSinglePushModal, fillSinglePushFromActivity, executeSinglePush, calculateSeniority,
-                isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
+                isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,isNewsDetailOpen, selectedNewsDetail, openNewsDetail,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete, paymentPushLoading, pushPaymentReminder,
                 selectAdminHour, openAdminAddShift, submitAdminShift, addCaseToEdit, removeCaseFromEdit, isCollectionSummaryModalOpen, collectionSummaryList,
                 openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList,
