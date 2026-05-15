@@ -2359,15 +2359,16 @@
     <!-- 內容區塊 -->
     <div class="space-y-5">
         
-        <!-- 標題顯示 -->
-        <div class="flex flex-col">
-            <span class="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                <i class="fa-solid fa-tag"></i> 消息標題
-            </span>
-            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-tight">
-                {{ selectedNewsDetail?.title.replace('🚨 海山救護義消 — ', '') }}
-            </div>
-        </div>
+       <!-- 標題顯示 -->
+<div class="flex flex-col">
+    <span class="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-tag"></i> 消息標題
+    </span>
+    <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-tight">
+        <!-- 🌟 智慧切換：如果是任務，顯示活動名稱；如果是公告，顯示原始標題 -->
+        {{ selectedNewsDetail?.body.includes('日期：') ? extractInfo(selectedNewsDetail?.body, '活動') : selectedNewsDetail?.title.replace('🚨 海山救護義消 — ', '') }}
+    </div>
+</div>
 
         <!-- 🌟 智慧判斷：如果是正式任務 (包含「日期：」字眼) -->
         <template v-if="selectedNewsDetail?.body.includes('日期：')">
@@ -2550,10 +2551,8 @@ const openNewsDetail = (news) => {
 const extractInfo = (body, type) => {
     if (!body) return '';
 
-    // 如果 body 不含關鍵字標籤，且不是在提取活動名稱，直接回傳空或預設
-    if (!body.includes('日期：') && type !== '活動') return '';
-
     const matchers = {
+        // 抓取 【活動】 到 第一個逗號或日期標籤之間的字
         '活動': /【活動】\s*(.*?)(?=，|日期|時間|[:：]|$)/,
         '日期': /日期[:：]\s*(.*?)(?=，|時間|地點|$)/,
         '時間': /時間[:：]\s*(.*?)(?=，|地點|$)/,
@@ -2562,10 +2561,10 @@ const extractInfo = (body, type) => {
     };
 
     const match = body.match(matchers[type]);
-    if (match) return match[1].trim();
+    if (match && match[1]) return match[1].trim();
     
     // 沒抓到時的預設值
-    const fallbacks = { '活動': '系統消息', '日期': '詳見公告', '時間': '依公告為主', '地點': '詳見地點', '備註': '無特別備註' };
+    const fallbacks = { '活動': '系統消息', '日期': '詳見公告', '時間': '依公告為主', '地點': '詳見內容', '備註': '無特別備註' };
     return fallbacks[type] || '';
 };
             const newsList = ref([]);
