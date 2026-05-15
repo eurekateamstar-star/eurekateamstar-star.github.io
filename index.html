@@ -465,7 +465,15 @@
                             </div>
                             <div class="space-y-5">
                                 <div v-for="t in filteredOfficialTasks" :key="t.id" class="list-card shadow-sm border-0 relative" :class="{ 'expired-task': isExpired(t.date) }">
-                                    <button v-if="isAdmin" @click="confirmDeleteTask(t, 'duty')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-2 i-10"><i class="fa-solid fa-trash-can"></i></button>
+    <!-- 管理員操作按鈕區：編輯 與 刪除 -->
+    <div v-if="isAdmin" class="absolute top-3 right-3 flex items-center gap-1 z-10">
+        <button @click.stop="openEditTaskModal(t, 'duty')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-blue-500 hover:bg-blue-50 active:scale-95 transition-all">
+            <i class="fa-solid fa-pen-to-square text-xs"></i>
+        </button>
+        <button @click.stop="confirmDeleteTask(t, 'duty')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 active:scale-95 transition-all">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
+    </div>
                                     <div class="p-5 task-card-header bg-slate-50/50 flex gap-4 items-stretch">
                                         <div class="task-card-date-box border border-rose-100 flex flex-col justify-center"><p class="text-lg font-num text-slate-800 leading-none">{{ t.date.split('-')[1] }}/{{ t.date.split('-')[2] }}</p><p class="text-[10px] font-black text-rose-500 uppercase tracking-tighter mt-1">{{ getWeekday(t.date) }}</p></div>
                                         <div class="flex-1 flex flex-col justify-center"><span class="type-tag tag-official inline-block mb-1.5 w-fit">公差任務</span><h4 class="text-lg font-black text-slate-800 leading-tight">{{ t.title }}</h4></div>
@@ -508,7 +516,15 @@
                             </div>
                             <div class="space-y-5">
                                 <div v-for="t in filteredMeetingTasks" :key="t.id" class="list-card shadow-sm border-0 relative" :class="{ 'expired-task': isExpired(t.date) }">
-                                    <button v-if="isAdmin" @click="confirmDeleteTask(t, 'meeting')" class="absolute top-4 right-4 text-slate-300 hover:text-red-500 p-2 i-10"><i class="fa-solid fa-trash-can"></i></button>
+    <!-- 管理員操作按鈕區：編輯 與 刪除 -->
+    <div v-if="isAdmin" class="absolute top-3 right-3 flex items-center gap-1 z-10">
+        <button @click.stop="openEditTaskModal(t, 'meeting')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-blue-500 hover:bg-blue-50 active:scale-95 transition-all">
+            <i class="fa-solid fa-pen-to-square text-xs"></i>
+        </button>
+        <button @click.stop="confirmDeleteTask(t, 'meeting')" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 active:scale-95 transition-all">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+        </button>
+    </div>
                                     <div class="p-5 task-card-header bg-slate-50/50 flex gap-4 items-stretch">
                                         <div class="task-card-date-box border border-purple-100 flex flex-col justify-center"><p class="text-lg font-num text-slate-800 leading-none">{{ t.date.split('-')[1] }}/{{ t.date.split('-')[2] }}</p><p class="text-[10px] font-black text-purple-500 uppercase tracking-tighter mt-1">{{ getWeekday(t.date) }}</p></div>
                                         <div class="flex-1 flex flex-col justify-center"><span class="type-tag inline-block mb-1.5 w-fit" :class="getCategoryClass(t.category)">{{ t.category || '一般會議' }}</span><h4 class="text-lg font-black text-slate-800 leading-tight">{{ t.title }}</h4></div>
@@ -1429,11 +1445,10 @@
                 <button @click="submitAdminPriceEdit" class="w-full py-4 rounded-2xl bg-indigo-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform mt-2">確認更新金額</button>
             </div>
         </div>
-
-        <div class="bottom-sheet-overlay" :class="{ active: isPostModalOpen }" @click="isPostModalOpen = false"></div>
+<div class="bottom-sheet-overlay" :class="{ active: isPostModalOpen }" @click="isPostModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isPostModalOpen }">
             <div class="flex justify-between items-center mb-4 shrink-0">
-                <h4 class="text-xl font-black text-slate-800">發佈 {{ postType === 'duty' ? '公差任務' : '會議項目' }}</h4>
+                <h4 class="text-xl font-black text-slate-800">{{ editingTaskId ? '編輯' : '發佈' }} {{ postType === 'duty' ? '公差任務' : '會議項目' }}</h4>
                 <button @click="isPostModalOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="mb-4 bg-indigo-50 p-3 rounded-2xl border border-indigo-100 shrink-0">
@@ -1468,8 +1483,17 @@
                     <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 ml-1">結束時間</label><input v-model="newTask.endTime" type="time" class="med-input w-full"></div>
                 </div>
                 <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 ml-1">地點</label><input v-model="newTask.location" type="text" placeholder="輸入詳細地點" class="med-input w-full"></div>
-                <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 ml-1">備註資訊 (服裝等)</label><textarea v-model="newTask.note" placeholder="例如：穿著黑色POLO衫..." class="med-input w-full h-24"></textarea></div>
-                <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-all">確認發佈項目</button>
+         <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 ml-1">備註資訊 (服裝等)</label><textarea v-model="newTask.note" placeholder="例如：穿著黑色POLO衫..." class="med-input w-full h-24"></textarea></div>
+                
+                <!-- 新增：編輯模式專屬的推播勾選框 -->
+                <div v-if="editingTaskId" class="flex items-center gap-2 mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <input type="checkbox" id="sendEditPushCB" v-model="sendEditPush" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                    <label for="sendEditPushCB" class="text-xs font-black text-slate-600 cursor-pointer flex-1 select-none">同時發送「內容異動通知」給已登記的人員</label>
+                </div>
+
+                <button @click="handlePostTask" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg active:scale-95 transition-all">
+                    {{ editingTaskId ? '確認儲存修改' : '確認發佈項目' }}
+                </button>
             </div>
         </div>
 
@@ -2794,8 +2818,32 @@ onMessage(messaging, (payload) => {
             });
             const tempStartTime = ref(null);
             const tempEndTime = ref(null);
-            const postType = ref('duty');
-            const newTask = ref({ title:'', date:'', startTime:'', endTime:'', location:'', note:'', quota: 1, category: '一般會議', priceAdult: 0, priceChild: 0 });
+        const editingTaskId = ref(null);
+const sendEditPush = ref(false); // 新增：是否在編輯時發送推播
+const postType = ref('duty');
+const newTask = ref({ title:'', date:'', startTime:'', endTime:'', location:'', note:'', quota: 1, category: '一般會議', priceAdult: 0, priceChild: 0 });
+
+// 進入編輯模式
+const openEditTaskModal = (task, type) => {
+    sendEditPush.value = false; // 每次開啟預設不打勾
+    postType.value = type;
+    editingTaskId.value = task.id; // 記錄目前正在編輯的 ID
+    
+    // 將原有資料填入表單中 (深拷貝避免直接污染原資料)
+    newTask.value = {
+        title: task.title || '',
+        date: task.date || '',
+        startTime: task.startTime || '',
+        endTime: task.endTime || '',
+        location: task.location || '',
+        note: task.note || '',
+        quota: task.quota || (type === 'duty' ? 2 : 99),
+        category: task.category || '一般會議',
+        priceAdult: task.priceAdult || 0,
+        priceChild: task.priceChild || 0
+    };
+    isPostModalOpen.value = true;
+};
             const regForm = ref({ status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 });
             const aiRawInput = ref('');
             const isAiProcessing = ref(false);
@@ -3130,11 +3178,13 @@ const isCancelSubModalOpen  = ref(false);
             const filteredOfficialTasks = computed(() => filterOldTasks(officialTasks.value));
             const filteredMeetingTasks = computed(() => filterOldTasks(meetingTasks.value));
 
-            const openPostTaskModal = (type) => {
-                postType.value = type;
-                newTask.value = { title:'', date: getTodayStr(), startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99, category: '一般會議', priceAdult: 0, priceChild: 0 };
-                isPostModalOpen.value = true;
-            };
+        const openPostTaskModal = (type) => {
+    editingTaskId.value = null; // 確保是新增模式
+    sendEditPush.value = false; // 重置推播選項
+    postType.value = type;
+    newTask.value = { title:'', date: getTodayStr(), startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99, category: '一般會議', priceAdult: 0, priceChild: 0 };
+    isPostModalOpen.value = true;
+};
 
             const handleAiParse = async () => {
                 if (!aiRawInput.value) return showAppAlert('error', '提示', "請先貼上文字內容");
@@ -3163,29 +3213,89 @@ const isCancelSubModalOpen  = ref(false);
                 }
             };
 
-            const handlePostTask = async () => {
-                if (!newTask.value.title || !newTask.value.date) return showAppAlert('error', '提示', '請填寫完整資訊');
-                const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
-                try {
-                    await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
-                    isPostModalOpen.value = false;
-                    const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-                    const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
-                    const response = await fetch(CLOUD_RUN_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
-                            body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
-                        })
-                    });
-                    const result = await response.json();
-                    if (result.stats) {
-                        lastPushStats.value = result.stats;
-                        isSuccessStatusOpen.value = true;
-                    } else { showAppAlert('success', '完成', "任務已發佈，但推播狀態未知。"); }
-                } catch (e) { showAppAlert('error', '錯誤', '發佈失敗'); }
-            };
+    const handlePostTask = async () => {
+    if (!newTask.value.title || !newTask.value.date) return showAppAlert('error', '提示', '請填寫完整資訊');
+    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
+    
+    try {
+        if (editingTaskId.value) {
+            // ----- 編輯模式 (更新資料) -----
+            await updateDoc(doc(db, collName, editingTaskId.value), { 
+                ...newTask.value
+            });
+            isPostModalOpen.value = false;
+
+            // 🌟 判斷是否有勾選發送異動推播
+            if (sendEditPush.value) {
+                // 找出有登記這場任務的人
+                const regs = registrations.value.filter(r => r.taskId === editingTaskId.value);
+                let successCount = 0;
+                let failCount = 0;
+                
+                const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+                const title = `✏️ 內容異動通知：${newTask.value.title}`;
+                const body = `您已登記的「${typeLabel}」內容已更新！\n時間：${newTask.value.startTime}-${newTask.value.endTime}\n地點：${newTask.value.location || '待確認'}\n請至 App 確認最新資訊。`;
+
+                showAppAlert('success', '處理中', '資料已儲存，正在背景發送推播通知...');
+
+                // 逐一發送給已登記的成員
+                for (const reg of regs) {
+                    const targetMember = members.value.find(m => m.姓名 === reg.userName);
+                    if (targetMember && targetMember.pushSubscription) {
+                        try {
+                            const response = await fetch(CLOUD_RUN_URL + 'push-single', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userName: targetMember.姓名,
+                                    subscription: targetMember.pushSubscription,
+                                    title: title,
+                                    body: body
+                                })
+                            });
+                            const resJson = await response.json();
+                            if(resJson.ok) successCount++;
+                            else failCount++;
+                        } catch(e) { failCount++; }
+                    } else {
+                        failCount++;
+                    }
+                }
+                setTimeout(() => {
+                    showAppAlert('success', '編輯完成', `內容已更新！\n推播成功: ${successCount} 人\n失敗或無訂閱: ${failCount} 人`);
+                }, 2000);
+            } else {
+                showAppAlert('success', '編輯成功', '任務內容已更新！');
+            }
+        } else {
+           
+            // ----- 新增模式 (建立新資料) -----
+            await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+            isPostModalOpen.value = false;
+            
+            // 只有「新增」時才發送全體推播
+            const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+            const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
+            const response = await fetch(CLOUD_RUN_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
+                    body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
+                })
+            });
+            const result = await response.json();
+            if (result.stats) {
+                lastPushStats.value = result.stats;
+                isSuccessStatusOpen.value = true;
+            } else { 
+                showAppAlert('success', '完成', "任務已發佈，但推播狀態未知。"); 
+            }
+        }
+    } catch (e) { 
+        showAppAlert('error', '錯誤', editingTaskId.value ? '儲存修改失敗' : '發佈失敗'); 
+    }
+};
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
             const handleDeleteTask = async () => {
@@ -4631,7 +4741,8 @@ const goToConfirmStep = (onlyShift = false) => {
                 isShiftModalOpen, isDeleteShiftModalOpen, selectedDay, tempStartTime, tempEndTime, isHourDisabled, isMyShift, userShifts,
                 currentCalendarDate, calendarTitle, calendarCells, changeCalendarMonth, getShiftsForCell, getShiftsCount, getWeekday,
                 officialTasks, meetingTasks, filteredOfficialTasks, filteredMeetingTasks, isPostModalOpen, postType, newTask,
-                openPostTaskModal, handlePostTask, handleDeleteTask, getTaskRegCount, getTaskParticipants, isUserSignedUp, toggleRegistration,
+                    editingTaskId, sendEditPush, openEditTaskModal, 
+                    openPostTaskModal, handlePostTask, handleDeleteTask, getTaskRegCount, getTaskParticipants, isUserSignedUp, toggleRegistration,
                 isMeetingRegModalOpen, regForm, openMeetingRegModal, submitMeetingReg, currentTask, getMeetingSummary, getDetailedRegs, getCategoryClass, isExpired, getFillingCount,
                 openDetailedListModal, isDetailedListModalOpen, unfilledMembers, isTaskDeleteModalOpen, itemToDelete, confirmDeleteTask,
                 openShiftModal, openDeleteShiftModal, selectHour, resetShiftSelection, confirmShift, closeShiftModal, deleteShift,
