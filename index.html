@@ -23,7 +23,7 @@
         html, body { margin:0;padding:0; background: var(--header-bg); color:#1e293b; font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro TC", "PingFang TC", "Helvetica Neue", "Microsoft JhengHei", sans-serif; height:100%;width:100%; overflow:hidden; overscroll-behavior:none; -webkit-font-smoothing:antialiased; }
         #app { width:100%; height:100dvh; max-width:450px; margin:0 auto; display:flex; flex-direction:column; position:relative; background:#f1f5f9; box-shadow:0 0 50px rgba(0,0,0,.08); }
         .font-num { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
-        .bank-card { flex:0 0 88%; scroll-snap-align:center; margin-right:12px; border-radius:24px; color:white; position:relative; overflow:hidden; padding:24px; min-height:190px; display:flex; flex-direction:column; justify-content:space-between; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.35); z-index: 1; }
+        .bank-card { flex:0 0 88%; scroll-snap-align:center; margin-right:12px; border-radius:24px; color:white; position:relative; overflow:hidden; padding:24px; min-height:190px; display:flex; flex-direction:column; justify-content:space-between; box-shadow: 0 8px 24px -8px rgba(0,0,0,0.35); }
         .bank-card::after { content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent); transform: rotate(30deg); pointer-events: none; }
         .bg-card-blue { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important; }
         .bg-card-emerald { background: linear-gradient(135deg, #065f46 0%, #10b981 100%) !important; }
@@ -48,12 +48,12 @@
         .dashboard-wrapper { flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0; }
         .cards-section { flex-shrink:0; overflow:hidden; transition: max-height .4s cubic-bezier(.4,0,.2,1), opacity .35s ease, padding .35s ease; will-change: max-height, opacity; }
         .cards-section.expanded { max-height:260px; opacity:1; padding:12px 0 8px; }
-        .cards-section.collapsed { max-height:0; opacity:0; padding:0; pointer-events:none; }
+        .cards-section.collapsed { max-height:0 !important; opacity:0; padding:0; pointer-events:none; visibility: hidden; }
         .tabs-section { flex-shrink:0; background:#f1f5f9; z-index:30; border-bottom: 1px solid #e2e8f0; }
         .slides-section { flex:1;overflow:hidden;min-height:0; }
         .content-slider { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; width:100%; height:100%; }
         .content-slider::-webkit-scrollbar { display:none; }
-        .slide-page { flex:0 0 100%; width:100%; scroll-snap-align:start; padding:0 20px 100px 20px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+        .slide-page { flex:0 0 100%; width:100%; scroll-snap-align:start; padding:0 20px 100px 20px; box-sizing:border-box; overflow-y:auto; -webkit-overflow-scrolling:touch; background-color: #f1f5f9; }
         .slide-page::-webkit-scrollbar { display:none; }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #e2e8f0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
         .calendar-day-header { background: #f8fafc; padding: 8px 0; text-align: center; font-size: 10px; font-weight: 900; color: #64748b; text-transform: uppercase; }
