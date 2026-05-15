@@ -2340,91 +2340,94 @@
             <!-- 頂部裝飾條 -->
             <div class="h-2 w-full bg-indigo-600"></div>
             
-           <div class="p-6">
-    <!-- 標題區域 -->
-    <div class="flex justify-between items-start mb-6">
-        <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
-                 :class="selectedNewsDetail?.body.includes('日期：') ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'">
-                <i class="fa-solid" :class="selectedNewsDetail?.body.includes('日期：') ? 'fa-calendar-check' : 'fa-bullhorn'"></i>
-            </div>
-            <div>
-                <h3 class="text-[17px] font-black text-slate-800 leading-tight">消息詳情</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{{ selectedNewsDetail?.date }} 發佈</p>
+            <div class="p-6">
+                <!-- 標題區域 -->
+                <div class="flex justify-between items-start mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-indigo-50 text-indigo-600">
+                            <i class="fa-solid fa-calendar-check text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-[18px] font-black text-slate-800 leading-tight">活動提醒</h3>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">發佈日期：{{ selectedNewsDetail?.date }}</p>
+                        </div>
+                    </div>
+                    <button @click="isNewsDetailOpen = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- 內容欄位 -->
+                <div class="space-y-5">
+                    
+                    <!-- 活動名稱 (大標題感) -->
+                    <div class="flex flex-col">
+                        <span class="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-star"></i> 活動名稱
+                        </span>
+                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-snug">
+                            {{ extractInfo(selectedNewsDetail?.body, '活動') }}
+                        </div>
+                    </div>
+
+                    <!-- 時間與地點 -->
+                    <div class="grid grid-cols-1 gap-4 px-1">
+                        <div class="flex items-start gap-4">
+                            <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-500 border border-blue-100">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動時間</span>
+                                <span class="text-[15px] font-num font-black text-slate-700">
+                                    {{ extractInfo(selectedNewsDetail?.body, '時間') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4">
+                            <div class="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 text-rose-500 border border-rose-100">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動地點</span>
+                                <span class="text-[15px] font-bold text-slate-700 leading-snug">
+                                    {{ extractInfo(selectedNewsDetail?.body, '地點') }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 備註事項 -->
+                    <div>
+                        <div class="bg-amber-50/50 border border-amber-200/50 rounded-[24px] p-4 relative overflow-hidden">
+                            <div class="absolute -right-2 -bottom-2 p-3 opacity-[0.05]">
+                                <i class="fa-solid fa-circle-info text-5xl"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-amber-600 uppercase flex items-center gap-2 mb-2">
+                                <i class="fa-solid fa-comment-dots"></i> 補充說明
+                            </span>
+                            <p class="text-[13px] font-bold text-slate-600 leading-relaxed relative z-10">
+                                {{ extractInfo(selectedNewsDetail?.body, '備註') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <button @click="isNewsDetailOpen = false" class="w-full mt-8 py-4 rounded-2xl bg-slate-900 text-white font-black text-sm active:scale-95 transition-transform shadow-lg tracking-widest">
+                    我知道了
+                </button>
             </div>
         </div>
-        <button @click="isNewsDetailOpen = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
+</transition>
 
-    <!-- 內容區塊 -->
-    <div class="space-y-5">
-        
-       <!-- 標題顯示 -->
-<div class="flex flex-col">
-    <span class="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-        <i class="fa-solid fa-tag"></i> 消息標題
-    </span>
-    <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-tight">
-        <!-- 🌟 智慧切換：如果是任務，顯示活動名稱；如果是公告，顯示原始標題 -->
-        {{ selectedNewsDetail?.body.includes('日期：') ? extractInfo(selectedNewsDetail?.body, '活動') : selectedNewsDetail?.title.replace('🚨 海山救護義消 — ', '') }}
-    </div>
-</div>
-
-        <!-- 🌟 智慧判斷：如果是正式任務 (包含「日期：」字眼) -->
-        <template v-if="selectedNewsDetail?.body.includes('日期：')">
-            <div class="space-y-4 px-1">
-                <div v-for="type in ['日期','時間','地點']" :key="type" class="flex items-start gap-4">
-                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
-                         :class="type==='日期'?'bg-indigo-50 text-indigo-500 border-indigo-100':type==='時間'?'bg-blue-50 text-blue-500 border-blue-100':'bg-rose-50 text-rose-500 border-rose-100'">
-                        <i class="fa-solid" :class="type==='日期'?'fa-calendar-day':type==='時間'?'fa-clock':'fa-location-dot'"></i>
-                    </div>
-                    <div class="flex-1">
-                        <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動{{type}}</span>
-                        <span class="text-[15px] font-bold text-slate-700">{{ extractInfo(selectedNewsDetail?.body, type) }}</span>
-                    </div>
-                </div>
+        <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
+            <div class="flex justify-around items-center h-full px-4">
+                <div @click="currPage='dashboard';scrollToTab(0);expandCards()" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
+                <div @click="currPage='schedule';scrollToScheduleTab(0);expandCards()" :class="currPage === 'schedule' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
+                <div @click="currPage='assistance';scrollToAssistTab(0);expandCards()" :class="currPage === 'assistance' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-truck-medical text-xl"></i><span class="text-[13px] font-black mt-1">協勤</span></div>
+                <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-users text-xl"></i><span class="text-[13px] font-black mt-1">會議</span></div>
+                <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-user-nurse text-xl"></i><span class="text-[13px] font-black mt-1">我的</span></div>
             </div>
-            <!-- 備註欄位 -->
-            <div class="mt-2">
-                <div class="bg-amber-50 border border-amber-200 rounded-[24px] p-4">
-                    <span class="text-[11px] font-black text-amber-600 uppercase flex items-center gap-2 mb-2">
-                        <i class="fa-solid fa-circle-info"></i> 重要備註
-                    </span>
-                    <p class="text-[14px] font-bold text-amber-900 leading-relaxed">{{ extractInfo(selectedNewsDetail?.body, '備註') }}</p>
-                </div>
-            </div>
-        </template>
-
-        <!-- 🌟 智慧判斷：如果是一般公告 (不含日期標籤) -->
-        <template v-else>
-            <div class="flex flex-col">
-                <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-message"></i> 公告內容
-                </span>
-                <div class="bg-white border border-slate-100 rounded-2xl p-5 text-[15px] font-bold text-slate-600 leading-relaxed shadow-sm">
-                    {{ selectedNewsDetail?.body.replace('【活動】', '') }}
-                </div>
-            </div>
-        </template>
-
-    </div>
-
-    <button @click="isNewsDetailOpen = false" class="w-full mt-8 py-4 rounded-2xl bg-slate-900 text-white font-black text-sm active:scale-95 transition-transform tracking-widest shadow-lg">
-        我知道了
-    </button>
-</div>
-
-        <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" 
-     class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-40 bg-white/95 backdrop-blur-md" 
-     style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
-    <div class="flex justify-around items-center h-full px-4">
-        <div @click="currPage='dashboard';scrollToTab(0);expandCards()" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
-        <div @click="currPage='schedule';scrollToScheduleTab(0);expandCards()" :class="currPage === 'schedule' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
-        <div @click="currPage='assistance';scrollToAssistTab(0);expandCards()" :class="currPage === 'assistance' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-truck-medical text-xl"></i><span class="text-[13px] font-black mt-1">協勤</span></div>
-        <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-users text-xl"></i><span class="text-[13px] font-black mt-1">會議</span></div>
-        <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-user-nurse text-xl"></i><span class="text-[13px] font-black mt-1">我的</span></div>
-    </div>
-</nav>
+        </nav>
     </template>
 </div>
 <script type="module">
@@ -2551,23 +2554,32 @@ const openNewsDetail = (news) => {
 
 // 智慧解析函式 V4 - 修復空格切斷問題，支援複雜字串解析
 const extractInfo = (body, type) => {
-    if (!body) return '';
+    if (!body) return type === '備註' ? '' : '未提供';
 
-    const matchers = {
-        // 抓取 【活動】 到 第一個逗號或日期標籤之間的字
-        '活動': /【活動】\s*(.*?)(?=，|日期|時間|[:：]|$)/,
-        '日期': /日期[:：]\s*(.*?)(?=，|時間|地點|$)/,
-        '時間': /時間[:：]\s*(.*?)(?=，|地點|$)/,
-        '地點': /地點[:：]\s*(.*?)(?=，|備註|$)/,
-        '備註': /備註[:：]\s*(.*?)(?=。|$)/
-    };
+    // 1. 活動名稱：抓取 【活動】 之後直到第一個逗號或「時間」標籤前
+    if (type === '活動') {
+        const match = body.match(/【活動】\s*(.*?)(?=，|時間|地点|地點|[:：]|$)/);
+        return match ? match[1].trim() : '系統訊息';
+    }
 
-    const match = body.match(matchers[type]);
-    if (match && match[1]) return match[1].trim();
+    // 2. 時間：支持各種時間標籤
+    if (type === '時間') {
+        const match = body.match(/時間[:：]\s*(.*?)(?=，|地點|地点|$)/);
+        return match ? match[1].trim() : '依公告為準';
+    }
     
-    // 沒抓到時的預設值
-    const fallbacks = { '活動': '系統消息', '日期': '詳見公告', '時間': '依公告為主', '地點': '詳見內容', '備註': '無特別備註' };
-    return fallbacks[type] || '';
+    // 3. 地點
+    if (type === '地點') {
+        const match = body.match(/地點[:：]\s*(.*?)(?=，|備註|备注|$)/);
+        return match ? match[1].trim() : '詳見公告內容';
+    }
+
+    // 4. 備註
+    if (type === '備註') {
+        const match = body.match(/備註[:：]\s*(.*?)(?=。|$)/);
+        return match ? match[1].trim() : '無特殊備註';
+    }
+    return '';
 };
             const newsList = ref([]);
             const rawSystemNews = ref([]); // 🌟 暫存從資料庫抓下來的所有原始資料
@@ -3328,56 +3340,73 @@ const isCancelSubModalOpen  = ref(false);
                 }
             };
 
- const handlePostTask = async () => {
+   const handlePostTask = async () => {
     if (!newTask.value.title || !newTask.value.date) return showAppAlert('error', '提示', '請填寫完整資訊');
     
     const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
     const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-    const dateStr = newTask.value.date.replace(/-/g, '/'); // 格式化日期為 YYYY/MM/DD
+    const dateStr = newTask.value.date.replace(/-/g, '/'); // 格式化日期
 
-    // 🌟 組合包含「日期：」標籤的字串
-    const formattedBody = `【活動】${newTask.value.title}，日期：${dateStr}，時間：${newTask.value.startTime}-${newTask.value.endTime}，地點：${newTask.value.location || '待確認'}，備註：${newTask.value.note || '無'}。`;
+    // 🌟 統一組合訊息內容的格式 (這決定了小鈴鐺詳情能不能看到時間與備註)
+    const formattedBody = `【活動】${newTask.value.title}，時間：${newTask.value.startTime}-${newTask.value.endTime}，地點：${newTask.value.location || '待確認'}，備註：${newTask.value.note || '無'}。`;
 
     try {
         if (editingTaskId.value) {
-            // 編輯模式
+            // ================= 編輯模式 (異動) =================
             await updateDoc(doc(db, collName, editingTaskId.value), { ...newTask.value });
             isPostModalOpen.value = false;
+
             if (sendEditPush.value) {
                 const regs = registrations.value.filter(r => r.taskId === editingTaskId.value && r.status === '出席');
-                for (const reg of regs) {
-                    const targetMember = members.value.find(m => m.姓名 === reg.userName);
-                    if (targetMember?.pushSubscription) {
-                        await fetch(CLOUD_RUN_URL + 'push-single', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                userName: targetMember.姓名,
-                                subscription: targetMember.pushSubscription,
-                                title: `✏️ 內容異動：${newTask.value.title}`,
-                                body: formattedBody
-                            })
-                        });
+                if (regs.length > 0) {
+                    showAppAlert('success', '處理中', `正在通知 ${regs.length} 位成員...`);
+                    
+                    const pushTitle = `✏️ 內容異動：${newTask.value.title}`;
+                    
+                    for (const reg of regs) {
+                        const targetMember = members.value.find(m => m.姓名 === reg.userName);
+                        if (targetMember && targetMember.pushSubscription) {
+                            await fetch(CLOUD_RUN_URL + 'push-single', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    userName: targetMember.姓名,
+                                    subscription: targetMember.pushSubscription,
+                                    title: pushTitle,
+                                    body: formattedBody
+                                })
+                            });
+                        }
                     }
+                    showAppAlert('success', '異動通知完成', '已儲存並通知相關人員');
                 }
-                showAppAlert('success', '異動通知完成', '已儲存並通知相關人員');
+            } else {
+                showAppAlert('success', '編輯成功', '任務已更新');
             }
         } else {
-            // 新增模式
+            // ================= 新增模式 (發佈) =================
             await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
             isPostModalOpen.value = false;
+
+            const pushTitle = `🚨 海山救護義消 — ${typeLabel}發佈`;
+            
             const response = await fetch(CLOUD_RUN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title: `🚨 海山救護義消 — ${typeLabel}發佈`,
+                    title: pushTitle,
                     body: formattedBody
                 })
             });
             const result = await response.json();
-            if (result.stats) { isSuccessStatusOpen.value = true; }
+            if (result.stats) {
+                lastPushStats.value = result.stats;
+                isSuccessStatusOpen.value = true;
+            }
         }
-    } catch (e) { showAppAlert('error', '錯誤', '操作失敗'); }
+    } catch (e) {
+        showAppAlert('error', '錯誤', '操作失敗');
+    }
 };
 
             const confirmDeleteTask = (task, type) => { itemToDelete.value = task; deleteTargetType.value = type; isTaskDeleteModalOpen.value = true; };
