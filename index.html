@@ -2340,98 +2340,78 @@
             <!-- 頂部裝飾條 -->
             <div class="h-2 w-full bg-indigo-600"></div>
             
-            <div class="p-6">
-                <!-- 標題區域 -->
-                <div class="flex justify-between items-start mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm bg-indigo-50 text-indigo-600">
-                            <i class="fa-solid fa-calendar-check text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-[18px] font-black text-slate-800 leading-tight">活動提醒</h3>
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">發佈日期：{{ selectedNewsDetail?.date }}</p>
-                        </div>
-                    </div>
-                    <button @click="isNewsDetailOpen = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-
-                <!-- 內容欄位 -->
-                <div class="space-y-5">
-                    
-                    <!-- 活動名稱 (大標題感) -->
-                    <div class="flex flex-col">
-                        <span class="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <i class="fa-solid fa-star"></i> 活動名稱
-                        </span>
-                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-snug">
-                            {{ extractInfo(selectedNewsDetail?.body, '活動') }}
-                        </div>
-                    </div>
-
-                    <!-- 時間與地點 -->
-                    <div class="space-y-4 px-1">
-    <!-- 1. 活動日期 -->
-    <div class="flex items-start gap-4">
-        <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 text-indigo-500 border border-indigo-100">
-            <i class="fa-solid fa-calendar-day"></i>
-        </div>
-        <div class="flex-1">
-            <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動日期</span>
-            <span class="text-[15px] font-num font-black text-slate-700">
-                {{ extractInfo(selectedNewsDetail?.body, '日期') }}
-            </span>
-        </div>
-    </div>
-
-    <!-- 2. 活動時間 -->
-    <div class="flex items-start gap-4">
-        <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 text-blue-500 border border-blue-100">
-            <i class="fa-solid fa-clock"></i>
-        </div>
-        <div class="flex-1">
-            <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動時間</span>
-            <span class="text-[15px] font-num font-black text-slate-700">
-                {{ extractInfo(selectedNewsDetail?.body, '時間') }}
-            </span>
-        </div>
-    </div>
-
-    <!-- 3. 活動地點 -->
-    <div class="flex items-start gap-4">
-        <div class="w-9 h-9 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 text-rose-500 border border-rose-100">
-            <i class="fa-solid fa-location-dot"></i>
-        </div>
-        <div class="flex-1">
-            <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動地點</span>
-            <span class="text-[15px] font-bold text-slate-700 leading-snug">
-                {{ extractInfo(selectedNewsDetail?.body, '地點') }}
-            </span>
-        </div>
-    </div>
-</div>
-                    <!-- 備註事項 -->
-                    <div>
-                        <div class="bg-amber-50/50 border border-amber-200/50 rounded-[24px] p-4 relative overflow-hidden">
-                            <div class="absolute -right-2 -bottom-2 p-3 opacity-[0.05]">
-                                <i class="fa-solid fa-circle-info text-5xl"></i>
-                            </div>
-                            <span class="text-[11px] font-black text-amber-600 uppercase flex items-center gap-2 mb-2">
-                                <i class="fa-solid fa-comment-dots"></i> 補充說明
-                            </span>
-                            <p class="text-[13px] font-bold text-slate-600 leading-relaxed relative z-10">
-                                {{ extractInfo(selectedNewsDetail?.body, '備註') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <button @click="isNewsDetailOpen = false" class="w-full mt-8 py-4 rounded-2xl bg-slate-900 text-white font-black text-sm active:scale-95 transition-transform shadow-lg tracking-widest">
-                    我知道了
-                </button>
+           <div class="p-6">
+    <!-- 標題區域 -->
+    <div class="flex justify-between items-start mb-6">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
+                 :class="selectedNewsDetail?.body.includes('日期：') ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'">
+                <i class="fa-solid" :class="selectedNewsDetail?.body.includes('日期：') ? 'fa-calendar-check' : 'fa-bullhorn'"></i>
+            </div>
+            <div>
+                <h3 class="text-[17px] font-black text-slate-800 leading-tight">消息詳情</h3>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{{ selectedNewsDetail?.date }} 發佈</p>
             </div>
         </div>
+        <button @click="isNewsDetailOpen = false" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark"></i></button>
     </div>
-</transition>
+
+    <!-- 內容區塊 -->
+    <div class="space-y-5">
+        
+        <!-- 標題顯示 -->
+        <div class="flex flex-col">
+            <span class="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-tag"></i> 消息標題
+            </span>
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-[16px] font-black text-slate-700 leading-tight">
+                {{ selectedNewsDetail?.title.replace('🚨 海山救護義消 — ', '') }}
+            </div>
+        </div>
+
+        <!-- 🌟 智慧判斷：如果是正式任務 (包含「日期：」字眼) -->
+        <template v-if="selectedNewsDetail?.body.includes('日期：')">
+            <div class="space-y-4 px-1">
+                <div v-for="type in ['日期','時間','地點']" :key="type" class="flex items-start gap-4">
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
+                         :class="type==='日期'?'bg-indigo-50 text-indigo-500 border-indigo-100':type==='時間'?'bg-blue-50 text-blue-500 border-blue-100':'bg-rose-50 text-rose-500 border-rose-100'">
+                        <i class="fa-solid" :class="type==='日期'?'fa-calendar-day':type==='時間'?'fa-clock':'fa-location-dot'"></i>
+                    </div>
+                    <div class="flex-1">
+                        <span class="text-[11px] font-black text-slate-400 uppercase block mb-0.5">活動{{type}}</span>
+                        <span class="text-[15px] font-bold text-slate-700">{{ extractInfo(selectedNewsDetail?.body, type) }}</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 備註欄位 -->
+            <div class="mt-2">
+                <div class="bg-amber-50 border border-amber-200 rounded-[24px] p-4">
+                    <span class="text-[11px] font-black text-amber-600 uppercase flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-circle-info"></i> 重要備註
+                    </span>
+                    <p class="text-[14px] font-bold text-amber-900 leading-relaxed">{{ extractInfo(selectedNewsDetail?.body, '備註') }}</p>
+                </div>
+            </div>
+        </template>
+
+        <!-- 🌟 智慧判斷：如果是一般公告 (不含日期標籤) -->
+        <template v-else>
+            <div class="flex flex-col">
+                <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-message"></i> 公告內容
+                </span>
+                <div class="bg-white border border-slate-100 rounded-2xl p-5 text-[15px] font-bold text-slate-600 leading-relaxed shadow-sm">
+                    {{ selectedNewsDetail?.body.replace('【活動】', '') }}
+                </div>
+            </div>
+        </template>
+
+    </div>
+
+    <button @click="isNewsDetailOpen = false" class="w-full mt-8 py-4 rounded-2xl bg-slate-900 text-white font-black text-sm active:scale-95 transition-transform tracking-widest shadow-lg">
+        我知道了
+    </button>
+</div>
 
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
             <div class="flex justify-around items-center h-full px-4">
@@ -2568,30 +2548,25 @@ const openNewsDetail = (news) => {
 
 // 智慧解析函式 V4 - 修復空格切斷問題，支援複雜字串解析
 const extractInfo = (body, type) => {
-    if (!body) return type === '備註' ? '' : '未提供';
+    if (!body) return '';
 
-    if (type === '活動') {
-        const match = body.match(/【活動】\s*(.*?)(?=，|日期|時間|[:：]|$)/);
-        return match ? match[1].trim() : '系統訊息';
-    }
-    // 🌟 解析日期資訊
-    if (type === '日期') {
-        const match = body.match(/日期[:：]\s*(.*?)(?=，|時間|地點|$)/);
-        return match ? match[1].trim() : '詳見公告';
-    }
-    if (type === '時間') {
-        const match = body.match(/時間[:：]\s*(.*?)(?=，|地點|$)/);
-        return match ? match[1].trim() : '依公告為準';
-    }
-    if (type === '地點') {
-        const match = body.match(/地點[:：]\s*(.*?)(?=，|備註|$)/);
-        return match ? match[1].trim() : '詳見公告內容';
-    }
-    if (type === '備註') {
-        const match = body.match(/備註[:：]\s*(.*?)(?=。|$)/);
-        return match ? match[1].trim() : '無特殊備註';
-    }
-    return '';
+    // 如果 body 不含關鍵字標籤，且不是在提取活動名稱，直接回傳空或預設
+    if (!body.includes('日期：') && type !== '活動') return '';
+
+    const matchers = {
+        '活動': /【活動】\s*(.*?)(?=，|日期|時間|[:：]|$)/,
+        '日期': /日期[:：]\s*(.*?)(?=，|時間|地點|$)/,
+        '時間': /時間[:：]\s*(.*?)(?=，|地點|$)/,
+        '地點': /地點[:：]\s*(.*?)(?=，|備註|$)/,
+        '備註': /備註[:：]\s*(.*?)(?=。|$)/
+    };
+
+    const match = body.match(matchers[type]);
+    if (match) return match[1].trim();
+    
+    // 沒抓到時的預設值
+    const fallbacks = { '活動': '系統消息', '日期': '詳見公告', '時間': '依公告為主', '地點': '詳見地點', '備註': '無特別備註' };
+    return fallbacks[type] || '';
 };
             const newsList = ref([]);
             const rawSystemNews = ref([]); // 🌟 暫存從資料庫抓下來的所有原始資料
