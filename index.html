@@ -2556,39 +2556,28 @@ const openNewsDetail = (news) => {
 const extractInfo = (body, type) => {
     if (!body) return type === '備註' ? '' : '未提供';
 
-    // 1. 解析活動名稱：抓取 【活動】 到 「，時間」 或 「時間:」 之間的所有內容
+    // 1. 活動名稱：抓取 【活動】 之後直到第一個逗號或「時間」標籤前
     if (type === '活動') {
-        const match = body.match(/【活動】\s*(.*?)(?=，時間|時間[:：]|$)/);
+        const match = body.match(/【活動】\s*(.*?)(?=，|時間|地点|地點|[:：]|$)/);
         return match ? match[1].trim() : '系統訊息';
     }
 
-    // 2. 解析時間：抓取 「時間:」 到 「，地點」 或 「地點:」 之間的所有內容
+    // 2. 時間：支持各種時間標籤
     if (type === '時間') {
-        const match = body.match(/時間[:：]\s*(.*?)(?=，地點|地點[:：]|$)/);
+        const match = body.match(/時間[:：]\s*(.*?)(?=，|地點|地点|$)/);
         return match ? match[1].trim() : '依公告為準';
     }
     
-    // 3. 解析地點：抓取 「地點:」 到 「，備註」 或 「備註:」 之間的所有內容
+    // 3. 地點
     if (type === '地點') {
-        const match = body.match(/地點[:：]\s*(.*?)(?=，備註|備註[:：]|$)/);
+        const match = body.match(/地點[:：]\s*(.*?)(?=，|備註|备注|$)/);
         return match ? match[1].trim() : '詳見公告內容';
     }
 
-    // 4. 解析備註：抓取 「備註:」 之後的所有內容，若無標籤則回傳剩餘描述
+    // 4. 備註
     if (type === '備註') {
-        const explicitMatch = body.match(/備註[:：]\s*(.*)/);
-        if (explicitMatch) return explicitMatch[1].trim();
-
-        // 自動模式：如果沒有「備註:」標籤，則顯示除了活動、時間、地點以外的內容
-        // 在您的截圖案例中，通常這部分會是空的，或者顯示一些補充說明
-        let cleanBody = body
-            .replace(/【活動】.*?((?=，時間|時間[:：]|$))/, '')
-            .replace(/時間[:：].*?((?=，地點|地點[:：]|$))/, '')
-            .replace(/地點[:：].*?((?=，備註|備註[:：]|$))/, '')
-            .replace(/[，,]/g, ' ')
-            .trim();
-        
-        return cleanBody || '無特殊備註';
+        const match = body.match(/備註[:：]\s*(.*?)(?=。|$)/);
+        return match ? match[1].trim() : '無特殊備註';
     }
     return '';
 };
@@ -3351,87 +3340,72 @@ const isCancelSubModalOpen  = ref(false);
                 }
             };
 
-    const handlePostTask = async () => {
+   const handlePostTask = async () => {
     if (!newTask.value.title || !newTask.value.date) return showAppAlert('error', '提示', '請填寫完整資訊');
-    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
     
+    const collName = postType.value === 'duty' ? "official_tasks" : "meeting_tasks";
+    const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
+    const dateStr = newTask.value.date.replace(/-/g, '/'); // 格式化日期
+
+    // 🌟 統一組合訊息內容的格式 (這決定了小鈴鐺詳情能不能看到時間與備註)
+    const formattedBody = `【活動】${newTask.value.title}，時間：${newTask.value.startTime}-${newTask.value.endTime}，地點：${newTask.value.location || '待確認'}，備註：${newTask.value.note || '無'}。`;
+
     try {
         if (editingTaskId.value) {
-            // ----- 編輯模式 (更新資料) -----
-            await updateDoc(doc(db, collName, editingTaskId.value), { 
-                ...newTask.value
-            });
+            // ================= 編輯模式 (異動) =================
+            await updateDoc(doc(db, collName, editingTaskId.value), { ...newTask.value });
             isPostModalOpen.value = false;
 
-            // 🌟 判斷是否有勾選發送異動推播
             if (sendEditPush.value) {
-                // 找出有登記這場任務的人
-                const regs = registrations.value.filter(r => r.taskId === editingTaskId.value);
-                let successCount = 0;
-                let failCount = 0;
-                
-                const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-                const title = `✏️ 內容異動通知：${newTask.value.title}`;
-                const body = `您已登記的「${typeLabel}」內容已更新！\n時間：${newTask.value.startTime}-${newTask.value.endTime}\n地點：${newTask.value.location || '待確認'}\n請至 App 確認最新資訊。`;
-
-                showAppAlert('success', '處理中', '資料已儲存，正在背景發送推播通知...');
-
-                // 逐一發送給已登記的成員
-                for (const reg of regs) {
-                    const targetMember = members.value.find(m => m.姓名 === reg.userName);
-                    if (targetMember && targetMember.pushSubscription) {
-                        try {
-                            const response = await fetch(CLOUD_RUN_URL + 'push-single', {
+                const regs = registrations.value.filter(r => r.taskId === editingTaskId.value && r.status === '出席');
+                if (regs.length > 0) {
+                    showAppAlert('success', '處理中', `正在通知 ${regs.length} 位成員...`);
+                    
+                    const pushTitle = `✏️ 內容異動：${newTask.value.title}`;
+                    
+                    for (const reg of regs) {
+                        const targetMember = members.value.find(m => m.姓名 === reg.userName);
+                        if (targetMember && targetMember.pushSubscription) {
+                            await fetch(CLOUD_RUN_URL + 'push-single', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                     userName: targetMember.姓名,
                                     subscription: targetMember.pushSubscription,
-                                    title: title,
-                                    body: body
+                                    title: pushTitle,
+                                    body: formattedBody
                                 })
                             });
-                            const resJson = await response.json();
-                            if(resJson.ok) successCount++;
-                            else failCount++;
-                        } catch(e) { failCount++; }
-                    } else {
-                        failCount++;
+                        }
                     }
+                    showAppAlert('success', '異動通知完成', '已儲存並通知相關人員');
                 }
-                setTimeout(() => {
-                    showAppAlert('success', '編輯完成', `內容已更新！\n推播成功: ${successCount} 人\n失敗或無訂閱: ${failCount} 人`);
-                }, 2000);
             } else {
-                showAppAlert('success', '編輯成功', '任務內容已更新！');
+                showAppAlert('success', '編輯成功', '任務已更新');
             }
         } else {
-           
-            // ----- 新增模式 (建立新資料) -----
+            // ================= 新增模式 (發佈) =================
             await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
             isPostModalOpen.value = false;
+
+            const pushTitle = `🚨 海山救護義消 — ${typeLabel}發佈`;
             
-            // 只有「新增」時才發送全體推播
-            const typeLabel = postType.value === 'duty' ? '公差任務' : '會議活動';
-            const dateStr = newTask.value.date.replace(/-(\d+)-(\d+)/, '/$1/$2');
             const response = await fetch(CLOUD_RUN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    title: '🚨 海山救護義消 — ' + typeLabel + '發佈',
-                    body: '【' + dateStr + '】' + newTask.value.title + '  地點：' + (newTask.value.location || '待確認')
+                    title: pushTitle,
+                    body: formattedBody
                 })
             });
             const result = await response.json();
             if (result.stats) {
                 lastPushStats.value = result.stats;
                 isSuccessStatusOpen.value = true;
-            } else { 
-                showAppAlert('success', '完成', "任務已發佈，但推播狀態未知。"); 
             }
         }
-    } catch (e) { 
-        showAppAlert('error', '錯誤', editingTaskId.value ? '儲存修改失敗' : '發佈失敗'); 
+    } catch (e) {
+        showAppAlert('error', '錯誤', '操作失敗');
     }
 };
 
