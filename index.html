@@ -1299,13 +1299,13 @@
             </div>
         </div>
 <!-- 考核分頁 (Iframe 嵌入) -->
-<div v-else-if="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
-    <iframe 
-        :key="loginUserName"
-        :src="'https://eurekateamstar-star.github.io/ems-passport/?student=' + loginUserName" 
-        class="w-full h-full border-0"
-        allow="geolocation; microphone; camera; fullscreen"
-    ></iframe>
+<div v-show="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
+   <iframe 
+    :key="userData.姓名"
+    :src="'https://eurekateamstar-star.github.io/ems-passport/?student=' + userData.姓名" 
+    class="w-full h-full border-0"
+    allow="geolocation; microphone; camera; fullscreen"
+></iframe>
 </div>
 
         <!-- 👇 找尋這行程式碼，並將上面的區塊貼在它上面 👇 -->
@@ -2694,6 +2694,7 @@ const extractInfo = (body, type) => {
             const scheduleTabsScrollRef = ref(null);
 
             const isAdmin = computed(() => loginUserName.value === '劉奕昕');
+            const assessmentUrl = computed(() => `https://eurekateamstar-star.github.io/ems-passport/?student=${encodeURIComponent(loginUserName.value)}`);
             const currentWeekStart = ref(new Date());
             const currentCalendarDate = ref(new Date());
             const userShifts = ref({});
@@ -4873,7 +4874,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
                 activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen, aiRawInput, isAiProcessing, handleAiParse,
                 lastPushStats, isAdminEditMemberOpen, adminEditTarget, adminEditForm, showEditPassword, handleNewsAction,
-                openAdminEditMember, submitAdminEditMember,
+                openAdminEditMember, submitAdminEditMember,assessmentUrl,
                 pushLogs, yesterdayStr, adminFilter, adminFilters, adminMembersData, filteredAdminMembers, adminStats,
                 todayStr, weekLaterAdminStr, isReminding, getUnfilledMembersList, remindDutyShortage, remindUnfilledMeeting,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,  isNewsDetailOpen, selectedNewsDetail, openNewsDetail, extractInfo,
