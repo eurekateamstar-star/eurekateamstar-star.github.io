@@ -1298,9 +1298,7 @@
                 </div>
             </div>
         </div>
-<!-- 考核分頁 (Iframe 嵌入，改用 v-show 登入即在背景預載入) -->
 <div v-show="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
-    <!-- 加入 v-if 確保登入後才載入，並用 :src 動態傳遞 student 參數 -->
     <iframe 
         v-if="loginUserName"
         :src="`https://eurekateamstar-star.github.io/ems-passport/?student=${loginUserName}`" 
