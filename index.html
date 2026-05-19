@@ -171,7 +171,8 @@
 
     <!-- 登入後 -->
     <template v-else>
-       <header :style="{ paddingTop:'calc(1rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
+       <!-- 加入 v-show 判斷 -->
+<header v-show="currPage !== 'assessment'" :style="{ paddingTop:'calc(1rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
     <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">{{ userData.姓名?.charAt(0) }}</div>
         <div><p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p><h2 class="text-lg font-black text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle font-bold">{{ userData['duty_title'] || '隊員' }}</span></h2></div>
@@ -1297,14 +1298,14 @@
                 </div>
             </div>
         </div>
-<!-- 考核分頁 (Iframe 嵌入) -->
-        <div v-else-if="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
-            <iframe 
-                src="https://eurekateamstar-star.github.io/ems-passport/" 
-                class="w-full h-full border-0"
-                allow="geolocation; microphone; camera; fullscreen"
-            ></iframe>
-        </div>
+<!-- 考核分頁 (Iframe 嵌入，改用 v-show 登入即在背景預載入) -->
+<div v-show="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
+    <iframe 
+        src="https://eurekateamstar-star.github.io/ems-passport/" 
+        class="w-full h-full border-0"
+        allow="geolocation; microphone; camera; fullscreen"
+    ></iframe>
+</div>
 
         <!-- 👇 找尋這行程式碼，並將上面的區塊貼在它上面 👇 -->
         <div class="bottom-sheet-overlay" :class="{ active: isMemberHistoryModalOpen }" @click="isMemberHistoryModalOpen = false"></div>
