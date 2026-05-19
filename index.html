@@ -1300,8 +1300,7 @@
         </div>
 <div v-show="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
     <iframe 
-        v-if="loginUserName"
-        :src="`https://eurekateamstar-star.github.io/ems-passport/?student=${loginUserName}`" 
+        :src="'https://eurekateamstar-star.github.io/ems-passport/?student=' + loginUserName" 
         class="w-full h-full border-0"
         allow="geolocation; microphone; camera; fullscreen"
     ></iframe>
