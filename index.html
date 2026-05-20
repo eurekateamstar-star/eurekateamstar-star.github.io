@@ -2570,6 +2570,25 @@ const handleNewsAction = () => {
     const title = news.title || '';
     const body = news.body || '';
 
+    // 👇👇👇 新增判斷：是否為「教官權限申請」 👇👇👇
+    if (title.includes('教官權限') || body.includes('教官模式')) {
+        currPage.value = 'assessment'; // 1. 跳轉到考核分頁
+        expandCards();
+        
+        // 2. 延遲一點點時間讓 iframe 渲染出來，然後發送指令給 iframe
+        nextTick(() => {
+            setTimeout(() => {
+                const iframe = document.querySelector('iframe');
+                if (iframe && iframe.contentWindow) {
+                    // 發送打開教官解鎖畫面的訊號給 iframe
+                    iframe.contentWindow.postMessage({ action: 'openInstructorLogin' }, '*');
+                }
+            }, 300); // 延遲 0.3 秒等待畫面切換
+        });
+        return; // 執行完就結束，不往下走
+    }
+    // 👆👆👆 新增結束 👆👆👆
+
     // 判斷是否為公差
     if (title.includes('公差') || body.includes('公差')) {
         currPage.value = 'schedule'; // 跳轉到排班頁
