@@ -3798,6 +3798,8 @@ const sortedCashHistory = computed(() => {
                 // 👇👇👇 監聽 Firestore 的最新公告 👇👇👇
                 const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
                 
+                let isFirstNewsLoad = true; // 🌟 標記是否為網頁剛打開的第一次載入
+
                 onSnapshot(newsQuery, (snap) => {
                     const arr = [];
                     snap.forEach((docData) => {
@@ -3811,8 +3813,23 @@ const sortedCashHistory = computed(() => {
                     // 把資料存進原始陣列
                     rawSystemNews.value = arr; 
                     
-                    // 呼叫我們剛剛在上面寫好的 processNews() 來更新畫面
+                    // 記錄更新「前」的未讀數量
+                    const previousUnread = unreadCount.value;
+                    
+                    // 更新畫面與紅點
                     processNews();             
+
+                    // 🌟 核心判斷：如果「不是」第一次載入，且「未讀數量變多」了，且「人已經登入了」
+                    if (!isFirstNewsLoad && unreadCount.value > previousUnread && currPage.value !== 'login') {
+                        // 延遲半秒鐘，直接強制彈出最新消息視窗！
+                        setTimeout(() => {
+                            if (typeof window.forceOpenNews === 'function') {
+                                window.forceOpenNews();
+                            }
+                        }, 500);
+                    }
+
+                    isFirstNewsLoad = false; // 第一次載入結束，改為 false
                 });
                 // 👆👆👆 監聽結束 👆👆👆
                 if ('clearAppBadge' in navigator) {
@@ -3894,7 +3911,20 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 });
             });
 
-          const handleLogin = () => {
+         const hasAutoShownNews = ref(false); // 紀錄這次登入是否已經彈出過了
+
+            // 🌟 自動監聽：解決載入時間差導致沒跳出視窗的問題
+            const { watch } = Vue; // 確保有引入 watch
+            watch([currPage, unreadCount], ([newPage, newUnread]) => {
+                if (newPage !== 'login' && newUnread > 0 && !hasAutoShownNews.value) {
+                    hasAutoShownNews.value = true;
+                    setTimeout(() => {
+                        openNewsModal();
+                    }, 600);
+                }
+            });
+
+            const handleLogin = () => {
                 const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
                 if (user) { 
                     loginUserName.value = user.姓名; 
@@ -3912,19 +3942,18 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                             .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
                     });
 
-                    // 👇👇👇 登入成功後，若有未讀消息，自動彈出公告視窗 👇👇👇
-                    if (unreadCount.value > 0) {
-                        setTimeout(() => {
-                            openNewsModal();
-                        }, 600); // 延遲 0.6 秒，等畫面切換的動畫跑完再彈出
-                    }
-                    // 👆👆👆 自動彈出結束 👆👆👆
+                    // 這裡移除舊版的 setTimeout 彈出邏輯，改由上面的 watch 全權負責！
 
                 } else { 
                     errMsg.value = "安全密碼錯誤"; 
                 }
             };
-            const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
+           const logout = () => { 
+                currPage.value = 'login'; 
+                loginUserName.value = ''; 
+                loginForm.value.pass = ''; 
+                hasAutoShownNews.value = false; // 🌟 登出時重置狀態，下次登入才會再次彈出
+            };
             const expandCards = () => { cardsExpanded.value = true; };
             const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
             const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; const todayStr = getTodayStr(); return Math.max(0,Math.ceil((new Date(s)-new Date(todayStr))/864e5)); };
