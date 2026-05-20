@@ -3746,7 +3746,36 @@ const sortedCashHistory = computed(() => {
                         window.forceOpenNews(); // 觸發打開小鈴鐺
                     }
                 });
-                
+                // 👇👇👇 新增：監聽來自考核系統 (Iframe) 的推播請求 👇👇👇
+                window.addEventListener('message', async (event) => {
+                    // 確認收到的動作是申請權限
+                    if (event.data && event.data.action === 'notifyAdminForAccess') {
+                        const requesterName = event.data.requestName;
+                        
+                        // 1. 在主系統名單中尋找管理員「劉奕昕」
+                        const adminMember = members.value.find(m => m.姓名 === '劉奕昕');
+                        
+                        // 2. 如果找到且他有訂閱推播，就發送通知
+                        if (adminMember && adminMember.pushSubscription) {
+                            try {
+                                await fetch(CLOUD_RUN_URL + 'push-single', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        userName: '劉奕昕',
+                                        subscription: adminMember.pushSubscription,
+                                        title: `🚨 教官權限申請`,
+                                        body: `${requesterName} 正在申請解鎖教官模式，請前往審核同意！`
+                                    })
+                                });
+                                console.log("✅ 成功發送教官申請推播給劉奕昕");
+                            } catch (e) {
+                                console.error("❌ 發送推播失敗:", e);
+                            }
+                        }
+                    }
+                });
+                // 👆👆👆 新增結束 👆👆👆
                 // 👇👇👇 監聽 Firestore 的最新公告 👇👇👇
                 const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
                 
