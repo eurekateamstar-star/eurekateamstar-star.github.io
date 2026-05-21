@@ -111,7 +111,7 @@
         .admin-edit-field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; }
         .admin-edit-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px; display: block; }
         .admin-edit-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; box-sizing: border-box; }
-        .admin-edit-select { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; }
+        .admin-edit-select { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; min-width: 0; }
         .admin-edit-section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; padding: 4px 0 8px 2px; border-bottom: 1px solid #f1f5f9; margin-bottom: 10px; }
 
         /* 紅色防呆錯誤提示輸入框樣式 */
@@ -1961,7 +1961,7 @@
         </div>
         <button @click="isAdminEditMemberOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
     </div>
-    <div class="modal-scroll-area space-y-3" v-if="adminEditForm">
+    <div class="modal-scroll-area space-y-3 overflow-x-hidden" v-if="adminEditForm">
 
         <!-- 基本職務 -->
         <div class="admin-edit-section-title"><i class="fa-solid fa-id-card mr-1 text-blue-400"></i>職務設定</div>
@@ -2000,13 +2000,14 @@
        <!-- 勤務數據 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-chart-bar mr-1 text-indigo-400"></i>勤務數據</div>
         
-        <!-- 將請假月份改為獨立一行，使用網格排列多選按鈕 -->
+       <!-- 將請假月份改為獨立一行，使用網格排列多選按鈕 -->
         <div class="admin-edit-field mb-3">
             <span class="admin-edit-label mb-2">請假月份設定 (可點擊複選)</span>
-            <div class="grid grid-cols-6 gap-2">
+            <!-- 把 grid-cols-6 改成 grid-cols-4，手機螢幕才塞得下 -->
+            <div class="grid grid-cols-4 gap-2">
                 <button v-for="mIdx in 12" :key="mIdx"
                         @click="toggleLeaveMonth(mIdx + '月')"
-                        class="py-2 rounded-lg text-[11px] font-black border transition-all"
+                        class="py-2 rounded-lg text-[11px] font-black border transition-all min-w-0"
                         :class="adminEditForm.leave_month && adminEditForm.leave_month.includes(mIdx + '月') ? 'bg-amber-100 text-amber-600 border-amber-300 shadow-sm' : 'bg-white text-slate-400 border-slate-200'">
                     {{ mIdx }}月
                 </button>
