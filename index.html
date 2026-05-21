@@ -2561,12 +2561,14 @@
     const messaging = getMessaging(fireApp);
     const auth = getAuth(fireApp);
     const googleProvider = new GoogleAuthProvider();
-
-   async function subscribeFCM(userName) {
+async function subscribeFCM(userName) {
         try {
             if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
             
-            const swReg = await navigator.serviceWorker.ready;
+            // 🚨 加入註冊 SW 確保它能正常啟動
+            const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+            await navigator.serviceWorker.ready;
+            
             let subscription = await swReg.pushManager.getSubscription();
             
             const membersSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", userName)));
@@ -2575,19 +2577,18 @@
             const memberDoc = membersSnap.docs[0];
             const currentData = memberDoc.data();
 
-            // 🚨 核心邏輯：如果管理員在後台把推播取消了，強制清除手機上的舊訂閱
+            // 如果管理員取消了推播，強制清除手機上的舊訂閱
             if (!currentData.pushSubscription) {
                 if (subscription) {
                     await subscription.unsubscribe();
                     console.log("🧹 管理員已重置，清除手機舊憑證");
                 }
-                return; // 結束，讓畫面顯示「重新綁定」的紅色按鈕給使用者點擊
+                return; // 結束，讓畫面顯示紅色按鈕
             }
 
-            // 如果沒有被管理員取消，但手機沒有訂閱 (例如換手機)，交給畫面按鈕處理
             if (!subscription) return;
 
-            // 正常同步狀態 (不用每次都重辦，加速載入)
+            // 正常同步狀態
             const subJson = JSON.stringify(subscription.toJSON());
             if (currentData.pushSubscription !== subJson) {
                 await updateDoc(doc(db, "members", memberDoc.id), { pushSubscription: subJson });
@@ -2618,32 +2619,38 @@
                         return;
                     }
 
-                    const swReg = await navigator.serviceWorker.ready;
+                    // 🚨 加入這行確保註冊，否則下一行 ready 會永遠卡住沒反應
+                    const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+                    await navigator.serviceWorker.ready;
+
                     let subscription = await swReg.pushManager.getSubscription();
                     
-                    // 1. 強制清除舊的 (解決換帳號或憑證損毀的問題)
+                    // 1. 強制清除舊的
                     if (subscription) {
                         await subscription.unsubscribe();
                     }
 
-                    // 2. 申請全新的訂閱 (因為是用戶親手點擊的，所以瀏覽器絕對會放行)
+                    // 2. 申請全新的訂閱
                     const convertedKey = urlBase64ToUint8Array(FCM_VAPID_KEY);
                     subscription = await swReg.pushManager.subscribe({
                         userVisibleOnly: true,
                         applicationServerKey: convertedKey
                     });
                     
-                    // 3. 更新到資料庫
+                    // 3. 更新到資料庫 (使用最穩定的 Query 方式尋找 ID)
                     const subJson = JSON.stringify(subscription.toJSON());
-                    const userRef = doc(db, "members", userData.value.id);
-                    await updateDoc(userRef, { pushSubscription: subJson });
+                    const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", loginUserName.value)));
                     
-                    showAppAlert('success', '設定成功', '✅ 推播通知已成功修復並綁定至此裝置！');
+                    if(!snap.empty){
+                        await updateDoc(doc(db, "members", snap.docs[0].id), { pushSubscription: subJson });
+                        showAppAlert('success', '設定成功', '✅ 推播通知已成功修復並綁定至此裝置！');
+                    } else {
+                        showAppAlert('error', '綁定失敗', '找不到您的使用者資料');
+                    }
                 } catch(e) {
                     showAppAlert('error', '綁定失敗', e.message);
                 }
             };
-
 
 onMessage(messaging, (payload) => {
         const n = payload.notification;
