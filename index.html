@@ -167,28 +167,44 @@
                         <p class="text-[10px] font-black text-blue-500 uppercase">已連接 Google 帳號</p>
                         <p class="text-xs font-bold text-slate-700 mt-1">{{ googleUser.email }}</p>
                     </div>
-                    <p class="text-xs font-black text-rose-500 mb-2"><i class="fa-solid fa-circle-exclamation mr-1"></i>首次使用請綁定您的隊員身分</p>
                     
-                    <div class="relative flex items-center">
-                        <i class="fa-solid fa-user-doctor absolute left-4 text-slate-400 z-20"></i>
-                        <select v-model="loginForm.name" class="med-input w-full p-4 appearance-none text-slate-700 bg-white relative z-10" style="padding-left: 3.5rem !important;">
-                            <option value="" disabled>請選擇救護人員</option>
-                            <option v-for="m in sortedLoginMembers" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-4 text-slate-300 pointer-events-none z-20"></i>
-                    </div>
+                    <!-- 還有尚未綁定的人員時顯示 -->
+                    <template v-if="sortedLoginMembers.length > 0">
+                        <p class="text-xs font-black text-rose-500 mb-2"><i class="fa-solid fa-circle-exclamation mr-1"></i>首次使用請綁定您的隊員身分</p>
+                        
+                        <div class="relative flex items-center">
+                            <i class="fa-solid fa-user-doctor absolute left-4 text-slate-400 z-20"></i>
+                            <select v-model="loginForm.name" class="med-input w-full p-4 appearance-none text-slate-700 bg-white relative z-10" style="padding-left: 3.5rem !important;">
+                                <option value="" disabled>請選擇救護人員</option>
+                                <option v-for="m in sortedLoginMembers" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-4 text-slate-300 pointer-events-none z-20"></i>
+                        </div>
 
-                    <div class="relative flex items-center">
-                        <i class="fa-solid fa-shield-halved absolute left-4 text-slate-400 z-20"></i>
-                        <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 font-bold bg-white relative z-10" style="padding-left: 3.5rem !important;">
-                    </div>
+                        <div class="relative flex items-center mt-3">
+                            <i class="fa-solid fa-shield-halved absolute left-4 text-slate-400 z-20"></i>
+                            <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 font-bold bg-white relative z-10" style="padding-left: 3.5rem !important;">
+                        </div>
 
-                    <div v-if="errMsg" class="text-rose-500 text-xs font-bold text-center">{{ errMsg }}</div>
+                        <div v-if="errMsg" class="text-rose-500 text-xs font-bold text-center mt-2">{{ errMsg }}</div>
 
-                    <button @click="bindAndLogin" class="med-btn w-full py-4 mt-4 transition-all uppercase tracking-widest text-[15px] font-black shadow-lg shadow-blue-200">
-                        驗證並綁定
-                    </button>
+                        <button @click="bindAndLogin" class="med-btn w-full py-4 mt-4 transition-all uppercase tracking-widest text-[15px] font-black shadow-lg shadow-blue-200">
+                            驗證並綁定
+                        </button>
+                    </template>
+                    
+                    <!-- 所有人皆已綁定時顯示 -->
+                    <template v-else>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-center mt-2">
+                            <div class="w-12 h-12 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                                <i class="fa-solid fa-check-double text-xl"></i>
+                            </div>
+                            <p class="text-sm font-black text-slate-700 mb-1">所有人員皆已完成綁定</p>
+                            <p class="text-[11px] font-bold text-slate-400 leading-relaxed mt-2">若您的帳號尚未開通或需更換綁定，<br>請聯繫管理員協助處理。</p>
+                        </div>
+                    </template>
 
+                    <!-- 切換帳號按鈕 (保留在底部) -->
                     <button @click="logout" class="w-full py-3 mt-2 text-[11px] font-bold text-slate-400 hover:text-slate-600 transition-colors">
                         切換其他 Google 帳號
                     </button>
@@ -3665,7 +3681,11 @@ const isCancelSubModalOpen  = ref(false);
             ];
 
             const sortedMembersList = computed(() => [...members.value].sort((a, b) => (NAME_ORDER.indexOf(a.姓名) === -1 ? 999 : NAME_ORDER.indexOf(a.姓名)) - (NAME_ORDER.indexOf(b.姓名) === -1 ? 999 : NAME_ORDER.indexOf(b.姓名))));
-            const sortedLoginMembers = computed(() => [...members.value].sort((a, b) => (NAME_ORDER.indexOf(a.姓名) === -1 ? 999 : NAME_ORDER.indexOf(a.姓名)) - (NAME_ORDER.indexOf(b.姓名) === -1 ? 999 : NAME_ORDER.indexOf(b.姓名))));
+            const sortedLoginMembers = computed(() => {
+    return members.value
+        .filter(m => !m.uid) // 👈 核心修改：只保留「沒有 uid (尚未綁定)」的隊員
+        .sort((a, b) => (NAME_ORDER.indexOf(a.姓名) === -1 ? 999 : NAME_ORDER.indexOf(a.姓名)) - (NAME_ORDER.indexOf(b.姓名) === -1 ? 999 : NAME_ORDER.indexOf(b.姓名)));
+});
             const totalYearlyHours = computed(() => { let sum = 0; if (!userData.value) return 0; for (let y = 94; y <= 114; y++) { let val = userData.value['hist_' + y]; if (val && !isNaN(val)) sum += Number(val); } return sum; });
             const medalCount = computed(() => medalList.filter(m => hasMedal(m.id)).length);
             const sortedTeams = computed(() => ['幹部', '第一小隊', '第二小隊', '第三小隊'].map(name => ({ name, total: getGroupTotal(name) })).sort((a, b) => a.total - b.total));
