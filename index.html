@@ -2048,7 +2048,7 @@
             <input v-model="adminEditForm.honor_expiry" type="date" class="admin-edit-input">
         </div>
 
-        <!-- 密碼重置 -->
+        <<!-- 密碼重置 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i>安全設定</div>
         <div class="admin-edit-field">
             <span class="admin-edit-label">重置密碼（留空則不更改）</span>
@@ -2167,76 +2167,87 @@
 
                 <!-- 編輯多筆案件 -->
                 <template v-if="editingAssistRecord.cases && editingAssistRecord.cases.length > 0">
-                    <div v-for="(c, cIdx) in editingAssistRecord.cases" :key="'edit-c-'+cIdx" class="mb-4 border border-slate-200 p-4 rounded-xl bg-white shadow-sm">
+                    <div v-for="(c, cIdx) in editingAssistRecord.cases" :key="'edit-c-'+cIdx" class="mb-4 border border-slate-200 p-4 rounded-xl bg-white shadow-sm transition-all">
                         
-                        <!-- 🌟 標題列加入刪除按鈕 -->
-                        <div class="admin-edit-section-title mt-0 border-b-0 mb-2 flex justify-between items-center">
-                            <span><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</span>
-                            <button v-if="editingAssistRecord.cases.length > 1" @click="removeCaseFromEdit(cIdx)" class="text-rose-400 hover:text-rose-600 active:scale-95 transition-transform p-1">
+                        <!-- 🌟 標題列 (加入點擊收合/展開功能) -->
+                        <div @click="c.isExpanded = !c.isExpanded" class="admin-edit-section-title mt-0 border-b-0 mb-0 flex justify-between items-center cursor-pointer select-none">
+                            <span class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
+                                    <i class="fa-solid text-xs" :class="c.isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                                </div>
+                                <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</span>
+                            </span>
+                            <button v-if="editingAssistRecord.cases.length > 1" @click.stop="removeCaseFromEdit(cIdx)" class="text-rose-400 hover:bg-rose-50 rounded-lg p-2 active:scale-95 transition-transform">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
                         </div>
                         
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errStart ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
-                                <span class="admin-edit-label" :class="c.errStart ? 'text-rose-600' : ''">救護開始 (如1230)</span>
-                                <input v-model="c.caseStart" type="tel" @blur="handleTimeInput(c, 'caseStart', 'edit')" placeholder="12:30" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errStart ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
+                        <!-- 🌟 內容區塊 (受 isExpanded 控制，並修復了被遮住的排版) -->
+                        <div v-show="c.isExpanded" class="pt-4 mt-2 border-t border-slate-100">
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div class="admin-edit-field transition-colors" :class="c.errStart ? 'border-rose-500 bg-rose-50' : ''">
+                                    <span class="admin-edit-label" :class="c.errStart ? 'text-rose-600' : ''">救護開始 (如1230)</span>
+                                    <input v-model="c.caseStart" type="tel" @blur="handleTimeInput(c, 'caseStart', 'edit')" placeholder="12:30" maxlength="5" class="admin-edit-input font-num text-center w-full" :class="c.errStart ? 'text-rose-600 font-black' : ''">
+                                </div>
+                                <div class="admin-edit-field transition-colors" :class="c.errEnd ? 'border-rose-500 bg-rose-50' : ''">
+                                    <span class="admin-edit-label" :class="c.errEnd ? 'text-rose-600' : ''">救護結束 (如1345)</span>
+                                    <input v-model="c.caseEnd" type="tel" @blur="handleTimeInput(c, 'caseEnd', 'edit')" placeholder="13:45" maxlength="5" class="admin-edit-input font-num text-center w-full" :class="c.errEnd ? 'text-rose-600 font-black' : ''">
+                                </div>
                             </div>
-                            <div class="admin-edit-field !p-2 !border-0 border-b transition-colors" :class="c.errEnd ? 'border-rose-500 bg-rose-50' : 'border-slate-100'">
-                                <span class="admin-edit-label" :class="c.errEnd ? 'text-rose-600' : ''">救護結束 (如1345)</span>
-                                <input v-model="c.caseEnd" type="tel" @blur="handleTimeInput(c, 'caseEnd', 'edit')" placeholder="13:45" maxlength="5" class="admin-edit-input font-num text-center w-full !bg-transparent" :class="c.errEnd ? 'text-rose-600 font-black' : ''" style="font-family: 'Inter';">
+                            
+                            <!-- 錯誤提示 -->
+                            <p v-if="c.errMsg" class="text-rose-600 text-[11px] font-black mb-3 px-2 py-1 bg-rose-50 rounded-lg">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ c.errMsg }}
+                            </p>
+                            
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div class="admin-edit-field" :class="c.errType ? 'border-rose-300 bg-rose-50' : ''">
+                                    <span class="admin-edit-label" :class="{'text-rose-600': c.errType}">案件種類</span>
+                                    <select v-model="c.caseType" class="admin-edit-select" :class="c.errType ? 'text-rose-600' : ''">
+                                        <option v-for="t in caseTypes" :key="t.name" :value="t.name">{{ t.name }}</option>
+                                    </select>
+                                </div>
+                                <div class="admin-edit-field">
+                                    <span class="admin-edit-label">救出人數</span>
+                                    <select v-model="c.rescuedCount" class="admin-edit-select">
+                                        <option v-for="n in [0, 1, 2, 3, 4, '>4']" :key="n" :value="n">{{ n }}</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- 錯誤提示 -->
-                        <p v-if="c.errMsg" class="text-rose-600 text-[11px] font-black mb-3 px-2 py-1 bg-rose-50 rounded-lg">
-                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> {{ c.errMsg }}
-                        </p>
-                        
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <div class="admin-edit-field !bg-transparent !p-0 !border-0">
-                                <span class="admin-edit-label" :class="{'text-rose-600': c.errType}">案件種類</span>
-                                <select v-model="c.caseType" class="admin-edit-select" :class="c.errType ? 'border-rose-300 bg-rose-50 text-rose-600' : ''">
-                                    <option v-for="t in caseTypes" :key="t.name" :value="t.name">{{ t.name }}</option>
+                            <div class="admin-edit-field mb-3" :class="c.errDistrict ? 'border-rose-300 bg-rose-50' : ''">
+                                <span class="admin-edit-label" :class="{'text-rose-600': c.errDistrict}">區域</span>
+                                <select v-model="c.district" class="admin-edit-select" :class="c.errDistrict ? 'text-rose-600' : ''">
+                                    <option value="板橋區">板橋區</option>
+                                    <option value="中和區">中和區</option>
+                                    <option value="新莊區">新莊區</option>
+                                    <option value="土城區">土城區</option>
+                                    <option value="樹林區">樹林區</option>
+                                    <option value="其他">其他</option>
                                 </select>
                             </div>
-                            <div class="admin-edit-field !bg-transparent !p-0 !border-0">
-                                <span class="admin-edit-label">救出人數</span>
-                                <select v-model="c.rescuedCount" class="admin-edit-select">
-                                    <option v-for="n in [0, 1, 2, 3, 4, '>4']" :key="n" :value="n">{{ n }}</option>
-                                </select>
+                            <!-- 加上 overflow-visible 防止地址自動補全下拉選單被切掉 -->
+                            <div class="admin-edit-field mb-3 relative overflow-visible" :class="c.errAddress ? 'border-rose-300 bg-rose-50' : ''">
+                                <span class="admin-edit-label" :class="{'text-rose-600': c.errAddress}">詳細地址 / 地標</span>
+                                <input v-model="c.address" type="text" 
+                                       @input="handleAddressInput(c, true)" 
+                                       @focus="handleAddressInput(c, true)" 
+                                       @blur="hideSuggestions(c)"
+                                       class="admin-edit-input" :class="c.errAddress ? 'text-rose-600 input-error' : ''">
+                                <ul v-if="c.showSuggestions && c.suggestions.length > 0" 
+                                    class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                    <li v-for="street in c.suggestions" :key="street" 
+                                        @mousedown.prevent="selectStreet(c, street, true)"
+                                        class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-b-0">
+                                        {{ street }}
+                                    </li>
+                                </ul>
                             </div>
-                        </div>
-                        <div class="admin-edit-field !bg-transparent !p-0 !border-0 mb-3">
-                            <span class="admin-edit-label" :class="{'text-rose-600': c.errDistrict}">區域</span>
-                            <select v-model="c.district" class="admin-edit-select" :class="c.errDistrict ? 'text-rose-600 border-rose-300' : ''">
-                                <option value="板橋區">板橋區</option>
-                                <option value="中和區">中和區</option>
-                                <option value="新莊區">新莊區</option>
-                                <option value="土城區">土城區</option>
-                                <option value="樹林區">樹林區</option>
-                                <option value="其他">其他</option>
-                            </select>
-                        </div>
-                        <div class="admin-edit-field !bg-transparent !p-0 !border-0 mb-3 relative">
-                            <span class="admin-edit-label" :class="{'text-rose-600': c.errAddress}">詳細地址 / 地標</span>
-                            <input v-model="c.address" type="text" 
-                                   @input="handleAddressInput(c, true)" 
-                                   @focus="handleAddressInput(c, true)" 
-                                   @blur="hideSuggestions(c)"
-                                   class="admin-edit-input" :class="c.errAddress ? 'border-rose-300 text-rose-600 input-error' : ''">
-                            <ul v-if="c.showSuggestions && c.suggestions.length > 0" 
-                                class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                                <li v-for="street in c.suggestions" :key="street" 
-                                    @mousedown.prevent="selectStreet(c, street, true)"
-                                    class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-blue-50 cursor-pointer border-b border-slate-50 last:border-b-0">
-                                    {{ street }}
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="admin-edit-field !bg-transparent !p-0 !border-0">
-                            <span class="admin-edit-label">狀況及處置 (選填)</span>
-                            <textarea v-model="c.description" placeholder="請簡述..." class="admin-edit-input h-16"></textarea>
+                            <div class="admin-edit-field">
+                                <span class="admin-edit-label">狀況及處置 (選填)</span>
+                                <textarea v-model="c.description" placeholder="請簡述..." class="admin-edit-input h-16"></textarea>
+                            </div>
+
                         </div>
                     </div>
                 </template>
@@ -4984,12 +4995,15 @@ const goToConfirmStep = (onlyShift = false) => {
             const isAssistEditModalOpen = ref(false);
             const editingAssistRecord = ref(null);
 
-           const openAssistEditModal = (record) => {
+          const openAssistEditModal = (record) => {
                 let r = JSON.parse(JSON.stringify(record));
                 if (r.cases) {
-                    r.cases.forEach(c => {
+                    r.cases.forEach((c, index) => {
                         c.errStart = false; c.errEnd = false; c.errType = false; c.errDistrict = false; c.errAddress = false; c.errMsg = '';
                         c.showSuggestions = false; c.suggestions = [];
+                        
+                        // 👇 新增：預設讓所有案件收合 (如果想預設打開第一件，可以寫 index === 0)
+                        c.isExpanded = false; 
                     });
                 }
                 editingAssistRecord.value = r;
@@ -5059,7 +5073,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 });
             };
 
-            // 🌟 編輯模式下新增一件案件
+           // 🌟 編輯模式下新增一件案件
             const addCaseToEdit = () => {
                 if (!editingAssistRecord.value.cases) {
                     editingAssistRecord.value.cases = [];
@@ -5067,7 +5081,8 @@ const goToConfirmStep = (onlyShift = false) => {
                 editingAssistRecord.value.cases.push({
                     caseStart: '', caseEnd: '', district: '板橋區', address: '', caseType: '', description: '', rescuedCount: 0,
                     errStart: false, errEnd: false, errType: false, errDistrict: false, errAddress: false, errMsg: '',
-                    showSuggestions: false, suggestions: []
+                    showSuggestions: false, suggestions: [],
+                    isExpanded: true // 👈 新增：新加的案件預設展開
                 });
                 validateAssistanceForm(editingAssistRecord.value);
             };
