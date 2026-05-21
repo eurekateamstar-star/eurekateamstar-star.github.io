@@ -4133,7 +4133,7 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                     syncTabScroll(index, scheduleTabsScrollRef.value); 
                 });
             };
-            const scrollToScheduleTab = (index) => { if (!scheduleSlider.value) return; scheduleSlider.value.scrollTo({ left: scheduleSlider.value.clientWidth * index, behavior:"smooth" }); activeScheduleTab.value = visibleScheduleTabs.value[index]?.id || scheduleTabs[index]?.id; syncTabScroll(index, scheduleTabsScrollRef.value); };
+           
             const syncTabScroll = (index, container) => { nextTick(() => { if (!container) return; const tabEls = container.querySelectorAll('.tab-item'); if (tabEls[index]) tabEls[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }); };
             const onSliderScroll = () => { if (!slider.value) return; const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth); if (dashboardTabs[index]) { activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); } };
             const onScheduleSliderScroll = () => { if (!scheduleSlider.value) return; const index = Math.round(scheduleSlider.value.scrollLeft / scheduleSlider.value.clientWidth); if (visibleScheduleTabs.value[index]) { activeScheduleTab.value = visibleScheduleTabs.value[index].id; syncTabScroll(index, scheduleTabsScrollRef.value); } };
