@@ -237,28 +237,8 @@
     </div>
 </header>
 
-       <!-- 首頁 -->
+        <!-- 首頁 -->
         <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
-            
-            <!-- 👇 新增：推播未開啟的紅色警告按鈕 👇 -->
-            <div v-if="userData && !userData.pushSubscription" class="px-6 pt-4 shrink-0 pb-2 fade-in">
-                <button @click="manualSubscribePush" :disabled="isPushBinding" class="w-full bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-[20px] p-4 flex items-center justify-between shadow-lg shadow-rose-200/50 active:scale-95 transition-all disabled:opacity-70">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0" :class="!isPushBinding ? 'animate-pulse' : ''">
-                            <!-- 正在處理就轉圈圈，否則顯示鈴鐺打叉 -->
-                            <i v-if="isPushBinding" class="fa-solid fa-spinner fa-spin text-lg"></i>
-                            <i v-else class="fa-solid fa-bell-slash text-lg"></i>
-                        </div>
-                        <div class="text-left">
-                            <h4 class="font-black text-[15px] tracking-wide mb-0.5">系統推播異常/未綁定</h4>
-                            <p v-if="isPushBinding" class="text-[11px] font-bold text-rose-100">正在向系統註冊憑證，請稍候...</p>
-                            <p v-else class="text-[11px] font-bold text-rose-100">點擊此處重新綁定裝置接收通知</p>
-                        </div>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-white/50"></i>
-                </button>
-            </div>
-            <!-- 👆 新增結束 👆 -->
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
                     <div class="bank-card bg-card-blue">
@@ -2564,41 +2544,50 @@
     const messaging = getMessaging(fireApp);
     const auth = getAuth(fireApp);
     const googleProvider = new GoogleAuthProvider();
-async function subscribeFCM(userName) {
+
+   async function subscribeFCM(userName) {
         try {
             if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
             
-            // 🚨 加入註冊 SW 確保它能正常啟動
+            let permission = Notification.permission;
+            // 如果從未授權過，嘗試要求授權
+            if (permission === "default") {
+                permission = await Notification.requestPermission();
+            }
+            if (permission !== "granted") return;
+
             const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
             await navigator.serviceWorker.ready;
-            
+            console.log("SW ready ✅");
+
             let subscription = await swReg.pushManager.getSubscription();
             
-            const membersSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", userName)));
-            if (membersSnap.empty) return;
-            
-            const memberDoc = membersSnap.docs[0];
-            const currentData = memberDoc.data();
-
-            // 如果管理員取消了推播，強制清除手機上的舊訂閱
-            if (!currentData.pushSubscription) {
-                if (subscription) {
-                    await subscription.unsubscribe();
-                    console.log("🧹 管理員已重置，清除手機舊憑證");
-                }
-                return; // 結束，讓畫面顯示紅色按鈕
+            // 🚨 核心修改：如果已經有訂閱了，千萬「不要」取消再重新訂閱，直接用舊的！
+            // 否則自動登入時因為沒有點擊按鈕，重新申請會被瀏覽器安全機制擋下。
+            if (!subscription) {
+                const convertedKey = urlBase64ToUint8Array(FCM_VAPID_KEY);
+                subscription = await swReg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: convertedKey
+                });
+                console.log("✨ 成功建立全新訂閱");
+            } else {
+                console.log("🔄 使用已存在的推播訂閱");
             }
 
-            if (!subscription) return;
-
-            // 正常同步狀態
             const subJson = JSON.stringify(subscription.toJSON());
-            if (currentData.pushSubscription !== subJson) {
-                await updateDoc(doc(db, "members", memberDoc.id), { pushSubscription: subJson });
-                console.log("🔄 訂閱憑證已同步至 Firestore");
+            const membersSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", userName)));
+            
+            for (const d of membersSnap.docs) {
+                const currentData = d.data();
+                // 只有當資料庫裡的訂閱碼跟現在不一樣或空缺時，才去更新資料庫 (減少不必要的讀寫)
+                if (currentData.pushSubscription !== subJson) {
+                    await updateDoc(doc(db, "members", d.id), { pushSubscription: subJson });
+                    console.log("訂閱已更新至 Firestore");
+                }
             }
         } catch(e) {
-            console.warn("推播檢查失敗:", e.message);
+            console.warn("推播訂閱失敗:", e.message);
         }
     }
 
@@ -2608,81 +2597,6 @@ async function subscribeFCM(userName) {
         const rawData = atob(base64);
         return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     }
-// 新增一個變數來控制按鈕轉圈圈
-            const isPushBinding = ref(false);
-
-            // 🌟 使用者手動點擊重新訂閱推播
-            const manualSubscribePush = async () => {
-                if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-                    showAppAlert('error', '無法支援', '您的裝置或瀏覽器不支援推播功能。');
-                    return;
-                }
-                
-                isPushBinding.value = true; // 開始轉圈圈
-                
-                try {
-                    // 1. 確認通知權限
-                    let permission = Notification.permission;
-                    if (permission !== "granted") {
-                        permission = await Notification.requestPermission();
-                    }
-                    if (permission !== "granted") {
-                        showAppAlert('error', '權限遭拒', '請至手機「設定」中允許此網頁發送通知後再試一次。');
-                        isPushBinding.value = false;
-                        return;
-                    }
-
-                    // 2. 註冊 Service Worker (移除了容易卡死的 ready，改為直接抓 register 結果)
-                    const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-                    
-                    // 3. 取得目前的訂閱狀態並清除舊憑證
-                    let subscription = await swReg.pushManager.getSubscription();
-                    if (subscription) {
-                        await subscription.unsubscribe();
-                    }
-
-                    // 內建轉換金鑰函數，確保它絕對能被讀到
-                    const urlBase64ToUint8ArraySafe = (base64String) => {
-                        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-                        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-                        const rawData = atob(base64);
-                        return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
-                    };
-
-                    // 4. 申請全新訂閱
-                    const convertedKey = urlBase64ToUint8ArraySafe(FCM_VAPID_KEY);
-                    subscription = await swReg.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: convertedKey
-                    });
-                    
-                    // 5. 更新至資料庫
-                    const subJson = JSON.stringify(subscription.toJSON());
-                    const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", loginUserName.value)));
-                    
-                    if (!snap.empty) {
-                        await updateDoc(doc(db, "members", snap.docs[0].id), { pushSubscription: subJson });
-                        
-                        // 強制更新本地端畫面，讓紅色按鈕立刻消失
-                        if (userData.value) {
-                            userData.value.pushSubscription = subJson;
-                        }
-                        
-                        showAppAlert('success', '設定成功', '✅ 推播通知已成功修復並綁定至此裝置！');
-                    } else {
-                        showAppAlert('error', '綁定失敗', '在資料庫中找不到您的名字。');
-                    }
-                } catch(e) {
-                    // 如果還是失敗，把最深層的錯誤代碼吐出來給我們看
-                    console.error("推播綁定錯誤:", e);
-                    let errorMsg = e.message;
-                    if (errorMsg.includes('register a ServiceWorker')) errorMsg = '無法載入 firebase-messaging-sw.js，請確定檔案存在於網域根目錄。';
-                    showAppAlert('error', '系統錯誤', errorMsg);
-                } finally {
-                    isPushBinding.value = false; // 停止轉圈圈
-                }
-            };
-
 onMessage(messaging, (payload) => {
         const n = payload.notification;
         if (!n) return;
@@ -5248,10 +5162,10 @@ const goToConfirmStep = (onlyShift = false) => {
                 isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
                 activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll, dynamicMemberHours,
                 myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
-                 authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount, manualSubscribePush,
+                 authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
-    selectedCaseDetails, openCaseDetailModal, personalYearlyStats, isPushBinding,
+    selectedCaseDetails, openCaseDetailModal, personalYearlyStats,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
