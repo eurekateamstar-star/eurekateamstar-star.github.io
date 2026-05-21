@@ -4117,8 +4117,23 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
             const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
             const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; const todayStr = getTodayStr(); return Math.max(0,Math.ceil((new Date(s)-new Date(todayStr))/864e5)); };
 
-            const scrollToTab = (index) => { if (!slider.value) return; slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:"smooth" }); activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); };
-            const scrollToScheduleTab = (index) => { if (!scheduleSlider.value) return; scheduleSlider.value.scrollTo({ left: scheduleSlider.value.clientWidth * index, behavior:"smooth" }); activeScheduleTab.value = visibleScheduleTabs.value[index]?.id || scheduleTabs[index]?.id; syncTabScroll(index, scheduleTabsScrollRef.value); };
+            const scrollToTab = (index) => { 
+                activeDashboardTab.value = dashboardTabs[index].id; 
+                nextTick(() => {
+                    if (!slider.value) return; 
+                    slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:"smooth" }); 
+                    syncTabScroll(index, tabsScrollRef.value); 
+                });
+            };
+            const scrollToScheduleTab = (index) => { 
+                activeScheduleTab.value = visibleScheduleTabs.value[index]?.id || scheduleTabs[index]?.id; 
+                nextTick(() => {
+                    if (!scheduleSlider.value) return; 
+                    scheduleSlider.value.scrollTo({ left: scheduleSlider.value.clientWidth * index, behavior:"smooth" }); 
+                    syncTabScroll(index, scheduleTabsScrollRef.value); 
+                });
+            };
+           
             const syncTabScroll = (index, container) => { nextTick(() => { if (!container) return; const tabEls = container.querySelectorAll('.tab-item'); if (tabEls[index]) tabEls[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }); };
             const onSliderScroll = () => { if (!slider.value) return; const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth); if (dashboardTabs[index]) { activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); } };
             const onScheduleSliderScroll = () => { if (!scheduleSlider.value) return; const index = Math.round(scheduleSlider.value.scrollLeft / scheduleSlider.value.clientWidth); if (visibleScheduleTabs.value[index]) { activeScheduleTab.value = visibleScheduleTabs.value[index].id; syncTabScroll(index, scheduleTabsScrollRef.value); } };
@@ -4743,11 +4758,13 @@ const exportAssistanceToExcel = () => {
             const assistSlider = ref(null);
             const assistTabsScrollRef = ref(null);
 
-            const scrollToAssistTab = (index) => {
-                if (!assistSlider.value) return;
-                assistSlider.value.scrollTo({ left: assistSlider.value.clientWidth * index, behavior: "smooth" });
-                activeAssistTab.value = visibleAssistTabs.value[index].id;
-                syncTabScroll(index, assistTabsScrollRef.value);
+            const scrollToAssistTab = (index) => { 
+                activeAssistTab.value = visibleAssistTabs.value[index].id; 
+                nextTick(() => {
+                    if (!assistSlider.value) return; 
+                    assistSlider.value.scrollTo({ left: assistSlider.value.clientWidth * index, behavior: "smooth" }); 
+                    syncTabScroll(index, assistTabsScrollRef.value); 
+                });
             };
 
             const onAssistSliderScroll = () => {
