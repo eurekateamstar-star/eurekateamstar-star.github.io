@@ -242,14 +242,17 @@
             
             <!-- 👇 新增：推播未開啟的紅色警告按鈕 👇 -->
             <div v-if="userData && !userData.pushSubscription" class="px-6 pt-4 shrink-0 pb-2 fade-in">
-                <button @click="manualSubscribePush" class="w-full bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-[20px] p-4 flex items-center justify-between shadow-lg shadow-rose-200/50 active:scale-95 transition-all">
+                <button @click="manualSubscribePush" :disabled="isPushBinding" class="w-full bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-[20px] p-4 flex items-center justify-between shadow-lg shadow-rose-200/50 active:scale-95 transition-all disabled:opacity-70">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center animate-pulse shrink-0">
-                            <i class="fa-solid fa-bell-slash text-lg"></i>
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0" :class="!isPushBinding ? 'animate-pulse' : ''">
+                            <!-- 正在處理就轉圈圈，否則顯示鈴鐺打叉 -->
+                            <i v-if="isPushBinding" class="fa-solid fa-spinner fa-spin text-lg"></i>
+                            <i v-else class="fa-solid fa-bell-slash text-lg"></i>
                         </div>
                         <div class="text-left">
                             <h4 class="font-black text-[15px] tracking-wide mb-0.5">系統推播異常/未綁定</h4>
-                            <p class="text-[11px] font-bold text-rose-100">點擊此處重新綁定裝置接收通知</p>
+                            <p v-if="isPushBinding" class="text-[11px] font-bold text-rose-100">正在向系統註冊憑證，請稍候...</p>
+                            <p v-else class="text-[11px] font-bold text-rose-100">點擊此處重新綁定裝置接收通知</p>
                         </div>
                     </div>
                     <i class="fa-solid fa-chevron-right text-white/50"></i>
@@ -2605,50 +2608,78 @@ async function subscribeFCM(userName) {
         const rawData = atob(base64);
         return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     }
-// 🌟 使用者手動點擊重新訂閱推播
+// 新增一個變數來控制按鈕轉圈圈
+            const isPushBinding = ref(false);
+
+            // 🌟 使用者手動點擊重新訂閱推播
             const manualSubscribePush = async () => {
                 if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-                    showAppAlert('error', '無法支援', '您的裝置或瀏覽器不支援推播功能，建議使用 Safari 或 Chrome。');
+                    showAppAlert('error', '無法支援', '您的裝置或瀏覽器不支援推播功能。');
                     return;
                 }
                 
+                isPushBinding.value = true; // 開始轉圈圈
+                
                 try {
-                    let permission = await Notification.requestPermission();
+                    // 1. 確認通知權限
+                    let permission = Notification.permission;
+                    if (permission !== "granted") {
+                        permission = await Notification.requestPermission();
+                    }
                     if (permission !== "granted") {
                         showAppAlert('error', '權限遭拒', '請至手機「設定」中允許此網頁發送通知後再試一次。');
+                        isPushBinding.value = false;
                         return;
                     }
 
-                    // 🚨 加入這行確保註冊，否則下一行 ready 會永遠卡住沒反應
+                    // 2. 註冊 Service Worker (移除了容易卡死的 ready，改為直接抓 register 結果)
                     const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-                    await navigator.serviceWorker.ready;
-
-                    let subscription = await swReg.pushManager.getSubscription();
                     
-                    // 1. 強制清除舊的
+                    // 3. 取得目前的訂閱狀態並清除舊憑證
+                    let subscription = await swReg.pushManager.getSubscription();
                     if (subscription) {
                         await subscription.unsubscribe();
                     }
 
-                    // 2. 申請全新的訂閱
-                    const convertedKey = urlBase64ToUint8Array(FCM_VAPID_KEY);
+                    // 內建轉換金鑰函數，確保它絕對能被讀到
+                    const urlBase64ToUint8ArraySafe = (base64String) => {
+                        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+                        const rawData = atob(base64);
+                        return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+                    };
+
+                    // 4. 申請全新訂閱
+                    const convertedKey = urlBase64ToUint8ArraySafe(FCM_VAPID_KEY);
                     subscription = await swReg.pushManager.subscribe({
                         userVisibleOnly: true,
                         applicationServerKey: convertedKey
                     });
                     
-                    // 3. 更新到資料庫 (使用最穩定的 Query 方式尋找 ID)
+                    // 5. 更新至資料庫
                     const subJson = JSON.stringify(subscription.toJSON());
                     const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", loginUserName.value)));
                     
-                    if(!snap.empty){
+                    if (!snap.empty) {
                         await updateDoc(doc(db, "members", snap.docs[0].id), { pushSubscription: subJson });
+                        
+                        // 強制更新本地端畫面，讓紅色按鈕立刻消失
+                        if (userData.value) {
+                            userData.value.pushSubscription = subJson;
+                        }
+                        
                         showAppAlert('success', '設定成功', '✅ 推播通知已成功修復並綁定至此裝置！');
                     } else {
-                        showAppAlert('error', '綁定失敗', '找不到您的使用者資料');
+                        showAppAlert('error', '綁定失敗', '在資料庫中找不到您的名字。');
                     }
                 } catch(e) {
-                    showAppAlert('error', '綁定失敗', e.message);
+                    // 如果還是失敗，把最深層的錯誤代碼吐出來給我們看
+                    console.error("推播綁定錯誤:", e);
+                    let errorMsg = e.message;
+                    if (errorMsg.includes('register a ServiceWorker')) errorMsg = '無法載入 firebase-messaging-sw.js，請確定檔案存在於網域根目錄。';
+                    showAppAlert('error', '系統錯誤', errorMsg);
+                } finally {
+                    isPushBinding.value = false; // 停止轉圈圈
                 }
             };
 
@@ -5220,7 +5251,7 @@ const goToConfirmStep = (onlyShift = false) => {
                  authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount, manualSubscribePush,
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
-    selectedCaseDetails, openCaseDetailModal, personalYearlyStats,
+    selectedCaseDetails, openCaseDetailModal, personalYearlyStats, isPushBinding,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
