@@ -108,9 +108,9 @@
         .chip-shift   { background: #eff6ff; color: #1d4ed8; }
         .chip-duty    { background: #fff1f2; color: #be123c; }
         .chip-meeting { background: #faf5ff; color: #7e22ce; }
-        .admin-edit-field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; }
+        .admin-edit-field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; min-width: 0; overflow: hidden; }
         .admin-edit-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 6px; display: block; }
-        .admin-edit-input { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; box-sizing: border-box; }
+      .admin-edit-input { width: 100%; max-width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 8px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; box-sizing: border-box; appearance: none; -webkit-appearance: none; min-width: 0; }
         .admin-edit-select { width: 100%; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #1e293b; outline: none; font-family: 'Inter', sans-serif; appearance: none; -webkit-appearance: none; min-width: 0; }
         .admin-edit-section-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; padding: 4px 0 8px 2px; border-bottom: 1px solid #f1f5f9; margin-bottom: 10px; }
 
@@ -2048,7 +2048,7 @@
             <input v-model="adminEditForm.honor_expiry" type="date" class="admin-edit-input">
         </div>
 
-        <<!-- 密碼重置 -->
+        <!-- 密碼重置 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i>安全設定</div>
         <div class="admin-edit-field">
             <span class="admin-edit-label">重置密碼（留空則不更改）</span>
