@@ -237,8 +237,25 @@
     </div>
 </header>
 
-        <!-- 首頁 -->
+       <!-- 首頁 -->
         <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
+            
+            <!-- 👇 新增：推播未開啟的紅色警告按鈕 👇 -->
+            <div v-if="userData && !userData.pushSubscription" class="px-6 pt-4 shrink-0 pb-2 fade-in">
+                <button @click="manualSubscribePush" class="w-full bg-gradient-to-r from-rose-500 to-red-600 text-white rounded-[20px] p-4 flex items-center justify-between shadow-lg shadow-rose-200/50 active:scale-95 transition-all">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center animate-pulse shrink-0">
+                            <i class="fa-solid fa-bell-slash text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="font-black text-[15px] tracking-wide mb-0.5">系統推播異常/未綁定</h4>
+                            <p class="text-[11px] font-bold text-rose-100">點擊此處重新綁定裝置接收通知</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-white/50"></i>
+                </button>
+            </div>
+            <!-- 👆 新增結束 👆 -->
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
                     <div class="bank-card bg-card-blue">
@@ -2549,45 +2566,35 @@
         try {
             if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
             
-            let permission = Notification.permission;
-            // 如果從未授權過，嘗試要求授權
-            if (permission === "default") {
-                permission = await Notification.requestPermission();
-            }
-            if (permission !== "granted") return;
-
-            const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-            await navigator.serviceWorker.ready;
-            console.log("SW ready ✅");
-
+            const swReg = await navigator.serviceWorker.ready;
             let subscription = await swReg.pushManager.getSubscription();
             
-            // 🚨 核心修改：如果已經有訂閱了，千萬「不要」取消再重新訂閱，直接用舊的！
-            // 否則自動登入時因為沒有點擊按鈕，重新申請會被瀏覽器安全機制擋下。
-            if (!subscription) {
-                const convertedKey = urlBase64ToUint8Array(FCM_VAPID_KEY);
-                subscription = await swReg.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: convertedKey
-                });
-                console.log("✨ 成功建立全新訂閱");
-            } else {
-                console.log("🔄 使用已存在的推播訂閱");
+            const membersSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", userName)));
+            if (membersSnap.empty) return;
+            
+            const memberDoc = membersSnap.docs[0];
+            const currentData = memberDoc.data();
+
+            // 🚨 核心邏輯：如果管理員在後台把推播取消了，強制清除手機上的舊訂閱
+            if (!currentData.pushSubscription) {
+                if (subscription) {
+                    await subscription.unsubscribe();
+                    console.log("🧹 管理員已重置，清除手機舊憑證");
+                }
+                return; // 結束，讓畫面顯示「重新綁定」的紅色按鈕給使用者點擊
             }
 
+            // 如果沒有被管理員取消，但手機沒有訂閱 (例如換手機)，交給畫面按鈕處理
+            if (!subscription) return;
+
+            // 正常同步狀態 (不用每次都重辦，加速載入)
             const subJson = JSON.stringify(subscription.toJSON());
-            const membersSnap = await getDocs(query(collection(db, "members"), where("姓名", "==", userName)));
-            
-            for (const d of membersSnap.docs) {
-                const currentData = d.data();
-                // 只有當資料庫裡的訂閱碼跟現在不一樣或空缺時，才去更新資料庫 (減少不必要的讀寫)
-                if (currentData.pushSubscription !== subJson) {
-                    await updateDoc(doc(db, "members", d.id), { pushSubscription: subJson });
-                    console.log("訂閱已更新至 Firestore");
-                }
+            if (currentData.pushSubscription !== subJson) {
+                await updateDoc(doc(db, "members", memberDoc.id), { pushSubscription: subJson });
+                console.log("🔄 訂閱憑證已同步至 Firestore");
             }
         } catch(e) {
-            console.warn("推播訂閱失敗:", e.message);
+            console.warn("推播檢查失敗:", e.message);
         }
     }
 
@@ -2597,6 +2604,47 @@
         const rawData = atob(base64);
         return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
     }
+// 🌟 使用者手動點擊重新訂閱推播
+            const manualSubscribePush = async () => {
+                if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+                    showAppAlert('error', '無法支援', '您的裝置或瀏覽器不支援推播功能，建議使用 Safari 或 Chrome。');
+                    return;
+                }
+                
+                try {
+                    let permission = await Notification.requestPermission();
+                    if (permission !== "granted") {
+                        showAppAlert('error', '權限遭拒', '請至手機「設定」中允許此網頁發送通知後再試一次。');
+                        return;
+                    }
+
+                    const swReg = await navigator.serviceWorker.ready;
+                    let subscription = await swReg.pushManager.getSubscription();
+                    
+                    // 1. 強制清除舊的 (解決換帳號或憑證損毀的問題)
+                    if (subscription) {
+                        await subscription.unsubscribe();
+                    }
+
+                    // 2. 申請全新的訂閱 (因為是用戶親手點擊的，所以瀏覽器絕對會放行)
+                    const convertedKey = urlBase64ToUint8Array(FCM_VAPID_KEY);
+                    subscription = await swReg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: convertedKey
+                    });
+                    
+                    // 3. 更新到資料庫
+                    const subJson = JSON.stringify(subscription.toJSON());
+                    const userRef = doc(db, "members", userData.value.id);
+                    await updateDoc(userRef, { pushSubscription: subJson });
+                    
+                    showAppAlert('success', '設定成功', '✅ 推播通知已成功修復並綁定至此裝置！');
+                } catch(e) {
+                    showAppAlert('error', '綁定失敗', e.message);
+                }
+            };
+
+
 onMessage(messaging, (payload) => {
         const n = payload.notification;
         if (!n) return;
@@ -5162,7 +5210,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
                 activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll, dynamicMemberHours,
                 myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
-                 authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,
+                 authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount, manualSubscribePush,
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
     selectedCaseDetails, openCaseDetailModal, personalYearlyStats,
