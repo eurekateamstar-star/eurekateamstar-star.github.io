@@ -2169,17 +2169,35 @@
                 <template v-if="editingAssistRecord.cases && editingAssistRecord.cases.length > 0">
                     <div v-for="(c, cIdx) in editingAssistRecord.cases" :key="'edit-c-'+cIdx" class="mb-4 border border-slate-200 p-4 rounded-xl bg-white shadow-sm transition-all">
                         
-                        <!-- 🌟 標題列 (加入點擊收合/展開功能) -->
-                        <div @click="c.isExpanded = !c.isExpanded" class="admin-edit-section-title mt-0 border-b-0 mb-0 flex justify-between items-center cursor-pointer select-none">
-                            <span class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500">
-                                    <i class="fa-solid text-xs" :class="c.isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                        <!-- 🌟 標題列 (加入點擊收合/展開功能 與 簡易資訊摘要) -->
+                        <div @click="c.isExpanded = !c.isExpanded" class="admin-edit-section-title mt-0 border-b-0 mb-0 cursor-pointer select-none !pb-0">
+                            <!-- 上排：箭頭、第X件、垃圾桶 -->
+                            <div class="flex justify-between items-center">
+                                <span class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                                        <i class="fa-solid text-xs transition-transform" :class="c.isExpanded ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
+                                    </div>
+                                    <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</span>
+                                </span>
+                                <button v-if="editingAssistRecord.cases.length > 1" @click.stop="removeCaseFromEdit(cIdx)" class="text-rose-400 hover:bg-rose-50 rounded-lg p-2 active:scale-95 transition-transform shrink-0">
+                                    <i class="fa-solid fa-trash-can text-sm"></i>
+                                </button>
+                            </div>
+
+                            <!-- 下排：收合時才顯示的摘要資訊 -->
+                            <div v-show="!c.isExpanded" class="mt-2 pl-8 pr-1 pb-2">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+                                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded shadow-sm border border-slate-200">{{ c.caseType || '尚未選擇種類' }}</span>
+                                        <span v-if="c.rescuedCount > 0" class="text-[10px] text-emerald-600">救出 {{ c.rescuedCount }} 人</span>
+                                    </div>
+                                    <span class="text-[11px] font-num text-slate-500">{{ c.caseStart || '--:--' }} - {{ c.caseEnd || '--:--' }}</span>
                                 </div>
-                                <span class="font-black text-slate-700 text-sm"><i class="fa-solid fa-truck-medical mr-1 text-emerald-400"></i>第 {{ cIdx + 1 }} 件</span>
-                            </span>
-                            <button v-if="editingAssistRecord.cases.length > 1" @click.stop="removeCaseFromEdit(cIdx)" class="text-rose-400 hover:bg-rose-50 rounded-lg p-2 active:scale-95 transition-transform">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
+                                <div class="flex gap-1.5 text-[11px] font-bold text-slate-500 truncate mt-1">
+                                    <i class="fa-solid fa-location-dot text-rose-400 mt-0.5 shrink-0"></i>
+                                    <span class="truncate">{{ c.district }} {{ c.address || '尚未填寫地址' }}</span>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- 🌟 內容區塊 (受 isExpanded 控制，並修復了被遮住的排版) -->
