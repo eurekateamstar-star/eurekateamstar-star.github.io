@@ -2060,7 +2060,24 @@
             </div>
             <p class="text-[10px] text-slate-400 font-bold mt-2 ml-1"><i class="fa-solid fa-info-circle mr-1 text-amber-400"></i>直接輸入新密碼後儲存即可完成重置</p>
         </div>
+<!-- 🏆 榮譽獎章編輯 -->
+        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-medal mr-1 text-amber-500"></i>榮譽獎章 (填入年度，留空為無)</div>
+        <div class="grid grid-cols-2 gap-3 mb-2">
+            <div v-for="medal in medalList" :key="medal.id" class="admin-edit-field">
+                <span class="admin-edit-label truncate">{{ medal.name.replace(/\n/g, ' ') }}</span>
+                <input v-model="adminEditForm.medals[medal.id]" type="text" placeholder="例如: 113年" class="admin-edit-input" style="font-size:13px !important; padding:8px !important;">
+            </div>
+        </div>
 
+        <!-- ⏳ 歷年時數編輯 -->
+        <div class="admin-edit-section-title mt-3"><i class="fa-solid fa-timeline mr-1 text-purple-500"></i>歷年時數 (小時)</div>
+        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 border border-slate-100 rounded-xl max-h-[160px] overflow-y-auto mb-3" style="scrollbar-width: none;">
+            <!-- 從 115 年倒推到 93 年 (共 23 年) -->
+            <div v-for="y in Array.from({length:23}, (_,i)=>115-i)" :key="y" class="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-between shadow-sm">
+                <span class="text-[10px] font-black text-slate-400">{{y}}年</span>
+                <input v-model="adminEditForm.history['hist_'+y]" type="number" class="w-12 text-center font-num text-sm bg-transparent border-0 outline-none text-slate-700 font-bold p-0">
+            </div>
+        </div>
         <!-- 👇👇👇 這是新增的 Google 帳號綁定區塊 👇👇👇 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-brands fa-google mr-1 text-red-500"></i>Google 帳號綁定</div>
         <div class="admin-edit-field mb-2">
@@ -4331,6 +4348,23 @@ const openAdminEditMember = (m) => {
                 if (Array.isArray(m.leave_month)) { currentLeaves = [...m.leave_month]; } 
                 else if (typeof m.leave_month === 'string' && m.leave_month.trim() !== '') { currentLeaves = m.leave_month.split(',').map(s => s.trim()); }
 
+                // 🌟 1. 讀取並配對既有的榮譽獎章資料
+                const getMedalVal = (mId) => {
+                    const keys = Object.keys(m);
+                    const foundKey = keys.find(k => k.startsWith('medal_') && mId.split(/[- \n]+/).every(p => k.includes(p)));
+                    return foundKey && m[foundKey] !== "無" ? m[foundKey] : '';
+                };
+                const medalsObj = {};
+                medalList.forEach(medal => {
+                    medalsObj[medal.id] = getMedalVal(medal.id);
+                });
+
+                // 🌟 2. 讀取歷年時數資料
+                const historyObj = {};
+                for (let y = 93; y <= 115; y++) {
+                    historyObj['hist_' + y] = m['hist_' + y] || '';
+                }
+
                 adminEditForm.value = {
                     duty_group:   m.duty_group   || '幹部',
                     duty_title:   m.duty_title   || '隊員',
@@ -4341,26 +4375,64 @@ const openAdminEditMember = (m) => {
                     duty_count:   Number(m.duty_count) || 0,
                     emt_level:    (m.emt_level || '初級技術員').trim(),
                     newPassword:  '',
-                    email:        m.email || '', // 👈 新增讀取 email
-                    uid:          m.uid || ''    // 👈 新增讀取 uid
+                    email:        m.email || '',
+                    uid:          m.uid || '',
+                    medals:       medalsObj,   // 👈 綁定獎章資料
+                    history:      historyObj   // 👈 綁定時數資料
                 };
                 showEditPassword.value = false;
                 isAdminEditMemberOpen.value = true;
             };
 
-            const submitAdminEditMember = async () => {
+          const submitAdminEditMember = async () => {
                 const m = adminEditTarget.value; const f = adminEditForm.value;
                 if (!m || !f) return;
                 adminActionLoading.value = 'edit';
                 try {
                     const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
-                    const updateData = { duty_group: f.duty_group, duty_title: f.duty_title, join_date: f.join_date, leave_month: f.leave_month, duty_count: Number(f.duty_count) || 0, emt_level: f.emt_level, emt_expiry: f.emt_expiry, honor_expiry: f.honor_expiry };
-                    if (f.newPassword && f.newPassword.trim() !== '') { updateData.password = f.newPassword.trim(); }
-                    for (const d of snap.docs) { await updateDoc(doc(db, "members", d.id), updateData); }
+                    const updateData = { 
+                        duty_group: f.duty_group, 
+                        duty_title: f.duty_title, 
+                        join_date: f.join_date, 
+                        leave_month: f.leave_month, 
+                        duty_count: Number(f.duty_count) || 0, 
+                        emt_level: f.emt_level, 
+                        emt_expiry: f.emt_expiry, 
+                        honor_expiry: f.honor_expiry 
+                    };
+                    
+                    if (f.newPassword && f.newPassword.trim() !== '') { 
+                        updateData.password = f.newPassword.trim(); 
+                    }
+
+                    // 🌟 1. 將獎章資料寫入 updateData
+                    medalList.forEach(medal => {
+                        // 將名稱轉換為標準資料庫 Key (例: medal_衛福部金)
+                        const cleanKey = 'medal_' + medal.id.replace(/[- \n]+/g, '');
+                        updateData[cleanKey] = f.medals[medal.id] ? String(f.medals[medal.id]).trim() : "";
+                    });
+
+                    // 🌟 2. 將歷年時數資料寫入 updateData
+                    for (const [key, val] of Object.entries(f.history)) {
+                        if (val !== '' && val !== null) {
+                            updateData[key] = Number(val);
+                        } else {
+                            updateData[key] = ""; // 清空該年時數
+                        }
+                    }
+
+                    // 執行批量更新
+                    for (const d of snap.docs) { 
+                        await updateDoc(doc(db, "members", d.id), updateData); 
+                    }
+                    
                     isAdminEditMemberOpen.value = false;
                     showAppAlert('success', '儲存成功', `✅ ${m.姓名} 的資料已更新`);
-                } catch(e) { showAppAlert('error', '提示', "儲存失敗：" + e.message); } 
-                finally { adminActionLoading.value = ''; }
+                } catch(e) { 
+                    showAppAlert('error', '提示', "儲存失敗：" + e.message); 
+                } finally { 
+                    adminActionLoading.value = ''; 
+                }
             };
 // 👇 新增：解除 Google 帳號綁定
             const unbindGoogleAccount = async () => {
