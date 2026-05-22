@@ -701,7 +701,7 @@
                                             {{ m.姓名.charAt(0) }}
                                         </div>
                                         <span class="text-[13px] font-black text-slate-800 leading-none mb-1">{{ m.姓名 }}</span>
-                                        <span class="text-[9px] font-bold text-slate-400 mt-1">{{ m.duty_group || '隊員' }}</span>
+                                        <span class="text-[9px] font-bold text-slate-400 mt-1">{{ m.duty_group || '' }} {{ m.duty_title || '隊員' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1701,7 +1701,7 @@
                         </div>
                         <div>
                             <h4 class="text-xl font-black text-slate-800">{{ adminSelectedMember.姓名 }}</h4>
-                            <p class="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest">{{ adminSelectedMember.duty_group || '隊員' }}</p>
+                            <p class="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest">{{ adminSelectedMember.duty_group || '' }} {{ adminSelectedMember.duty_title || '隊員' }}</p>
                         </div>
                     </div>
                     <button @click="isAdminMemberMenuOpen = false" class="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 active:scale-95 transition-transform"><i class="fa-solid fa-xmark"></i></button>
@@ -3391,12 +3391,28 @@ const isCancelSubModalOpen  = ref(false);
                 });
             });
             const filteredAdminMembers = computed(() => {
+                // 定義排序權重 (越前面的越輕，排在越上面)
+                const groupOrder = ['幹部', '第一小隊', '第二小隊', '第三小隊'];
+                const titleOrder = ['分隊長', '副分隊長', '幹事', '助理幹事', '小隊長', '副小隊長', '隊員'];
+                
+                const getWeight = (val, orderArr) => {
+                    const idx = orderArr.indexOf(val);
+                    return idx === -1 ? 99 : idx; // 如果資料不正規找不到，就丟到最後面
+                };
+
                 return adminMembersData.value.filter(m => {
                     if (adminFilter.value === 'nosub')    return !m.hasSub;
                     if (adminFilter.value === 'hasact')   return m.weekActivities.length > 0;
                     if (adminFilter.value === 'pushfail') return m.pushResult === 'fail';
                     if (adminFilter.value === 'pushok')   return m.pushResult === 'sent';
                     return true;
+                }).sort((a, b) => {
+                    // 1. 先比小隊
+                    const groupDiff = getWeight(a.duty_group, groupOrder) - getWeight(b.duty_group, groupOrder);
+                    if (groupDiff !== 0) return groupDiff;
+                    
+                    // 2. 小隊一樣，再比職稱
+                    return getWeight(a.duty_title, titleOrder) - getWeight(b.duty_title, titleOrder);
                 });
             });
 
