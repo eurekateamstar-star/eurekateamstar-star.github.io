@@ -701,7 +701,10 @@
                                             {{ m.姓名.charAt(0) }}
                                         </div>
                                         <span class="text-[13px] font-black text-slate-800 leading-none mb-1">{{ m.姓名 }}</span>
-                                        <span class="text-[9px] font-bold text-slate-400 mt-1">{{ m.duty_group || '' }} {{ m.duty_title || '隊員' }}</span>
+                                        <span class="text-[9px] font-bold text-slate-400 mt-1 flex flex-col items-center">
+    <span>{{ m.duty_group || '' }}</span>
+    <span>{{ m.duty_title || '隊員' }}</span>
+</span>
                                     </div>
                                 </div>
                             </div>
