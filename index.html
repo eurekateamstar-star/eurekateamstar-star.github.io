@@ -313,7 +313,17 @@
                         <template v-if="i === 3">
                             <div class="space-y-3 pt-2">
                                 <div class="list-card history-gradient p-5 shadow-lg"><div class="flex justify-between items-center"><div><p class="text-[10px] opacity-80 font-bold uppercase">Yearly Service Log</p><h3 class="text-xl font-black">歷年服務時數</h3></div><div class="text-right"><p class="text-[10px] opacity-80 font-bold uppercase">Total hr</p><h3 class="text-xl font-num">{{ totalYearlyHours }}</h3></div></div></div>
-                                <div class="list-card p-3 pb-10 shadow-sm"><div class="grid grid-cols-2 gap-x-6 gap-y-1"><div v-for="y in Array.from({length:21}, (_,i)=>114-i)" :key="y" class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0" :class="userData['hist_'+y] ? 'opacity-100' : 'opacity-30'"><span class="text-xs font-black text-slate-400">{{y}} 年度</span><span class="text-sm font-num" :class="userData['hist_'+y] ? 'text-indigo-600' : 'text-slate-300'">{{ userData['hist_'+y] || '0' }} <span class="text-[9px] font-bold uppercase">hr</span></span></div></div></div>
+                                <div class="list-card p-3 pb-10 shadow-sm"><div class="grid grid-cols-2 gap-x-6 gap-y-1">
+    <div v-for="item in yearlyHistoryList" :key="item.year" class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0" :class="item.hasData || item.isCurrent ? 'opacity-100' : 'opacity-30'">
+        <span class="text-xs font-black text-slate-400 flex items-center gap-1">
+            {{ item.year }} 年度
+            <span v-if="item.isCurrent" class="text-[8px] bg-blue-100 text-blue-600 px-1 py-0.5 rounded uppercase tracking-wider">系統計算</span>
+        </span>
+        <span class="text-sm font-num" :class="item.isCurrent ? 'text-blue-600 font-black' : (item.hasData ? 'text-indigo-600' : 'text-slate-300')">
+            {{ item.hours || '0' }} <span class="text-[9px] font-bold uppercase">hr</span>
+        </span>
+    </div>
+</div></div>
                             </div>
                         </template>
                         <template v-if="i === 4">
@@ -2048,7 +2058,7 @@
             <input v-model="adminEditForm.honor_expiry" type="date" class="admin-edit-input">
         </div>
 
-        <<!-- 密碼重置 -->
+        <!-- 密碼重置 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i>安全設定</div>
         <div class="admin-edit-field">
             <span class="admin-edit-label">重置密碼（留空則不更改）</span>
@@ -2070,14 +2080,16 @@
         </div>
 
         <!-- ⏳ 歷年時數編輯 -->
-        <div class="admin-edit-section-title mt-3"><i class="fa-solid fa-timeline mr-1 text-purple-500"></i>歷年時數 (小時)</div>
+        <div class="admin-edit-section-title mt-3"><i class="fa-solid fa-timeline mr-1 text-purple-500"></i>歷年時數 (今年度由系統自動計算)</div>
         <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 border border-slate-100 rounded-xl max-h-[160px] overflow-y-auto mb-3" style="scrollbar-width: none;">
-            <!-- 從 115 年倒推到 93 年 (共 23 年) -->
-            <div v-for="y in Array.from({length:23}, (_,i)=>115-i)" :key="y" class="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-between shadow-sm">
+            <div v-for="y in Array.from({length: currentRocYear - 93}, (_,i) => (currentRocYear - 1) - i)" :key="y" class="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-between shadow-sm">
                 <span class="text-[10px] font-black text-slate-400">{{y}}年</span>
                 <input v-model="adminEditForm.history['hist_'+y]" type="number" class="w-12 text-center font-num text-sm bg-transparent border-0 outline-none text-slate-700 font-bold p-0">
             </div>
         </div>
+
+        <!-- 密碼重置 -->
+        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i>安全設定</div>
         <!-- 👇👇👇 這是新增的 Google 帳號綁定區塊 👇👇👇 -->
         <div class="admin-edit-section-title mt-2"><i class="fa-brands fa-google mr-1 text-red-500"></i>Google 帳號綁定</div>
         <div class="admin-edit-field mb-2">
@@ -3748,7 +3760,52 @@ const isCancelSubModalOpen  = ref(false);
         .filter(m => !m.uid) // 👈 核心修改：只保留「沒有 uid (尚未綁定)」的隊員
         .sort((a, b) => (NAME_ORDER.indexOf(a.姓名) === -1 ? 999 : NAME_ORDER.indexOf(a.姓名)) - (NAME_ORDER.indexOf(b.姓名) === -1 ? 999 : NAME_ORDER.indexOf(b.姓名)));
 });
-            const totalYearlyHours = computed(() => { let sum = 0; if (!userData.value) return 0; for (let y = 94; y <= 114; y++) { let val = userData.value['hist_' + y]; if (val && !isNaN(val)) sum += Number(val); } return sum; });
+           // 🌟 取得當前民國年 (自動隨年份變更)
+            const currentRocYear = computed(() => new Date().getFullYear() - 1911);
+
+            // 🌟 重新計算總服務時數：(歷年加總) + (今年度系統自動計算)
+            const totalYearlyHours = computed(() => {
+                let sum = 0;
+                if (!userData.value) return 0;
+                
+                // 1. 加總「去年度以前」的歷史手動資料
+                for (let y = 93; y < currentRocYear.value; y++) {
+                    let val = userData.value['hist_' + y];
+                    if (val && !isNaN(val)) sum += Number(val);
+                }
+                
+                // 2. 加上「今年度」由系統自動加總的出勤時數
+                const currentYearDynamicHours = dynamicMemberHours.value[userData.value.姓名]?.total || 0;
+                sum += currentYearDynamicHours;
+
+                return Number(sum.toFixed(1)); 
+            });
+
+            // 🌟 產生給畫面渲染用的歷年時數清單
+            const yearlyHistoryList = computed(() => {
+                if (!userData.value) return [];
+                const list = [];
+                const currentY = currentRocYear.value;
+
+                for (let y = currentY; y >= 94; y--) {
+                    let hours = 0;
+                    let isCurrentYear = (y === currentY);
+
+                    if (isCurrentYear) {
+                        hours = dynamicMemberHours.value[userData.value.姓名]?.total || 0;
+                    } else {
+                        hours = Number(userData.value['hist_' + y]) || 0;
+                    }
+
+                    list.push({
+                        year: y,
+                        hours: Number(hours.toFixed(1)),
+                        isCurrent: isCurrentYear,
+                        hasData: hours > 0
+                    });
+                }
+                return list;
+            });
             const medalCount = computed(() => medalList.filter(m => hasMedal(m.id)).length);
             const sortedTeams = computed(() => ['幹部', '第一小隊', '第二小隊', '第三小隊'].map(name => ({ name, total: getGroupTotal(name) })).sort((a, b) => a.total - b.total));
             const rotationDuty = computed(() => [...members.value].sort((a, b) => (Number(a.duty_count) || 0) - (Number(b.duty_count) || 0)).slice(0, 2));
@@ -4359,9 +4416,10 @@ const openAdminEditMember = (m) => {
                     medalsObj[medal.id] = getMedalVal(medal.id);
                 });
 
-                // 🌟 2. 讀取歷年時數資料
+                // 🌟 2. 讀取歷年時數資料 (只讀去年度以前)
                 const historyObj = {};
-                for (let y = 93; y <= 115; y++) {
+                const currentY = new Date().getFullYear() - 1911;
+                for (let y = 93; y < currentY; y++) {
                     historyObj['hist_' + y] = m['hist_' + y] || '';
                 }
 
@@ -4377,14 +4435,14 @@ const openAdminEditMember = (m) => {
                     newPassword:  '',
                     email:        m.email || '',
                     uid:          m.uid || '',
-                    medals:       medalsObj,   // 👈 綁定獎章資料
-                    history:      historyObj   // 👈 綁定時數資料
+                    medals:       medalsObj,
+                    history:      historyObj
                 };
                 showEditPassword.value = false;
                 isAdminEditMemberOpen.value = true;
             };
 
-          const submitAdminEditMember = async () => {
+         const submitAdminEditMember = async () => {
                 const m = adminEditTarget.value; const f = adminEditForm.value;
                 if (!m || !f) return;
                 adminActionLoading.value = 'edit';
@@ -4405,23 +4463,21 @@ const openAdminEditMember = (m) => {
                         updateData.password = f.newPassword.trim(); 
                     }
 
-                    // 🌟 1. 將獎章資料寫入 updateData
+                    // 🌟 1. 將獎章資料寫入
                     medalList.forEach(medal => {
-                        // 將名稱轉換為標準資料庫 Key (例: medal_衛福部金)
                         const cleanKey = 'medal_' + medal.id.replace(/[- \n]+/g, '');
                         updateData[cleanKey] = f.medals[medal.id] ? String(f.medals[medal.id]).trim() : "";
                     });
 
-                    // 🌟 2. 將歷年時數資料寫入 updateData
+                    // 🌟 2. 將歷年時數資料寫入
                     for (const [key, val] of Object.entries(f.history)) {
                         if (val !== '' && val !== null) {
                             updateData[key] = Number(val);
                         } else {
-                            updateData[key] = ""; // 清空該年時數
+                            updateData[key] = ""; 
                         }
                     }
 
-                    // 執行批量更新
                     for (const d of snap.docs) { 
                         await updateDoc(doc(db, "members", d.id), updateData); 
                     }
@@ -5232,7 +5288,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
                 activeReminders, getTimeDistanceLabel, onPageTouchStart, onPageTouchMove, expandCards, isSuccessStatusOpen, aiRawInput, isAiProcessing, handleAiParse,
                 lastPushStats, isAdminEditMemberOpen, adminEditTarget, adminEditForm, showEditPassword, handleNewsAction,
-                openAdminEditMember, submitAdminEditMember,assessmentUrl,
+                openAdminEditMember, submitAdminEditMember,assessmentUrl, currentRocYear, yearlyHistoryList,
                 pushLogs, yesterdayStr, adminFilter, adminFilters, adminMembersData, filteredAdminMembers, adminStats,
                 todayStr, weekLaterAdminStr, isReminding, getUnfilledMembersList, remindDutyShortage, remindUnfilledMeeting,
                 isCancelSubModalOpen, isSinglePushModalOpen, cancelSubTarget, singlePushTarget,  isNewsDetailOpen, selectedNewsDetail, openNewsDetail, extractInfo,
