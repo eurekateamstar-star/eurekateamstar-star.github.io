@@ -700,7 +700,10 @@
                                              :class="m.hasSub ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400 border border-slate-200'">
                                             {{ m.姓名.charAt(0) }}
                                         </div>
-                                        <span class="text-[13px] font-black text-slate-800 leading-none mb-1">{{ m.姓名 }}</span>
+                                        <span class="text-[13px] font-black text-slate-800 leading-none mb-1 flex items-center gap-1">
+    {{ m.姓名 }}
+    <i v-if="m.is_admin || m.姓名 === '劉奕昕'" class="fa-solid fa-crown text-amber-400 text-[10px]"></i>
+</span>
                                         <span class="text-[9px] font-bold text-slate-400 mt-1 flex flex-col items-center">
     <span>{{ m.duty_group || '' }}</span>
     <span>{{ m.duty_title || '隊員' }}</span>
@@ -1754,7 +1757,14 @@
                             <i class="fa-solid fa-pen-to-square mr-1"></i>編輯隊員資料
                         </button>
                     </div>
-
+<!-- 🌟 設定管理員按鈕 -->
+                        <button @click="toggleAdminStatus(adminSelectedMember)" 
+                                :disabled="adminActionLoading === 'admin_toggle' || adminSelectedMember.姓名 === '劉奕昕'"
+                                class="w-full mt-2 py-3 rounded-xl text-[11px] font-black border transition-all shadow-sm flex items-center justify-center gap-1"
+                                :class="adminSelectedMember.is_admin || adminSelectedMember.姓名 === '劉奕昕' ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-50 text-slate-500 border-slate-200'">
+                            <i class="fa-solid fa-user-shield"></i>
+                            {{ adminActionLoading === 'admin_toggle' ? '處理中...' : (adminSelectedMember.is_admin || adminSelectedMember.姓名 === '劉奕昕' ? '撤銷系統管理員' : '設為系統管理員') }}
+                        </button>
                     <!-- 代為登記操作 -->
                     <div class="space-y-2 pt-2">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 px-1">代為登記操作</p>
@@ -2897,7 +2907,11 @@ const extractInfo = (body, type) => {
             const tabsScrollRef = ref(null);
             const scheduleTabsScrollRef = ref(null);
 
-            const isAdmin = computed(() => loginUserName.value === '劉奕昕');
+            // 判斷是否為管理員 (劉奕昕為防呆最高權限，其他依據資料庫 is_admin 欄位)
+            const isAdmin = computed(() => {
+                if (loginUserName.value === '劉奕昕') return true;
+                return userData.value?.is_admin === true;
+            });
             const assessmentUrl = computed(() => `https://eurekateamstar-star.github.io/ems-passport/?student=${encodeURIComponent(loginUserName.value)}`);
             const currentWeekStart = ref(new Date());
             const currentCalendarDate = ref(new Date());
@@ -3243,6 +3257,35 @@ const openEditTaskModal = (task, type) => {
                 isAdminMemberMenuOpen.value = true;
             };
            
+// 🌟 切換管理員權限邏輯
+            const toggleAdminStatus = (m) => {
+                if (m.姓名 === '劉奕昕') {
+                    showAppAlert('error', '操作無效', '最高管理員的權限無法被撤銷。');
+                    return;
+                }
+                const isCurrentlyAdmin = m.is_admin === true;
+                const actionText = isCurrentlyAdmin ? '撤銷' : '賦予';
+                
+                showAppConfirm(`${actionText}管理員`, `確定要將 ${m.姓名} ${actionText}管理員權限嗎？`, async () => {
+                    adminActionLoading.value = 'admin_toggle';
+                    try {
+                        const snap = await getDocs(query(collection(db, "members"), where("姓名", "==", m.姓名)));
+                        for (const d of snap.docs) {
+                            await updateDoc(doc(db, "members", d.id), { is_admin: !isCurrentlyAdmin });
+                        }
+                        // 即時更新畫面的狀態
+                        if (adminSelectedMember.value) adminSelectedMember.value.is_admin = !isCurrentlyAdmin;
+                        
+                        showAppAlert('success', '權限已更新', `成功${actionText} ${m.姓名} 的管理員權限！`);
+                    } catch(e) {
+                        showAppAlert('error', '設定失敗', e.message);
+                    } finally {
+                        adminActionLoading.value = '';
+                    }
+                });
+            };
+
+
 const isCancelSubModalOpen  = ref(false);
             const isSinglePushModalOpen = ref(false);
             const cancelSubTarget       = ref(null);
@@ -5388,7 +5431,7 @@ const goToConfirmStep = (onlyShift = false) => {
                  authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,adminEditSections,isAdminMemberMenuOpen, adminSelectedMember, openAdminMemberMenu,
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
-    selectedCaseDetails, openCaseDetailModal, personalYearlyStats,
+    selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
