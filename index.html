@@ -1978,138 +1978,152 @@
     </div>
     <div class="modal-scroll-area space-y-3 overflow-x-hidden" v-if="adminEditForm">
 
-        <!-- 基本職務 -->
-        <div class="admin-edit-section-title"><i class="fa-solid fa-id-card mr-1 text-blue-400"></i>職務設定</div>
-        <div class="grid grid-cols-2 gap-3">
-            <div class="admin-edit-field">
-                <span class="admin-edit-label">所屬小隊</span>
-                <select v-model="adminEditForm.duty_group" class="admin-edit-select">
-                    <option>幹部</option>
-                    <option>第一小隊</option>
-                    <option>第二小隊</option>
-                    <option>第三小隊</option>
-                </select>
-            </div>
-            <div class="admin-edit-field">
-                <span class="admin-edit-label">職稱</span>
-                <select v-model="adminEditForm.duty_title" class="admin-edit-select">
-                    <option>分隊長</option>
-                    <option>副分隊長</option>
-                    <option>幹事</option>
-                    <option>助理幹事</option>
-                    <option>小隊長</option>
-                    <option>副小隊長</option>
-                    <option>隊員</option>
-                </select>
-            </div>
+        <!-- 1. 基本職務 -->
+        <div @click="adminEditSections.duty = !adminEditSections.duty" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-solid fa-id-card mr-1 text-blue-500"></i>職務設定</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.duty ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
         </div>
-
-        <div class="admin-edit-field">
-            <div class="flex justify-between items-end mb-1">
-                <span class="admin-edit-label mb-0">加入日期</span>
-                <span class="text-[10px] font-bold text-blue-500">{{ calculateSeniority(adminEditForm.join_date) }}</span>
-            </div>
-            <input v-model="adminEditForm.join_date" type="date" class="admin-edit-input">
-        </div>
-
-       <!-- 勤務數據 -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-chart-bar mr-1 text-indigo-400"></i>勤務數據</div>
-        
-       <!-- 將請假月份改為獨立一行，使用網格排列多選按鈕 -->
-        <div class="admin-edit-field mb-3">
-            <span class="admin-edit-label mb-2">請假月份設定 (可點擊複選)</span>
-            <!-- 把 grid-cols-6 改成 grid-cols-4，手機螢幕才塞得下 -->
-            <div class="grid grid-cols-4 gap-2">
-                <button v-for="mIdx in 12" :key="mIdx"
-                        @click="toggleLeaveMonth(mIdx + '月')"
-                        class="py-2 rounded-lg text-[11px] font-black border transition-all min-w-0"
-                        :class="adminEditForm.leave_month && adminEditForm.leave_month.includes(mIdx + '月') ? 'bg-amber-100 text-amber-600 border-amber-300 shadow-sm' : 'bg-white text-slate-400 border-slate-200'">
-                    {{ mIdx }}月
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-            <div class="admin-edit-field">
-                <span class="admin-edit-label">公差次數</span>
-                <div class="flex items-center gap-2 mt-1">
-                    <button @click="adminEditForm.duty_count = Math.max(0, Number(adminEditForm.duty_count) - 1)" class="w-9 h-9 rounded-xl bg-slate-100 font-black text-slate-600 flex items-center justify-center shrink-0">−</button>
-                    <input v-model="adminEditForm.duty_count" type="number" class="admin-edit-input text-center" style="padding: 8px 4px !important;">
-                    <button @click="adminEditForm.duty_count = Number(adminEditForm.duty_count) + 1" class="w-9 h-9 rounded-xl bg-slate-100 font-black text-slate-600 flex items-center justify-center shrink-0">＋</button>
+        <div v-show="adminEditSections.duty" class="space-y-3 fade-in pb-2">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="admin-edit-field">
+                    <span class="admin-edit-label">所屬小隊</span>
+                    <select v-model="adminEditForm.duty_group" class="admin-edit-select">
+                        <option>幹部</option>
+                        <option>第一小隊</option>
+                        <option>第二小隊</option>
+                        <option>第三小隊</option>
+                    </select>
+                </div>
+                <div class="admin-edit-field">
+                    <span class="admin-edit-label">職稱</span>
+                    <select v-model="adminEditForm.duty_title" class="admin-edit-select">
+                        <option>分隊長</option><option>副分隊長</option><option>幹事</option><option>助理幹事</option><option>小隊長</option><option>副小隊長</option><option>隊員</option>
+                    </select>
                 </div>
             </div>
-            <div></div> <!-- 右側留白保持排版 -->
-        </div>
-
-        <!-- 證照效期 -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-id-badge mr-1 text-rose-400"></i>證照與榮譽</div>
-        <div class="grid grid-cols-2 gap-3">
             <div class="admin-edit-field">
-                <span class="admin-edit-label">EMT 等級</span>
-                <!-- 更新 EMT 選項 -->
-                <select v-model="adminEditForm.emt_level" class="admin-edit-select">
-                    <option>初級技術員</option>
-                    <option>中級技術員</option>
-                    <option>高級技術員</option>
-                </select>
-            </div>
-            <div class="admin-edit-field">
-                <span class="admin-edit-label">EMT 到期日</span>
-                <input v-model="adminEditForm.emt_expiry" type="date" class="admin-edit-input" style="font-size:12px !important;">
-            </div>
-        </div>
-        <div class="admin-edit-field">
-            <span class="admin-edit-label">志工榮譽卡到期日</span>
-            <input v-model="adminEditForm.honor_expiry" type="date" class="admin-edit-input">
-        </div>
-
-        <!-- 密碼重置 -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i>安全設定</div>
-        <div class="admin-edit-field">
-            <span class="admin-edit-label">重置密碼（留空則不更改）</span>
-            <div class="relative">
-                <input v-model="adminEditForm.newPassword" :type="showEditPassword ? 'text' : 'password'" placeholder="輸入新密碼..." class="admin-edit-input" style="padding-right: 44px !important;">
-                <button @click="showEditPassword = !showEditPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-7 h-7 flex items-center justify-center">
-                    <i :class="showEditPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" style="font-size: 13px;"></i>
-                </button>
-            </div>
-            <p class="text-[10px] text-slate-400 font-bold mt-2 ml-1"><i class="fa-solid fa-info-circle mr-1 text-amber-400"></i>直接輸入新密碼後儲存即可完成重置</p>
-        </div>
-<!-- 🏆 榮譽獎章編輯 -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-medal mr-1 text-amber-500"></i>榮譽獎章 (填入年度，留空為無)</div>
-        <div class="grid grid-cols-2 gap-3 mb-2">
-            <div v-for="medal in medalList" :key="medal.id" class="admin-edit-field">
-                <span class="admin-edit-label truncate">{{ medal.name.replace(/\n/g, ' ') }}</span>
-                <input v-model="adminEditForm.medals[medal.id]" type="text" placeholder="例如: 113年" class="admin-edit-input" style="font-size:13px !important; padding:8px !important;">
-            </div>
-        </div>
-
-        <!-- ⏳ 歷年時數編輯 -->
-        <div class="admin-edit-section-title mt-3"><i class="fa-solid fa-timeline mr-1 text-purple-500"></i>歷年時數 (今年度由系統自動計算)</div>
-        <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 border border-slate-100 rounded-xl max-h-[160px] overflow-y-auto mb-3" style="scrollbar-width: none;">
-            <div v-for="y in Array.from({length: currentRocYear - 93}, (_,i) => (currentRocYear - 1) - i)" :key="y" class="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-between shadow-sm">
-                <span class="text-[10px] font-black text-slate-400">{{y}}年</span>
-                <input v-model="adminEditForm.history['hist_'+y]" type="number" class="w-12 text-center font-num text-sm bg-transparent border-0 outline-none text-slate-700 font-bold p-0">
-            </div>
-        </div>
-
-        <!-- 密碼重置 -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-solid fa-shield-halved mr-1 text-amber-400"></i>安全設定</div>
-        <!-- 👇👇👇 這是新增的 Google 帳號綁定區塊 👇👇👇 -->
-        <div class="admin-edit-section-title mt-2"><i class="fa-brands fa-google mr-1 text-red-500"></i>Google 帳號綁定</div>
-        <div class="admin-edit-field mb-2">
-            <div v-if="adminEditForm.email" class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl">
-                <div class="flex flex-col overflow-hidden mr-2">
-                    <span class="text-[9px] font-black text-slate-400 uppercase">已綁定帳號</span>
-                    <span class="text-sm font-bold text-slate-700 truncate">{{ adminEditForm.email }}</span>
+                <div class="flex justify-between items-end mb-1">
+                    <span class="admin-edit-label mb-0">加入日期</span>
+                    <span class="text-[10px] font-bold text-blue-500">{{ calculateSeniority(adminEditForm.join_date) }}</span>
                 </div>
-                <button @click="unbindGoogleAccount" :disabled="adminActionLoading === 'unbind'" class="shrink-0 px-3 py-2 bg-red-50 text-red-500 rounded-lg text-xs font-black active:scale-95 transition-all border border-red-100 disabled:opacity-50">
-                    {{ adminActionLoading === 'unbind' ? '處理中' : '解除綁定' }}
-                </button>
+                <input v-model="adminEditForm.join_date" type="date" class="admin-edit-input">
             </div>
-            <div v-else class="flex items-center gap-2 bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-slate-400">
-                <i class="fa-solid fa-link-slash"></i>
-                <span class="text-xs font-bold">尚未綁定任何 Google 帳號</span>
+        </div>
+
+        <!-- 2. 勤務數據 -->
+        <div @click="adminEditSections.stats = !adminEditSections.stats" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-solid fa-chart-bar mr-1 text-indigo-500"></i>勤務數據</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.stats ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div v-show="adminEditSections.stats" class="space-y-3 fade-in pb-2">
+            <div class="admin-edit-field mb-1">
+                <span class="admin-edit-label mb-2">請假月份設定 (可點擊複選)</span>
+                <div class="grid grid-cols-4 gap-2">
+                    <button v-for="mIdx in 12" :key="mIdx" @click="toggleLeaveMonth(mIdx + '月')" class="py-2 rounded-lg text-[11px] font-black border transition-all min-w-0" :class="adminEditForm.leave_month && adminEditForm.leave_month.includes(mIdx + '月') ? 'bg-amber-100 text-amber-600 border-amber-300 shadow-sm' : 'bg-white text-slate-400 border-slate-200'">{{ mIdx }}月</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="admin-edit-field">
+                    <span class="admin-edit-label">公差次數</span>
+                    <div class="flex items-center gap-2 mt-1">
+                        <button @click="adminEditForm.duty_count = Math.max(0, Number(adminEditForm.duty_count) - 1)" class="w-9 h-9 rounded-xl bg-slate-100 font-black text-slate-600 flex items-center justify-center shrink-0">−</button>
+                        <input v-model="adminEditForm.duty_count" type="number" class="admin-edit-input text-center" style="padding: 8px 4px !important;">
+                        <button @click="adminEditForm.duty_count = Number(adminEditForm.duty_count) + 1" class="w-9 h-9 rounded-xl bg-slate-100 font-black text-slate-600 flex items-center justify-center shrink-0">＋</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 證照效期 -->
+        <div @click="adminEditSections.cert = !adminEditSections.cert" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-solid fa-id-badge mr-1 text-rose-500"></i>證照與榮譽卡</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.cert ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div v-show="adminEditSections.cert" class="space-y-3 fade-in pb-2">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="admin-edit-field">
+                    <span class="admin-edit-label">EMT 等級</span>
+                    <select v-model="adminEditForm.emt_level" class="admin-edit-select">
+                        <option>初級技術員</option><option>中級技術員</option><option>高級技術員</option>
+                    </select>
+                </div>
+                <div class="admin-edit-field">
+                    <span class="admin-edit-label">EMT 到期日</span>
+                    <input v-model="adminEditForm.emt_expiry" type="date" class="admin-edit-input" style="font-size:12px !important;">
+                </div>
+            </div>
+            <div class="admin-edit-field">
+                <span class="admin-edit-label">志工榮譽卡到期日</span>
+                <input v-model="adminEditForm.honor_expiry" type="date" class="admin-edit-input">
+            </div>
+        </div>
+
+        <!-- 4. 榮譽獎章 -->
+        <div @click="adminEditSections.medal = !adminEditSections.medal" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-solid fa-medal mr-1 text-amber-500"></i>榮譽獎章設定</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.medal ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div v-show="adminEditSections.medal" class="fade-in pb-2">
+            <div class="grid grid-cols-2 gap-3 mt-2">
+                <div v-for="medal in medalList" :key="medal.id" class="admin-edit-field">
+                    <span class="admin-edit-label truncate">{{ medal.name.replace(/\n/g, ' ') }}</span>
+                    <input v-model="adminEditForm.medals[medal.id]" type="text" placeholder="例: 113年" class="admin-edit-input" style="font-size:13px !important; padding:8px !important;">
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 歷年時數 -->
+        <div @click="adminEditSections.history = !adminEditSections.history" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-solid fa-timeline mr-1 text-purple-500"></i>歷年歷史時數</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.history ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div v-show="adminEditSections.history" class="fade-in pb-2">
+            <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 border border-slate-100 rounded-xl max-h-[160px] overflow-y-auto mt-2" style="scrollbar-width: none;">
+                <div v-for="y in Array.from({length: currentRocYear - 93}, (_,i) => (currentRocYear - 1) - i)" :key="y" class="bg-white border border-slate-200 rounded-lg p-1.5 flex items-center justify-between shadow-sm">
+                    <span class="text-[10px] font-black text-slate-400">{{y}}年</span>
+                    <input v-model="adminEditForm.history['hist_'+y]" type="number" class="w-12 text-center font-num text-sm bg-transparent border-0 outline-none text-slate-700 font-bold p-0">
+                </div>
+            </div>
+            <p class="text-[9px] text-slate-400 font-bold mt-1 ml-1"><i class="fa-solid fa-info-circle mr-1"></i>今年度已改為系統自動計算，此處僅編輯去年度以前的歷史紀錄。</p>
+        </div>
+
+        <!-- 6. 密碼重置 -->
+        <div @click="adminEditSections.security = !adminEditSections.security" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-solid fa-shield-halved mr-1 text-amber-500"></i>安全與密碼</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.security ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div v-show="adminEditSections.security" class="fade-in pb-2 mt-2">
+            <div class="admin-edit-field">
+                <span class="admin-edit-label">重置密碼（留空則不更改）</span>
+                <div class="relative">
+                    <input v-model="adminEditForm.newPassword" :type="showEditPassword ? 'text' : 'password'" placeholder="輸入新密碼..." class="admin-edit-input" style="padding-right: 44px !important;">
+                    <button @click="showEditPassword = !showEditPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-7 h-7 flex items-center justify-center">
+                        <i :class="showEditPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" style="font-size: 13px;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Google 帳號綁定 -->
+        <div @click="adminEditSections.google = !adminEditSections.google" class="admin-edit-section-title flex justify-between items-center cursor-pointer mt-1 !mb-1 border-b border-slate-200 pb-2 transition-all hover:opacity-70">
+            <span><i class="fa-brands fa-google mr-1 text-red-500"></i>Google 帳號綁定</span>
+            <i class="fa-solid text-slate-300 transition-transform duration-300" :class="adminEditSections.google ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div v-show="adminEditSections.google" class="fade-in pb-2 mt-2">
+            <div class="admin-edit-field">
+                <div v-if="adminEditForm.email" class="flex justify-between items-center bg-white border border-slate-200 p-2.5 rounded-xl">
+                    <div class="flex flex-col overflow-hidden mr-2">
+                        <span class="text-[9px] font-black text-slate-400 uppercase">已綁定帳號</span>
+                        <span class="text-sm font-bold text-slate-700 truncate">{{ adminEditForm.email }}</span>
+                    </div>
+                    <button @click="unbindGoogleAccount" :disabled="adminActionLoading === 'unbind'" class="shrink-0 px-3 py-2 bg-red-50 text-red-500 rounded-lg text-xs font-black active:scale-95 transition-all border border-red-100 disabled:opacity-50">
+                        {{ adminActionLoading === 'unbind' ? '處理中' : '解除綁定' }}
+                    </button>
+                </div>
+                <div v-else class="flex items-center gap-2 bg-slate-50 border border-slate-100 p-2.5 rounded-xl text-slate-400">
+                    <i class="fa-solid fa-link-slash"></i>
+                    <span class="text-xs font-bold">尚未綁定任何 Google 帳號</span>
+                </div>
             </div>
         </div>
         <!-- 👆👆👆 新增結束 👆👆👆 -->
@@ -4380,6 +4394,16 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
             const adminEditTarget       = ref(null);
             const adminEditForm         = ref(null);
             const showEditPassword      = ref(false);
+// 🌟 控制編輯彈窗的各區塊折疊狀態 (預設全關)
+            const adminEditSections = ref({
+                duty: false,
+                stats: false,
+                cert: false,
+                medal: false,
+                history: false,
+                security: false,
+                google: false
+            });
 
             const toggleLeaveMonth = (monthStr) => {
                 if (!adminEditForm.value.leave_month) adminEditForm.value.leave_month = [];
@@ -4442,6 +4466,8 @@ const openAdminEditMember = (m) => {
                     medals:       medalsObj,
                     history:      historyObj
                 };
+     adminEditSections.value = { duty: false, stats: false, cert: false, medal: false, history: false, security: false, google: false };
+
                 showEditPassword.value = false;
                 isAdminEditMemberOpen.value = true;
             };
