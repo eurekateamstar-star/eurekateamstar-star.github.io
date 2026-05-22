@@ -697,7 +697,7 @@
                                                 <span class="text-sm font-black text-slate-800">{{ m.姓名 }}</span>
                                                 <span class="text-[9px] font-bold text-slate-400">{{ m.duty_group || '' }}</span>
                                             </div>
-                                            <div class="flex items-center gap-1.5 mt-0.5">
+                                            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
                                                 <span class="status-dot" :class="m.hasSub ? 'dot-green' : 'dot-red'"></span>
                                                 <span class="text-[10px] font-bold" :class="m.hasSub ? 'text-emerald-600' : 'text-rose-500'">
                                                     {{ m.hasSub ? '已訂閱' : '未訂閱' }}
@@ -716,7 +716,12 @@
                                                     <i v-else-if="m.pushResult === 'fail'" class="fa-solid fa-circle-xmark" style="font-size:9px"></i>
                                                     <i v-else-if="!m.hasSub" class="fa-solid fa-bell-slash" style="font-size:9px"></i>
                                                     <i v-else class="fa-solid fa-minus" style="font-size:9px"></i>
-                                                    {{ m.hasSub ? (m.pushResult === 'sent' ? '昨日送達' : m.pushResult === 'fail' ? '昨日失敗' : '昨日未觸發') : '無訂閱' }}
+                                                    {{ m.hasSub ? (m.pushResult === 'sent' ? '昨日送達' : m.pushResult === 'fail' ? '昨日失敗' : '未觸發') : '無訂閱' }}
+                                                </span>
+                                                <span class="text-slate-200 mx-0.5">|</span>
+                                                <span class="push-indicator" :class="m.hasBind ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'">
+                                                    <i class="fa-brands fa-google" style="font-size:9px"></i>
+                                                    {{ m.hasBind ? '已綁定' : '未綁定' }}
                                                 </span>
                                             </div>
                                         </div>
@@ -3354,11 +3359,10 @@ const isCancelSubModalOpen  = ref(false);
                             weekActivities.push({ key: 'meeting_' + t.id, type: 'meeting', date: t.date, dateLabel: `${t.date.slice(5,7)}/${t.date.slice(8,10)}`, label: t.title, chipClass: 'chip-meeting', icon: 'fa-solid fa-users', startTime: t.startTime, location: t.location || '' });
                         }
                     });
-                    weekActivities.sort((a, b) => a.date.localeCompare(b.date));
-                    return { ...m, hasSub: !!m.pushSubscription, weekActivities, pushResult: pushMap[m.姓名] || 'none' };
+                  weekActivities.sort((a, b) => a.date.localeCompare(b.date));
+                    return { ...m, hasSub: !!m.pushSubscription, hasBind: !!m.uid, weekActivities, pushResult: pushMap[m.姓名] || 'none' };
                 });
             });
-
             const filteredAdminMembers = computed(() => {
                 return adminMembersData.value.filter(m => {
                     if (adminFilter.value === 'nosub')    return !m.hasSub;
