@@ -4976,41 +4976,47 @@ const timeToMin = (t) => {
 const validateAssistanceForm = (form) => {
     if (!form || !form.cases) return true;
     
-    // 取得協勤整體的起訖時間
     const shiftStartMin = timeToMin(form.startTime || form.shiftStart);
     const shiftEndMin = timeToMin(form.endTime || form.shiftEnd);
     let allValid = true;
 
     form.cases.forEach((c, idx) => {
-        // 重置狀態
         c.errStart = false; 
         c.errEnd = false; 
         c.errMsg = '';
 
-        // 相容不同模式的欄位名
         const cStartStr = c.startTime || c.caseStart;
         const cEndStr = c.endTime || c.caseEnd;
         
         const cStart = timeToMin(cStartStr);
         const cEnd = timeToMin(cEndStr);
         
-        if (cStart === -1 || cEnd === -1) return;
+        // 🌟 嚴格擋下格式不對的時間 (沒有冒號或轉換失敗)
+        if (cStart === -1) {
+            c.errStart = true;
+            c.errMsg = '請輸入完整的 4 碼時間 (如 0900)';
+            allValid = false;
+        }
+        if (cEnd === -1) {
+            c.errEnd = true;
+            if (!c.errMsg) c.errMsg = '請輸入完整的 4 碼時間 (如 0900)';
+            allValid = false;
+        }
+        
+        if (cStart === -1 || cEnd === -1) return; // 格式不對就直接跳過比大小
 
-        // 1. 嚴格檢查：開始必須「小於」結束 (不能等於)
         if (cStart >= cEnd) {
             c.errEnd = true; 
             c.errMsg = '開始時間必須「小於」結束時間';
             allValid = false;
         }
 
-        // 2. 邊界檢查：不可早於協勤開始
         if (idx === 0 && cStart < shiftStartMin) {
             c.errStart = true; 
             c.errMsg = `首件需晚於協勤開始 (${form.startTime || form.shiftStart})`;
             allValid = false;
         }
 
-        // 3. 跨案件重疊檢查：目前案件開始 必須 >= 前一件的結束
         if (idx > 0) {
             const prevCase = form.cases[idx - 1];
             const prevEndStr = prevCase.endTime || prevCase.caseEnd;
@@ -5023,7 +5029,6 @@ const validateAssistanceForm = (form) => {
             }
         }
 
-        // 4. 邊界檢查：不可晚於協勤結束
         if (idx === form.cases.length - 1 && cEnd > shiftEndMin) {
             c.errEnd = true; 
             c.errMsg = `末件需早於協勤結束 (${form.endTime || form.shiftEnd})`;
@@ -5037,34 +5042,45 @@ const validateAssistanceForm = (form) => {
 // 處理數字轉時間格式 (如 1230 -> 12:30)
 const handleTimeInput = (item, field, formType) => {
     let val = item[field];
-    if (!val) return;
+    if (!val) {
+        const targetForm = formType === 'edit' ? editingAssistRecord.value : assistanceForm.value;
+        validateAssistanceForm(targetForm);
+        return;
+    }
+
+    // 🌟 如果已經是帶有冒號的正確格式，直接驗證並跳出
+    if (val.includes(':') && val.length === 5) {
+        const targetForm = formType === 'edit' ? editingAssistRecord.value : assistanceForm.value;
+        validateAssistanceForm(targetForm);
+        return;
+    }
+
     val = val.replace(/\D/g, ''); 
     if (val.length > 4) val = val.substring(0, 4);
-    if (val.length === 3) val = '0' + val; 
+    if (val.length === 3) val = '0' + val; // 輸入 3 碼自動補 0，如 900 -> 0900
     
     if (val.length === 4) {
         const h = parseInt(val.substring(0, 2));
         const m = parseInt(val.substring(2, 4));
         
-        // 允許 00:00~23:59 或 24:00
         const isValidTime = (h >= 0 && h <= 23 && m >= 0 && m <= 59) || (h === 24 && m === 0);
         
         if (isValidTime) {
             item[field] = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             item.errMsg = '';
-            
-            // 重要：每次輸入完畢，立刻重新驗證整個表單，這樣才能觸發跨案件的重疊警告
-            const targetForm = formType === 'edit' ? editingAssistRecord.value : assistanceForm.value;
-            validateAssistanceForm(targetForm);
-            
         } else {
             item.errMsg = '時間格式錯誤 (最高 24:00)';
             item[field] = ''; 
         }
+    } else {
+        // 🌟 核心修改：長度不對，直接報錯並清空
+        item.errMsg = '請輸入 4 碼時間 (如 0900)';
+        item[field] = '';
     }
+    
+    const targetForm = formType === 'edit' ? editingAssistRecord.value : assistanceForm.value;
+    validateAssistanceForm(targetForm);
 };
-
-
             const handleAddressInput = (c, isEdit = false) => {
                 c.errAddress = false;
                 if (!c.address) {
@@ -5100,24 +5116,24 @@ const goToConfirmStep = (onlyShift = false) => {
     }
 
     let hasEmptyField = false;
-    // 必填欄位檢查：地點、區域、種類、時間
     assistanceForm.value.cases.forEach(c => {
-        c.errDistrict = false; c.errAddress = false; c.errType = false;
+        c.errDistrict = false; c.errAddress = false; c.errType = false; c.errStart = false; c.errEnd = false;
         if (!c.district) { c.errDistrict = true; hasEmptyField = true; }
         if (!c.address || c.address.trim() === '') { c.errAddress = true; hasEmptyField = true; }
         if (!c.type) { c.errType = true; hasEmptyField = true; }
-        if (!c.startTime) { c.errStart = true; hasEmptyField = true; }
-        if (!c.endTime) { c.errEnd = true; hasEmptyField = true; }
+        // 🌟 強制檢查欄位內必須包含冒號，才算是有填時間
+        if (!c.startTime || !c.startTime.includes(':')) { c.errStart = true; hasEmptyField = true; c.errMsg = '請輸入完整的 4 碼時間'; }
+        if (!c.endTime || !c.endTime.includes(':')) { c.errEnd = true; hasEmptyField = true; c.errMsg = '請輸入完整的 4 碼時間'; }
     });
 
     if (hasEmptyField) {
-        showAppAlert('error', '資料未填齊', '請檢查標註紅框的必填欄位。');
+        showAppAlert('error', '資料未填齊', '請檢查標註紅框的必填欄位與時間格式。');
         return;
     }
 
     const isLogicOk = validateAssistanceForm(assistanceForm.value);
     if (!isLogicOk) {
-        showAppAlert('error', '時間邏輯錯誤', '請修正標註紅色的案件時間或順序。');
+        showAppAlert('error', '時間邏輯錯誤', '請修正標註紅色的案件時間。');
         return;
     }
     assistanceStep.value = 3;
@@ -5202,8 +5218,8 @@ const goToConfirmStep = (onlyShift = false) => {
                         c.errAddress = false;
                         
                         // 檢查是否有空值
-                        if (!c.caseStart) { c.errStart = true; hasEmptyField = true; }
-                        if (!c.caseEnd) { c.errEnd = true; hasEmptyField = true; }
+                        if (!c.caseStart || !c.caseStart.includes(':')) { c.errStart = true; hasEmptyField = true; }
+                        if (!c.caseEnd || !c.caseEnd.includes(':')) { c.errEnd = true; hasEmptyField = true; }
                         if (!c.caseType) { c.errType = true; hasEmptyField = true; }
                         if (!c.district) { c.errDistrict = true; hasEmptyField = true; }
                         if (!c.address || c.address.trim() === '') { c.errAddress = true; hasEmptyField = true; }
