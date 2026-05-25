@@ -1292,6 +1292,14 @@
                 </div>
             </div>
         </div>
+<!-- 常訓分頁 (Iframe 嵌入) -->
+<div v-show="currPage === 'regular'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
+   <iframe 
+    src="https://eurekateamstar-star.github.io/Regular/" 
+    class="w-full h-full border-0"
+    allow="fullscreen"
+   ></iframe>
+</div>
 <!-- 考核分頁 (Iframe 嵌入) -->
 <div v-show="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
    <iframe 
@@ -2594,7 +2602,10 @@
                 <div @click="currPage='dashboard';scrollToTab(0);expandCards()" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
                 <div @click="currPage='schedule';scrollToScheduleTab(0);expandCards()" :class="currPage === 'schedule' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
                 <div @click="currPage='assistance';scrollToAssistTab(0);expandCards()" :class="currPage === 'assistance' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-truck-medical text-xl"></i><span class="text-[13px] font-black mt-1">協勤</span></div>
-                <div class="nav-item text-slate-200 pointer-events-none"><i class="fa-solid fa-users text-xl"></i><span class="text-[13px] font-black mt-1">'常訓</span></div>
+                <div @click="currPage='regular';expandCards()" :class="currPage === 'regular' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer">
+    <i class="fa-solid fa-users text-xl"></i>
+    <span class="text-[13px] font-black mt-1">常訓</span>
+</div>
                 <div @click="currPage='assessment';expandCards()" :class="currPage === 'assessment' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-user-nurse text-xl"></i><span class="text-[13px] font-black mt-1">考核</span></div>
             </div>
         </nav>
