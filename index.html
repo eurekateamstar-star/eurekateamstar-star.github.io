@@ -1295,10 +1295,10 @@
 <!-- 常訓分頁 (Iframe 嵌入) -->
 <div v-show="currPage === 'regular'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
    <iframe 
-    src="https://eurekateamstar-star.github.io/Regular/" 
+    :src="'https://eurekateamstar-star.github.io/Regular/?user=' + userData.姓名" 
     class="w-full h-full border-0"
     allow="fullscreen"
-   ></iframe>
+></iframe>
 </div>
 <!-- 考核分頁 (Iframe 嵌入) -->
 <div v-show="currPage === 'assessment'" class="dashboard-wrapper fade-in" style="padding-top: var(--safe-top); padding-bottom: calc(75px + var(--safe-bottom)); background: #f8fafc;">
