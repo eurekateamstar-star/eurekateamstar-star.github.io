@@ -2435,9 +2435,15 @@
             <label class="text-[10px] font-black text-slate-400 ml-1">姓名 (必填)</label>
             <input v-model="newMemberForm.name" type="text" placeholder="輸入人員真實姓名" class="med-input w-full">
         </div>
+        
         <div class="space-y-1">
-            <label class="text-[10px] font-black text-slate-400 ml-1">預設安全登入密碼 (必填)</label>
-            <input v-model="newMemberForm.password" type="text" placeholder="設定初次登入密碼" class="med-input w-full">
+            <label class="text-[10px] font-black text-rose-400 ml-1">身分證字號 (必填，將自動設為登入密碼)</label>
+            <input v-model="newMemberForm.id_no" type="text" placeholder="輸入身分證字號" class="med-input w-full uppercase">
+        </div>
+
+        <div class="space-y-1">
+            <label class="text-[10px] font-black text-slate-400 ml-1">生日</label>
+            <input v-model="newMemberForm.birthday" type="date" class="med-input w-full">
         </div>
         
         <div class="grid grid-cols-2 gap-3 pt-2">
@@ -3390,18 +3396,20 @@ const isCancelSubModalOpen  = ref(false);
             const singlePushForm        = ref({ title: '', body: '' });
 // 👇 新增：人員管理相關狀態
 const isAddMemberModalOpen = ref(false);
-const newMemberForm = ref({ name: '', password: '', duty_group: '第一小隊', duty_title: '隊員' });
+// 更新表單欄位，移除 password，加入 id_no 與 birthday
+const newMemberForm = ref({ name: '', id_no: '', birthday: '', duty_group: '第一小隊', duty_title: '隊員' });
 const isDeleteMemberConfirmOpen = ref(false);
 const memberToDelete = ref(null);
 
 const openAddMemberModal = () => {
-    newMemberForm.value = { name: '', password: '', duty_group: '第一小隊', duty_title: '隊員' };
+    // 重置表單
+    newMemberForm.value = { name: '', id_no: '', birthday: '', duty_group: '第一小隊', duty_title: '隊員' };
     isAddMemberModalOpen.value = true;
 };
 
 const submitAddMember = async () => {
     const f = newMemberForm.value;
-    if (!f.name || !f.password) return showAppAlert('error', '資料不全', '姓名與預設密碼為必填項目。');
+    if (!f.name || !f.id_no) return showAppAlert('error', '資料不全', '姓名與身分證字號為必填項目。');
     
     // 檢查是否同名
     if (members.value.some(m => m.姓名 === f.name)) {
@@ -3410,10 +3418,15 @@ const submitAddMember = async () => {
 
     adminActionLoading.value = 'add_member';
     try {
+        // 確保身分證字號為大寫
+        const uppercaseIdNo = f.id_no.trim().toUpperCase();
+
         // 使用姓名作為 Document ID 新增至 members 集合中
         await setDoc(doc(db, "members", f.name), {
-            姓名: f.name,
-            password: f.password,
+            姓名: f.name.trim(),
+            password: uppercaseIdNo, // 預設密碼綁定為身分證字號
+            id_no: uppercaseIdNo,    // 寫入身分證字號欄位
+            birthday: f.birthday || '', // 寫入生日欄位
             duty_group: f.duty_group,
             duty_title: f.duty_title,
             duty_count: 0,
@@ -3422,7 +3435,7 @@ const submitAddMember = async () => {
             join_date: getTodayStr()
         });
         isAddMemberModalOpen.value = false;
-        showAppAlert('success', '新增成功', `已成功將 ${f.name} 加入系統。`);
+        showAppAlert('success', '新增成功', `已成功加入 ${f.name}。\n預設登入密碼為：${uppercaseIdNo}`);
     } catch(e) {
         showAppAlert('error', '新增失敗', e.message);
     } finally {
