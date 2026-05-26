@@ -2495,39 +2495,7 @@
         </div>
     </div>
 </div>
-        <!-- 自訂全域提醒彈窗 (App Alert Modal) -->
-        <div class="bottom-sheet-overlay" :class="{ active: appAlert.show }" @click="appAlert.show = false"></div>
-        <div class="bottom-sheet" :class="{ active: appAlert.show }" style="z-index: 1000 !important;">
-            <div class="text-center py-6">
-                <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                     :class="appAlert.type === 'success' ? 'bg-emerald-50' : 'bg-rose-50'">
-                    <i class="fa-solid text-4xl"
-                       :class="appAlert.type === 'success' ? 'fa-circle-check text-emerald-500' : 'fa-circle-exclamation text-rose-500'"></i>
-                </div>
-                <h4 class="text-2xl font-black text-slate-800 mb-2">{{ appAlert.title }}</h4>
-                <p class="text-sm font-bold text-slate-400 mb-8 whitespace-pre-line">{{ appAlert.msg }}</p>
-                <button @click="appAlert.show = false" class="w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl active:scale-[0.98] transition-transform"
-                        :class="appAlert.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'">
-                    我知道了
-                </button>
-            </div>
-        </div>
-
-        <!-- 自訂全域確認彈窗 (App Confirm Modal) -->
-        <div class="bottom-sheet-overlay" :class="{ active: appConfirm.show }" @click="appConfirm.show = false"></div>
-        <div class="bottom-sheet" :class="{ active: appConfirm.show }" style="z-index: 1000 !important;">
-            <div class="text-center py-4">
-                <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-circle-question text-3xl text-amber-500"></i>
-                </div>
-                <h4 class="text-xl font-black text-slate-800 mb-2">{{ appConfirm.title }}</h4>
-                <p class="text-sm font-bold text-slate-400 mb-8">{{ appConfirm.msg }}</p>
-                <div class="flex gap-3">
-                    <button @click="appConfirm.show = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
-                    <button @click="appConfirm.onConfirm" class="flex-1 py-4 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-lg active:scale-[0.98] transition-transform">確認執行</button>
-                </div>
-            </div>
-        </div>
+     
 <!-- ===== 最新消息半透明小視窗 ===== -->
 <transition name="fade-scale">
     <div v-if="isNewsModalOpen" class="fixed inset-0 z-[1000] flex items-center justify-center px-5 pb-10" style="background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);" @click.self="closeNewsModal">
@@ -2708,6 +2676,43 @@
             </div>
         </nav>
     </template>
+
+<!-- 👇👇 把彈窗貼在這裡，這樣不管有沒有登入都能呼叫它 👇👇 -->
+    
+    <!-- 自訂全域提醒彈窗 (App Alert Modal) -->
+    <div class="bottom-sheet-overlay" :class="{ active: appAlert.show }" @click="appAlert.show = false"></div>
+    <div class="bottom-sheet" :class="{ active: appAlert.show }" style="z-index: 1000 !important;">
+        <div class="text-center py-6">
+            <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+                 :class="appAlert.type === 'success' ? 'bg-emerald-50' : 'bg-rose-50'">
+                <i class="fa-solid text-4xl"
+                   :class="appAlert.type === 'success' ? 'fa-circle-check text-emerald-500' : 'fa-circle-exclamation text-rose-500'"></i>
+            </div>
+            <h4 class="text-2xl font-black text-slate-800 mb-2">{{ appAlert.title }}</h4>
+            <p class="text-sm font-bold text-slate-400 mb-8 whitespace-pre-line">{{ appAlert.msg }}</p>
+            <button @click="appAlert.show = false" class="w-full py-4 rounded-2xl text-white font-black text-lg shadow-xl active:scale-[0.98] transition-transform"
+                    :class="appAlert.type === 'success' ? 'bg-emerald-500' : 'bg-rose-500'">
+                我知道了
+            </button>
+        </div>
+    </div>
+
+    <!-- 自訂全域確認彈窗 (App Confirm Modal) -->
+    <div class="bottom-sheet-overlay" :class="{ active: appConfirm.show }" @click="appConfirm.show = false"></div>
+    <div class="bottom-sheet" :class="{ active: appConfirm.show }" style="z-index: 1000 !important;">
+        <div class="text-center py-4">
+            <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-circle-question text-3xl text-amber-500"></i>
+            </div>
+            <h4 class="text-xl font-black text-slate-800 mb-2">{{ appConfirm.title }}</h4>
+            <p class="text-sm font-bold text-slate-400 mb-8">{{ appConfirm.msg }}</p>
+            <div class="flex gap-3">
+                <button @click="appConfirm.show = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
+                <button @click="appConfirm.onConfirm" class="flex-1 py-4 rounded-2xl bg-amber-500 text-white font-black text-sm shadow-lg active:scale-[0.98] transition-transform">確認執行</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
