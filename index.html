@@ -3566,23 +3566,7 @@ const executeDeleteMember = async () => {
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
-            // 👇👇👇 加入這段：即時監聽，如果使用中被管理員停用，立刻踢下線 👇👇👇
-            watch(() => userData.value.is_suspended, async (isSuspended) => {
-                if (isSuspended && currPage.value !== 'login') {
-                    // 執行登出並清空資料
-                    await signOut(auth);
-                    currPage.value = 'login';
-                    loginUserName.value = '';
-                    googleUser.value = null;
-                    
-                    // 等待畫面回到登入頁後，再跳出警告
-                    nextTick(() => {
-                        showAppAlert('error', '帳號已停用', '您的帳號已被管理員暫停使用，已強制登出。');
-                    });
-                }
-            });
-            // 👆👆👆 加入結束 👆👆👆
-
+            
             const scheduleTabs = [
                 { id:'register',  name:'登記排班', icon:'fa-solid fa-calendar-plus',      activeClass:'bg-blue-600 text-white shadow-md',   textColor:'text-blue-600' },
                 { id:'overview',  name:'排班總覽', icon:'fa-solid fa-calendar-day',       activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' },
@@ -4267,14 +4251,18 @@ const sortedCashHistory = computed(() => {
                     const snap = await getDocs(q);
                     if (!snap.empty) {
                         const memberData = snap.docs[0].data();
-                        // 👇 檢查是否被停用
-                        if (memberData.is_suspended) {
+                         if (memberData.is_suspended) {
                             await signOut(auth);
                             googleUser.value = null;
-                            currPage.value = 'login'; // 確保畫面切換回登入頁
-                            showAppAlert('error', '帳號停用', '您的帳號已被管理員暫停使用。');
+                            loginUserName.value = ''; // 徹底清空身分
+                            currPage.value = 'login'; // 確保切換回登入頁
+                            
+                            // 加上 300 毫秒延遲，讓畫面先穩定渲染，再跳出彈窗，避免卡死
+                            setTimeout(() => {
+                                showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
+                            }, 300);
                         } else {
-                            appAlert.value.show = false; // 👈 修復：登入成功時，清除任何殘留的警告彈窗
+                            appAlert.value.show = false; // 👈 登入成功，強制清除殘留彈窗
                             executeSystemLogin(memberData.姓名);
                         }
                     }
@@ -4376,18 +4364,21 @@ const sortedCashHistory = computed(() => {
                     }
                 });
 
-                onSnapshot(collection(db, "members"), (snap) => { 
+               onSnapshot(collection(db, "members"), (snap) => { 
                     members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); 
                     
-                    // 👇 新增：即時監聽，如果當前登入者在使用中途被管理員停用，立刻強制登出
-                    if (loginUserName.value) {
+                    // 👇 修改：確保只有在「非登入頁 (已登入狀態)」時才執行強制踢除
+                    if (loginUserName.value && currPage.value !== 'login') {
                         const currentUser = members.value.find(m => m.姓名 === loginUserName.value);
                         if (currentUser && currentUser.is_suspended) {
                             signOut(auth);
-                            currPage.value = 'login';
                             loginUserName.value = '';
                             googleUser.value = null;
-                            showAppAlert('error', '帳號已停用', '您的系統權限已被管理員即時暫停，請聯繫管理員。');
+                            currPage.value = 'login';
+                            
+                            setTimeout(() => {
+                                showAppAlert('error', '帳號已停用', '您的權限已被管理員即時暫停，已強制登出。');
+                            }, 300);
                         }
                     }
                 });
