@@ -3564,7 +3564,7 @@ const executeDeleteMember = async () => {
             // 👆👆👆 新增結束 👆👆👆
 
 
-            const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
+            
 
             const scheduleTabs = [
                 { id:'register',  name:'登記排班', icon:'fa-solid fa-calendar-plus',      activeClass:'bg-blue-600 text-white shadow-md',   textColor:'text-blue-600' },
@@ -3573,8 +3573,8 @@ const executeDeleteMember = async () => {
                 { id:'meeting',   name:'會議登記', icon:'fa-solid fa-users-rectangle',    activeClass:'bg-purple-600 text-white shadow-md',  textColor:'text-purple-600' },
                 { id:'adminpush', name:'主控台',   icon:'fa-solid fa-satellite-dish',     activeClass:'bg-slate-800 text-white shadow-md',   textColor:'text-slate-700' },
             ];
-const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
+const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
             // 👇👇👇 加入這段：即時監聽，如果使用中被管理員停用，立刻踢下線 👇👇👇
             watch(() => userData.value.is_suspended, async (isSuspended) => {
                 if (isSuspended && currPage.value !== 'login') {
