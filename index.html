@@ -2821,7 +2821,7 @@ onMessage(messaging, (payload) => {
                         .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
                 });
             };
-
+const isForcedLogout = ref(false);
             // 全域自訂彈窗
             const appAlert = ref({ show: false, type: 'success', title: '', msg: '' });
             const appConfirm = ref({ show: false, title: '', msg: '', onConfirm: null });
@@ -4245,35 +4245,44 @@ const sortedCashHistory = computed(() => {
                 // 監聽 Google 登入狀態 (自動秒登入邏輯)
              // 監聽 Google 登入狀態 (自動秒登入邏輯)
                 onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    googleUser.value = user;
-                    const q = query(collection(db, "members"), where("uid", "==", user.uid));
-                    const snap = await getDocs(q);
-                    if (!snap.empty) {
-                        const memberData = snap.docs[0].data();
-                         if (memberData.is_suspended) {
-                            await signOut(auth);
-                            googleUser.value = null;
-                            loginUserName.value = ''; // 徹底清空身分
-                            currPage.value = 'login'; // 確保切換回登入頁
-                            
-                            // 加上 300 毫秒延遲，讓畫面先穩定渲染，再跳出彈窗，避免卡死
-                            setTimeout(() => {
-                                showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
-                            }, 300);
-                        } else {
-                            appAlert.value.show = false; // 👈 登入成功，強制清除殘留彈窗
-                            executeSystemLogin(memberData.姓名);
-                        }
-                    }
-                } else {
-                    googleUser.value = null;
-                    if (currPage.value !== 'login') {
-                        currPage.value = 'login'; // 確保無登入狀態時回到登入頁
-                    }
-                }
+    // 🌟 如果是被強制登出的，直接跳過，避免無限循環
+    if (isForcedLogout.value) {
+        isForcedLogout.value = false;
+        authLoading.value = false;
+        return;
+    }
+
+    if (user) {
+        googleUser.value = user;
+        const q = query(collection(db, "members"), where("uid", "==", user.uid));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            const memberData = snap.docs[0].data();
+            if (memberData.is_suspended) {
+                isForcedLogout.value = true; // 🌟 設旗標，避免登出後再次觸發
+                await signOut(auth);
+                googleUser.value = null;
+                loginUserName.value = '';
+                currPage.value = 'login';
                 authLoading.value = false;
-            });
+                setTimeout(() => {
+                    showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
+                }, 300);
+            } else {
+                appAlert.value.show = false;
+                executeSystemLogin(memberData.姓名);
+            }
+        } else {
+            authLoading.value = false;
+        }
+    } else {
+        googleUser.value = null;
+        if (currPage.value !== 'login') {
+            currPage.value = 'login';
+        }
+        authLoading.value = false;
+    }
+});
 
     // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
     // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
@@ -4365,23 +4374,23 @@ const sortedCashHistory = computed(() => {
                 });
 
                onSnapshot(collection(db, "members"), (snap) => { 
-                    members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); 
-                    
-                    // 👇 修改：確保只有在「非登入頁 (已登入狀態)」時才執行強制踢除
-                    if (loginUserName.value && currPage.value !== 'login') {
-                        const currentUser = members.value.find(m => m.姓名 === loginUserName.value);
-                        if (currentUser && currentUser.is_suspended) {
-                            signOut(auth);
-                            loginUserName.value = '';
-                            googleUser.value = null;
-                            currPage.value = 'login';
-                            
-                            setTimeout(() => {
-                                showAppAlert('error', '帳號已停用', '您的權限已被管理員即時暫停，已強制登出。');
-                            }, 300);
-                        }
-                    }
-                });
+    members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); 
+    
+    if (loginUserName.value && currPage.value !== 'login') {
+        const currentUser = members.value.find(m => m.姓名 === loginUserName.value);
+        if (currentUser && currentUser.is_suspended) {
+            isForcedLogout.value = true; // 🌟 同樣設旗標
+            signOut(auth);
+            loginUserName.value = '';
+            googleUser.value = null;
+            currPage.value = 'login';
+            
+            setTimeout(() => {
+                showAppAlert('error', '帳號已停用', '您的權限已被管理員即時暫停，已強制登出。');
+            }, 300);
+        }
+    }
+});
                 onSnapshot(collection(db, "shifts"), (snap) => { const obj = {}; snap.docs.forEach(doc => { const data = doc.data(); if (!obj[data.date]) obj[data.date] = []; obj[data.date].push(data); }); userShifts.value = obj; });
                 onSnapshot(collection(db, "official_tasks"), (snap) => { officialTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
                 onSnapshot(collection(db, "meeting_tasks"), (snap) => { meetingTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
