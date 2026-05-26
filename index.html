@@ -2783,7 +2783,7 @@ onMessage(messaging, (payload) => {
         setTimeout(() => { if (toast.parentNode) toast.remove(); }, 5000);
     });
 
-    const { createApp, ref, computed, onMounted, nextTick } = Vue;
+    const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
     const toLocalDateStr = (d) => {
         const y = d.getFullYear();
@@ -3573,7 +3573,24 @@ const executeDeleteMember = async () => {
                 { id:'meeting',   name:'會議登記', icon:'fa-solid fa-users-rectangle',    activeClass:'bg-purple-600 text-white shadow-md',  textColor:'text-purple-600' },
                 { id:'adminpush', name:'主控台',   icon:'fa-solid fa-satellite-dish',     activeClass:'bg-slate-800 text-white shadow-md',   textColor:'text-slate-700' },
             ];
+const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
+            // 👇👇👇 加入這段：即時監聽，如果使用中被管理員停用，立刻踢下線 👇👇👇
+            watch(() => userData.value.is_suspended, async (isSuspended) => {
+                if (isSuspended && currPage.value !== 'login') {
+                    // 執行登出並清空資料
+                    await signOut(auth);
+                    currPage.value = 'login';
+                    loginUserName.value = '';
+                    googleUser.value = null;
+                    
+                    // 等待畫面回到登入頁後，再跳出警告
+                    nextTick(() => {
+                        showAppAlert('error', '帳號已停用', '您的帳號已被管理員暫停使用，已強制登出。');
+                    });
+                }
+            });
+            // 👆👆👆 加入結束 👆👆👆
             const visibleScheduleTabs = computed(() => isAdmin.value ? scheduleTabs : scheduleTabs.slice(0, 4));
 
             const todayStr = getTodayStr();
@@ -4241,28 +4258,36 @@ const sortedCashHistory = computed(() => {
 
 
             onMounted(() => {
-                // 監聽 Google 登入狀態 (自動秒登入邏輯)
+                
+             // 監聽 Google 登入狀態 (自動秒登入邏輯)
                 onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        googleUser.value = user;
-        const q = query(collection(db, "members"), where("uid", "==", user.uid));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-            const memberData = snap.docs[0].data();
-            // 👇 檢查是否被停用
-            if (memberData.is_suspended) {
-                await signOut(auth);
-                googleUser.value = null;
-                showAppAlert('error', '帳號停用', '您的帳號已被管理員暫停使用。');
-            } else {
-                executeSystemLogin(memberData.姓名);
-            }
-        }
-    } else {
-        googleUser.value = null;
-    }
-    authLoading.value = false;
-});
+                    if (user) {
+                        googleUser.value = user;
+                        const q = query(collection(db, "members"), where("uid", "==", user.uid));
+                        const snap = await getDocs(q);
+                        if (!snap.empty) {
+                            const memberData = snap.docs[0].data();
+                            
+                            // 👇 檢查是否被停用
+                            if (memberData.is_suspended) {
+                                authLoading.value = false; // 先解除讀取狀態
+                                googleUser.value = null;
+                                await signOut(auth);       // 執行登出
+                                
+                                // 🌟 關鍵修復：延遲到畫面確定回到未登入狀態後，再彈出視窗
+                                setTimeout(() => {
+                                    showAppAlert('error', '帳號停用', '您的帳號已被管理員暫停使用，請聯繫管理員。');
+                                }, 100);
+                                return; // 終止後續登入動作
+                            } else {
+                                executeSystemLogin(memberData.姓名);
+                            }
+                        }
+                    } else {
+                        googleUser.value = null;
+                    }
+                    authLoading.value = false;
+                });
 
     // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
     // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
@@ -4440,18 +4465,22 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 }
             };
 
-           const bindAndLogin = async () => {
-    errMsg.value = '';
-    if (!loginForm.value.name || !loginForm.value.pass) return errMsg.value = "請選擇姓名並輸入密碼";
+          const bindAndLogin = async () => {
+                errMsg.value = '';
+                if (!loginForm.value.name || !loginForm.value.pass) return errMsg.value = "請選擇姓名並輸入密碼";
 
-    const userDoc = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-    if (userDoc) {
-        // 👇 新增停用檢查
-        if (userDoc.is_suspended) return errMsg.value = "此帳號已被停用，請聯繫管理員";
-        
-        if (userDoc.uid && userDoc.uid !== googleUser.value.uid) {
-            return errMsg.value = "此隊員已被其他 Google 帳號綁定！";
-        }
+                const userDoc = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
+                if (userDoc) {
+                    
+                    // 👇 關鍵修改：如果是停用狀態，直接彈出大視窗並阻斷
+                    if (userDoc.is_suspended) {
+                        showAppAlert('error', '帳號停用', '此帳號已被管理員暫停使用，無法進行綁定與登入。');
+                        return;
+                    }
+                    
+                    if (userDoc.uid && userDoc.uid !== googleUser.value.uid) {
+                        return errMsg.value = "此隊員已被其他 Google 帳號綁定！";
+                    }
                     try {
                         authLoading.value = true;
                         const userRef = doc(db, "members", userDoc.id);
