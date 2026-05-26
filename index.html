@@ -182,11 +182,18 @@
                         </div>
 
                         <div class="relative flex items-center mt-3">
-                            <i class="fa-solid fa-shield-halved absolute left-4 text-slate-400 z-20"></i>
-                            <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 font-bold bg-white relative z-10" style="padding-left: 3.5rem !important;">
-                        </div>
+    <i class="fa-solid fa-shield-halved absolute left-4 text-slate-400 z-20"></i>
+    
+    <!-- 密碼輸入框 (加入動態 type 切換，以及右側預留給眼睛的 padding) -->
+    <input v-model="loginForm.pass" :type="showLoginPassword ? 'text' : 'password'" placeholder="安全密碼" class="med-input w-full p-4 font-bold bg-white relative z-10" style="padding-left: 3.5rem !important; padding-right: 3.5rem !important;">
+    
+    <!-- 眼睛按鈕 -->
+    <button @click="showLoginPassword = !showLoginPassword" class="absolute right-3 z-20 w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+        <i :class="showLoginPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" class="text-[15px]"></i>
+    </button>
+</div>
 
-                        <div v-if="errMsg" class="text-rose-500 text-xs font-bold text-center mt-2">{{ errMsg }}</div>
+<!-- (將原本的 inline errMsg 拿掉，改由彈窗顯示) -->
 
                         <button @click="bindAndLogin" class="med-btn w-full py-4 mt-4 transition-all uppercase tracking-widest text-[15px] font-black shadow-lg shadow-blue-200">
                             驗證並綁定
@@ -2814,7 +2821,7 @@ onMessage(messaging, (payload) => {
         setup() {
             const authLoading = ref(true); 
             const googleUser = ref(null);  
-            
+            const showLoginPassword = ref(false); // 控制登入密碼是否顯示
             const executeSystemLogin = (name) => {
                 loginUserName.value = name;
                 processNews();
@@ -4492,34 +4499,43 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
             };
 
           const bindAndLogin = async () => {
-                errMsg.value = '';
-                if (!loginForm.value.name || !loginForm.value.pass) return errMsg.value = "請選擇姓名並輸入密碼";
+    // 防呆：檢查是否填寫
+    if (!loginForm.value.name) return showAppAlert('error', '資料不全', '請先選擇您的隊員姓名。');
+    if (!loginForm.value.pass) return showAppAlert('error', '資料不全', '請輸入安全密碼。');
 
-                const userDoc = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-                if (userDoc) {
-                    
-                    // 👇 關鍵修改：如果是停用狀態，直接彈出大視窗並阻斷
-                    if (userDoc.is_suspended) {
-                        showAppAlert('error', '帳號停用', '此帳號已被管理員暫停使用，無法進行綁定與登入。');
-                        return;
-                    }
-                    
-                    if (userDoc.uid && userDoc.uid !== googleUser.value.uid) {
-                        return errMsg.value = "此隊員已被其他 Google 帳號綁定！";
-                    }
-                    try {
-                        authLoading.value = true;
-                        const userRef = doc(db, "members", userDoc.id);
-                        await updateDoc(userRef, { uid: googleUser.value.uid, email: googleUser.value.email });
-                        executeSystemLogin(userDoc.姓名);
-                    } catch (e) {
-                        authLoading.value = false;
-                        errMsg.value = "綁定失敗，請聯繫管理員";
-                    }
-                } else {
-                    errMsg.value = "安全密碼錯誤";
-                }
-            };
+    // 尋找該人員資料
+    const userDoc = members.value.find(m => m.姓名 === loginForm.value.name);
+
+    if (!userDoc) {
+        return showAppAlert('error', '驗證失敗', '系統中找不到該人員，請確認。');
+    }
+
+    // 驗證密碼是否正確
+    if (String(userDoc.password) !== String(loginForm.value.pass)) {
+        return showAppAlert('error', '密碼錯誤', '您輸入的安全密碼不正確，請重新確認。（預設為您的身分證字號，包含大寫英文字母）');
+    }
+    
+    // 如果是停用狀態，阻斷登入
+    if (userDoc.is_suspended) {
+        return showAppAlert('error', '帳號停用', '此帳號已被管理員暫停使用，無法進行綁定與登入。');
+    }
+    
+    // 檢查是否已被其他人綁定
+    if (userDoc.uid && userDoc.uid !== googleUser.value.uid) {
+        return showAppAlert('error', '綁定失敗', '此隊員已被其他 Google 帳號綁定！若需更換綁定請聯繫管理員解除。');
+    }
+
+    // 密碼與狀態皆正確，進行綁定
+    try {
+        authLoading.value = true;
+        const userRef = doc(db, "members", userDoc.id);
+        await updateDoc(userRef, { uid: googleUser.value.uid, email: googleUser.value.email });
+        executeSystemLogin(userDoc.姓名);
+    } catch (e) {
+        authLoading.value = false;
+        showAppAlert('error', '系統錯誤', '綁定失敗，請聯繫管理員協助處理。');
+    }
+};
 
             const logout = async () => {
                 await signOut(auth);
@@ -5681,7 +5697,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
     selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,isAddMemberModalOpen, newMemberForm, openAddMemberModal, submitAddMember,
-isDeleteMemberConfirmOpen, memberToDelete, confirmDeleteMember, executeDeleteMember, toggleSuspendMember,
+isDeleteMemberConfirmOpen, memberToDelete, confirmDeleteMember, executeDeleteMember, toggleSuspendMember,showLoginPassword,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
