@@ -1591,8 +1591,8 @@
         </div>
 
         <!-- ===== 取消訂閱確認彈窗 ===== -->
-        <div class="bottom-sheet-overlay" :class="{ active: isCancelSubModalOpen }" @click="isCancelSubModalOpen = false"></div>
-        <div class="bottom-sheet" :class="{ active: isCancelSubModalOpen }">
+        <div class="bottom-sheet-overlay" :class="{ active: isCancelSubModalOpen }" @click="isCancelSubModalOpen = false" style="z-index: 110;"></div>
+        <div class="bottom-sheet" :class="{ active: isCancelSubModalOpen }" style="z-index: 111;">
             <div class="text-center py-4">
                 <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-bell-slash text-2xl text-amber-500"></i></div>
                 <h4 class="text-xl font-black text-slate-800 mb-2">確認取消訂閱？</h4>
