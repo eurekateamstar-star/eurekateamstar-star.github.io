@@ -81,20 +81,24 @@
         .bottom-sheet { max-height: 94dvh !important; display: flex; flex-direction: column; padding-left: 20px !important; padding-right: 20px !important; padding-top: 16px !important; }
         .modal-scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 150px; }
         .med-input { font-size: 16px !important; padding: 12px 16px !important; appearance: none; -webkit-appearance: none; }
-/* 專門為嵌入全螢幕 Iframe 設計的容器 */
-.iframe-wrapper {
-    flex: 1;
+/* 針對全螢幕嵌入頁面的專用容器 */
+.iframe-fixed-container {
+    position: absolute;
+    /* 頂部從安全區域開始 */
+    top: var(--safe-top); 
+    left: 0;
+    right: 0;
+    /* 底部精確扣除導覽列高度 (75px) + 安全區域 */
+    bottom: calc(75px + var(--safe-bottom)); 
     width: 100%;
-    /* 扣除上方 Header 或 Padding 後，確保不超出螢幕 */
-    height: 0; 
-    position: relative;
-    display: flex;
-    flex-direction: column;
+    overflow: hidden;
+    background: #fff;
+    z-index: 40; /* 確保在 Header 之下，但在內容之上 */
 }
 
-.iframe-wrapper iframe {
-    flex: 1;
-    width: 100%;
+.iframe-fixed-container iframe {
+    width: 1px;
+    min-width: 100%;
     height: 100%;
     border: none;
     display: block;
@@ -1339,22 +1343,23 @@
         </iframe>
     </div>
 </div>
+<!-- 常訓分頁 (絕對定位版) -->
+<div v-show="currPage === 'regular'" class="dashboard-wrapper">
+    <div class="iframe-fixed-container">
+        <iframe 
+            :src="'https://eurekateamstar-star.github.io/Regular/?user=' + userData.姓名" 
+            allow="fullscreen; geolocation; microphone; camera">
+        </iframe>
+    </div>
+</div>
 
-<!-- 考核分頁 (修正版) -->
-<div v-show="currPage === 'assessment'" 
-     class="dashboard-wrapper fade-in" 
-     style="height: 100%; display: flex; flex-direction: column; background: #f8fafc;">
-    
-    <div class="iframe-wrapper" 
-         :style="{ 
-            paddingTop: 'var(--safe-top)', 
-            paddingBottom: 'calc(75px + var(--safe-bottom))' 
-         }">
+<!-- 考核分頁 (絕對定位版) -->
+<div v-show="currPage === 'assessment'" class="dashboard-wrapper">
+    <div class="iframe-fixed-container">
         <iframe 
             :key="userData.姓名"
             :src="'https://eurekateamstar-star.github.io/ems-passport/?student=' + userData.姓名" 
-            allow="fullscreen; geolocation; microphone; camera"
-            frameborder="0">
+            allow="fullscreen; geolocation; microphone; camera">
         </iframe>
     </div>
 </div>
