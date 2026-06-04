@@ -81,26 +81,27 @@
         .bottom-sheet { max-height: 94dvh !important; display: flex; flex-direction: column; padding-left: 20px !important; padding-right: 20px !important; padding-top: 16px !important; }
         .modal-scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 150px; }
         .med-input { font-size: 16px !important; padding: 12px 16px !important; appearance: none; -webkit-appearance: none; }
-/* 針對全螢幕嵌入頁面的專用容器 */
-.iframe-fixed-container {
-    position: absolute;
-    /* 頂部從安全區域開始 */
-    top: var(--safe-top); 
-    left: 0;
-    right: 0;
-    /* 底部精確扣除導覽列高度 (75px) + 安全區域 */
-    bottom: calc(75px + var(--safe-bottom)); 
+/* 強制佔滿螢幕，僅留出底部 75px 導航欄 */
+.iframe-fullscreen-fix {
+    position: fixed;
+    top: 0;
+    left: 50%; /* 配合 max-width 450px 置中 */
+    transform: translateX(-50%);
     width: 100%;
+    max-width: 450px; /* 務必與您的 #app 寬度一致 */
+    /* 核心計算：總高度 - 導航欄 - 安全區域 */
+    height: calc(100dvh - 75px - var(--safe-bottom)); 
+    background: white;
+    z-index: 49; /* 低於底部導航欄(50)，高於其他內容 */
     overflow: hidden;
-    background: #fff;
-    z-index: 40; /* 確保在 Header 之下，但在內容之上 */
+    -webkit-overflow-scrolling: touch;
 }
 
-.iframe-fixed-container iframe {
-    width: 1px;
-    min-width: 100%;
+.iframe-fullscreen-fix iframe {
+    width: 100%;
     height: 100%;
     border: none;
+    /* 修正 iOS 切割感 */
     display: block;
 }
         .admin-panel-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
@@ -1327,41 +1328,20 @@
             </div>
         </div>
 <!-- 常訓分頁 (修正版) -->
-<div v-show="currPage === 'regular'" 
-     class="dashboard-wrapper fade-in" 
-     style="height: 100%; display: flex; flex-direction: column; background: #f8fafc;">
-    
-    <div class="iframe-wrapper" 
-         :style="{ 
-            paddingTop: 'var(--safe-top)', 
-            paddingBottom: 'calc(75px + var(--safe-bottom))' 
-         }">
-        <iframe 
-            :src="'https://eurekateamstar-star.github.io/Regular/?user=' + userData.姓名" 
-            allow="fullscreen; geolocation; microphone; camera"
-            frameborder="0">
-        </iframe>
-    </div>
-</div>
-<!-- 常訓分頁 (絕對定位版) -->
-<div v-show="currPage === 'regular'" class="dashboard-wrapper">
-    <div class="iframe-fixed-container">
-        <iframe 
-            :src="'https://eurekateamstar-star.github.io/Regular/?user=' + userData.姓名" 
-            allow="fullscreen; geolocation; microphone; camera">
-        </iframe>
-    </div>
+<div v-show="currPage === 'regular'" class="iframe-fullscreen-fix">
+    <iframe 
+        :src="'https://eurekateamstar-star.github.io/Regular/?user=' + userData.姓名" 
+        allow="fullscreen; geolocation; microphone; camera; display-capture">
+    </iframe>
 </div>
 
-<!-- 考核分頁 (絕對定位版) -->
-<div v-show="currPage === 'assessment'" class="dashboard-wrapper">
-    <div class="iframe-fixed-container">
-        <iframe 
-            :key="userData.姓名"
-            :src="'https://eurekateamstar-star.github.io/ems-passport/?student=' + userData.姓名" 
-            allow="fullscreen; geolocation; microphone; camera">
-        </iframe>
-    </div>
+<!-- 考核分頁 (修正版) -->
+<div v-show="currPage === 'assessment'" class="iframe-fullscreen-fix">
+    <iframe 
+        :key="userData.姓名"
+        :src="'https://eurekateamstar-star.github.io/ems-passport/?student=' + userData.姓名" 
+        allow="fullscreen; geolocation; microphone; camera; display-capture">
+    </iframe>
 </div>
 
         <!-- 👇 找尋這行程式碼，並將上面的區塊貼在它上面 👇 -->
