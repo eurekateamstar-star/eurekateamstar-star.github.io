@@ -272,7 +272,7 @@
                 <div class="horizontal-scroll px-6 mb-2">
                     <!-- 第一張：年度累計協勤 -->
                     <div class="bank-card bg-card-blue">
-                        <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div><div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-num tracking-tighter">{{ cleanValue(dynamicMemberHours[userData.姓名]?.total || 0) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div></div>
+                        <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div><div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-num tracking-tighter">{{ cleanValue(dynamicMemberHours[userData?.姓名]?.total || 0) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div></div>
                         <div class="grid grid-cols-3 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-[15px] font-num">{{ personalYearlyStats.dispatchCount }} <span class="text-[9px] font-normal">次</span></p></div><div class="border-r border-white/10 text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-[15px] font-num">{{ personalYearlyStats.rescueCount }} <span class="text-[9px] font-normal">人</span></p></div><div class="text-left pl-3"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">服務年資</p><p class="text-[14px] font-bold whitespace-nowrap">{{ calculateSeniority(userData['join_date']) }}</p></div></div>
                     </div>
 
@@ -3056,63 +3056,7 @@ const isForcedLogout = ref(false);
 
 
 
-// ===== 衛福部 EMT 受訓紀錄查詢邏輯 (含首頁連動) =====
-            const isEmtRecordModalOpen = ref(false);
-            const isLoadingMohw = ref(false);
-            const mohwRecordData = ref(null);
 
-            // 1. 監聽登入者名稱，一旦登入就自動去抓取衛福部資料 (背景自動同步)
-            watch(loginUserName, (newName) => {
-                if (newName) {
-                    const docRef = doc(db, "mohw_records", newName);
-                    onSnapshot(docRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            let data = docSnap.data();
-                            if (data.training_data && Array.isArray(data.training_data)) {
-                                data.training_data = data.training_data.map((item, index) => ({
-                                    ...item,
-                                    isExpanded: index === 0 // 預設展開第一筆
-                                }));
-                            }
-                            mohwRecordData.value = data;
-                        } else {
-                            mohwRecordData.value = null;
-                        }
-                    });
-                }
-            });
-
-            // 2. 動態計算首頁卡片的到期日 (優先抓衛福部資料，沒有才用手動輸入的)
-            const displayEmtExpiry = computed(() => {
-                // 如果有抓到衛福部資料，且有「證書有效期間」
-                if (mohwRecordData.value && mohwRecordData.value.basic_info && mohwRecordData.value.basic_info['證書有效期間']) {
-                    const dateStr = mohwRecordData.value.basic_info['證書有效期間'];
-                    // 字串長這樣："115年08月18日 至 118年08月18日"，我們用 "至" 切開拿後面那段
-                    const parts = dateStr.split('至');
-                    if (parts.length > 1) {
-                        const endDateStr = parts[1].trim(); 
-                        // 用正則表達式把 年、月、日 抓出來
-                        const match = endDateStr.match(/(\d+)年(\d+)月(\d+)日/);
-                        if (match) {
-                            const y = parseInt(match[1]) + 1911; // 民國轉西元
-                            const m = match[2].padStart(2, '0');
-                            const d = match[3].padStart(2, '0');
-                            return `${y}/${m}/${d}`; // 組合成 2029/08/18 格式
-                        }
-                    }
-                }
-                // 如果爬蟲還沒抓到資料，先退回使用系統內手動設定的日期
-                return userData.value['emt_expiry'] ? userData.value['emt_expiry'].replace(/-/g, '/') : '無';
-            });
-
-            // 3. 點擊卡片開啟彈窗
-            const openEmtRecordModal = () => {
-                isEmtRecordModalOpen.value = true;
-                if (!mohwRecordData.value) {
-                    isLoadingMohw.value = true;
-                    setTimeout(() => { isLoadingMohw.value = false; }, 800); // 防呆轉圈圈
-                }
-            };
 
 // ===== 最新消息狀態 (支援多筆與數字提示) =====
             const isNewsModalOpen = ref(false);
@@ -3848,7 +3792,63 @@ const executeDeleteMember = async () => {
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
-            
+            // ===== 衛福部 EMT 受訓紀錄查詢邏輯 (含首頁連動) =====
+const isEmtRecordModalOpen = ref(false);
+const isLoadingMohw = ref(false);
+const mohwRecordData = ref(null);
+
+// 1. 監聽登入者名稱，一旦登入就自動去抓取衛福部資料 (背景自動同步)
+watch(loginUserName, (newName) => {
+    if (newName) {
+        const docRef = doc(db, "mohw_records", newName);
+        onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                let data = docSnap.data();
+                if (data.training_data && Array.isArray(data.training_data)) {
+                    data.training_data = data.training_data.map((item, index) => ({
+                        ...item,
+                        isExpanded: index === 0 // 預設展開第一筆
+                    }));
+                }
+                mohwRecordData.value = data;
+            } else {
+                mohwRecordData.value = null;
+            }
+        });
+    }
+});
+
+// 2. 動態計算首頁卡片的到期日 (優先抓衛福部資料，沒有才用手動輸入的)
+const displayEmtExpiry = computed(() => {
+    // 如果有抓到衛福部資料，且有「證書有效期間」
+    if (mohwRecordData.value && mohwRecordData.value.basic_info && mohwRecordData.value.basic_info['證書有效期間']) {
+        const dateStr = mohwRecordData.value.basic_info['證書有效期間'];
+        // 字串長這樣："115年08月18日 至 118年08月18日"，我們用 "至" 切開拿後面那段
+        const parts = dateStr.split('至');
+        if (parts.length > 1) {
+            const endDateStr = parts[1].trim(); 
+            // 用正則表達式把 年、月、日 抓出來
+            const match = endDateStr.match(/(\d+)年(\d+)月(\d+)日/);
+            if (match) {
+                const y = parseInt(match[1]) + 1911; // 民國轉西元
+                const m = match[2].padStart(2, '0');
+                const d = match[3].padStart(2, '0');
+                return `${y}/${m}/${d}`; // 組合成 2029/08/18 格式
+            }
+        }
+    }
+    // 如果爬蟲還沒抓到資料，先退回使用系統內手動設定的日期
+    return userData.value['emt_expiry'] ? userData.value['emt_expiry'].replace(/-/g, '/') : '無';
+});
+
+// 3. 點擊卡片開啟彈窗
+const openEmtRecordModal = () => {
+    isEmtRecordModalOpen.value = true;
+    if (!mohwRecordData.value) {
+        isLoadingMohw.value = true;
+        setTimeout(() => { isLoadingMohw.value = false; }, 800); // 防呆轉圈圈
+    }
+};
             const scheduleTabs = [
                 { id:'register',  name:'登記排班', icon:'fa-solid fa-calendar-plus',      activeClass:'bg-blue-600 text-white shadow-md',   textColor:'text-blue-600' },
                 { id:'overview',  name:'排班總覽', icon:'fa-solid fa-calendar-day',       activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' },
@@ -4739,7 +4739,7 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
          const hasAutoShownNews = ref(false); // 紀錄這次登入是否已經彈出過了
 
             // 🌟 自動監聽：解決載入時間差導致沒跳出視窗的問題
-            const { watch } = Vue; // 確保有引入 watch
+            
             watch([currPage, unreadCount], ([newPage, newUnread]) => {
                 if (newPage !== 'login' && newUnread > 0 && !hasAutoShownNews.value) {
                     hasAutoShownNews.value = true;
