@@ -278,7 +278,35 @@
                         <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div><div class="mb-6 mt-2"><h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 <span class="font-num">{{ calculateDays(userData['honor_expiry']) }}</span> 天</p></div></div>
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p><p class="text-[15px] font-num">{{ userData['honor_expiry'] || '無' }}</p></div><div class="text-left pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">累計總時數</p><p class="text-[15px] font-num">{{ totalYearlyHours }}</p></div></div>
                     </div>
-                    <div class="bank-card" style="background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%) !important;">
+                    <!-- 加入 @click 事件、cursor-pointer 與點擊縮放動畫 -->
+<div @click="openEmtRecordModal" class="bank-card cursor-pointer active:scale-[0.98] transition-transform" style="background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%) !important;">
+    <!-- 右上角加入點擊提示 -->
+    <div class="absolute top-4 right-4 bg-white/20 px-2.5 py-1 rounded-lg text-[10px] font-black backdrop-blur-sm flex items-center gap-1 shadow-sm">
+        <i class="fa-solid fa-hand-pointer"></i> 訓練明細
+    </div>
+    
+    <div class="top">
+        <div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">
+            EMT 救護證照 <i class="fa-solid fa-id-card text-lg"></i>
+        </div>
+        <div class="mb-4 mt-2">
+            <h3 class="text-2xl font-black">{{ userData['emt_level'] || 'EMT-1' }}</h3>
+            <p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
+                剩餘 <span class="font-num">{{ calculateDays(userData['emt_expiry']) }}</span> 天
+            </p>
+        </div>
+    </div>
+    <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1">
+        <div class="border-r border-white/10 text-left pl-1">
+            <p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p>
+            <p class="text-[15px] font-num">{{ userData['emt_expiry'] || '無' }}</p>
+        </div>
+        <div class="text-left pl-6">
+            <p class="text-[9px] opacity-60 font-bold mb-1 uppercase">核發單位</p>
+            <p class="text-[13px] font-bold whitespace-nowrap">新北市消防局</p>
+        </div>
+    </div>
+</div>
                         <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">EMT 救護證照 <i class="fa-solid fa-id-card text-lg"></i></div><div class="mb-4 mt-2"><h3 class="text-2xl font-black">{{ userData['emt_level'] || 'EMT-1' }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 <span class="font-num">{{ calculateDays(userData['emt_expiry']) }}</span> 天</p></div></div>
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p><p class="text-[15px] font-num">{{ userData['emt_expiry'] || '無' }}</p></div><div class="text-left pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">核發單位</p><p class="text-[13px] font-bold whitespace-nowrap">新北市消防局</p></div></div>
                     </div>
@@ -1343,6 +1371,118 @@
         allow="fullscreen; geolocation; microphone; camera; display-capture">
     </iframe>
 </div>
+
+<!-- ===== 衛福部 EMT 受訓紀錄查詢 Modal ===== -->
+<div class="bottom-sheet-overlay" :class="{ active: isEmtRecordModalOpen }" @click="isEmtRecordModalOpen = false"></div>
+<div class="bottom-sheet" :class="{ active: isEmtRecordModalOpen }" style="padding-top: 20px;">
+    <div class="flex justify-between items-center mb-4 shrink-0 px-1">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl shadow-sm border border-rose-100">
+                <i class="fa-solid fa-laptop-medical"></i>
+            </div>
+            <div>
+                <h4 class="text-xl font-black text-slate-800">受訓紀錄及效期</h4>
+                <p class="text-[10px] font-black text-slate-400 mt-1 uppercase tracking-widest">衛福部緊急醫療管理系統</p>
+            </div>
+        </div>
+        <button @click="isEmtRecordModalOpen = false" class="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 active:scale-95 transition-transform"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div class="modal-scroll-area space-y-4 pr-1">
+        <!-- 載入中 -->
+        <div v-if="isLoadingMohw" class="py-16 text-center text-slate-400">
+            <i class="fa-solid fa-spinner fa-spin text-4xl mb-4 text-rose-400"></i>
+            <p class="text-sm font-black">正與衛福部系統連線同步中...</p>
+        </div>
+        
+        <!-- 找不到資料 -->
+        <div v-else-if="!mohwRecordData" class="py-16 text-center text-slate-400">
+            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-file-circle-xmark text-2xl text-slate-300"></i>
+            </div>
+            <h3 class="text-[15px] font-black text-slate-700 mb-1">查無受訓資料</h3>
+            <p class="text-xs font-bold text-slate-400">目前資料庫無您的同步紀錄，<br>請確認系統爬蟲是否已更新。</p>
+        </div>
+
+        <!-- 成功載入資料 -->
+        <template v-else>
+            <!-- 狀態大卡片 -->
+            <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 relative overflow-hidden shadow-sm">
+                <!-- 裝飾背景圖示 -->
+                <i class="fa-solid fa-certificate absolute -right-4 -bottom-4 text-[80px] text-rose-600 opacity-5 rotate-12"></i>
+                
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[11px] font-black text-rose-600 uppercase tracking-widest"><i class="fa-solid fa-circle-info mr-1"></i>系統判定狀態</span>
+                    <span class="text-[10px] font-black px-2 py-1 rounded-lg" 
+                          :class="mohwRecordData.basic_info?.['說明']?.includes('已達') ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+                        {{ mohwRecordData.basic_info?.['說明'] || '狀態未明' }}
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 border-t border-rose-200/60 pt-3">
+                    <div>
+                        <p class="text-[10px] font-bold text-rose-400 uppercase mb-1">累計時數</p>
+                        <p class="text-2xl font-num font-black text-rose-700">{{ mohwRecordData.basic_info?.['累計時數'] || 0 }} <span class="text-xs text-rose-500 font-bold">hr</span></p>
+                    </div>
+                    <div class="border-l border-rose-200/60 pl-4">
+                        <p class="text-[10px] font-bold text-rose-400 uppercase mb-1">必修時數</p>
+                        <p class="text-2xl font-num font-black text-rose-700">{{ mohwRecordData.basic_info?.['必修時數'] || 0 }} <span class="text-xs text-rose-500 font-bold">hr</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 其他基本資料 -->
+            <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+                <div class="text-slate-500 font-bold text-xs">證書有效期間</div>
+                <div class="text-right font-num font-black text-slate-800 text-[13px]">{{ mohwRecordData.basic_info?.['證書有效期間'] || '--' }}</div>
+                
+                <div class="text-slate-500 font-bold text-xs">系統有效期間</div>
+                <div class="text-right font-num font-black text-slate-800 text-[13px]">{{ mohwRecordData.basic_info?.['系統有效期間'] || '--' }}</div>
+                
+                <div class="text-slate-500 font-bold text-xs">服務單位</div>
+                <div class="text-right font-black text-slate-800 text-xs truncate">{{ mohwRecordData.basic_info?.['服務單位'] || '--' }}</div>
+            </div>
+
+            <!-- 上課紀錄明細 -->
+            <div class="mt-4">
+                <h5 class="text-[11px] font-black text-slate-400 uppercase mb-3 px-1 flex items-center justify-between">
+                    <span><i class="fa-solid fa-list-check mr-1"></i>上課紀錄明細</span>
+                    <span>共 {{ mohwRecordData.records?.length || 0 }} 筆</span>
+                </h5>
+                
+                <div v-if="mohwRecordData.records && mohwRecordData.records.length > 0" class="space-y-3">
+                    <div v-for="(rec, idx) in mohwRecordData.records" :key="idx" class="bg-white border border-slate-100 shadow-sm rounded-2xl p-3 flex gap-3 items-center hover:border-blue-200 transition-colors">
+                        
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shrink-0 border border-blue-100">
+                            <span class="text-[16px] font-black font-num leading-none">{{ rec['上課時數'] || 0 }}</span>
+                            <span class="text-[9px] font-bold mt-1 uppercase">hrs</span>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0 py-1">
+                            <p class="text-[13px] font-black text-slate-800 truncate mb-1">
+                                {{ rec['資格/課程'] || '一般課程' }}
+                            </p>
+                            <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-400">
+                                <span><i class="fa-solid fa-building text-slate-300 mr-1"></i>{{ rec['訓練機構'] || '未知機構' }}</span>
+                                <span class="font-num"><i class="fa-solid fa-calendar-day text-slate-300 mr-1"></i>{{ rec['上課期間'] || '--' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="shrink-0 text-[10px] font-black px-2 py-1 rounded-lg border" 
+                             :class="rec['狀態'] === '通過' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'">
+                            {{ rec['狀態'] || '未知' }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-else class="text-center text-xs font-bold text-slate-400 py-6 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                    目前尚無上課紀錄明細
+                </div>
+            </div>
+        </template>
+    </div>
+</div>
+
 
         <!-- 👇 找尋這行程式碼，並將上面的區塊貼在它上面 👇 -->
         <div class="bottom-sheet-overlay" :class="{ active: isMemberHistoryModalOpen }" @click="isMemberHistoryModalOpen = false"></div>
@@ -2737,7 +2877,7 @@
 </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-   import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, updateDoc, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+   import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, getDoc, updateDoc, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getMessaging, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
@@ -2878,6 +3018,39 @@ const isForcedLogout = ref(false);
                     }
                 };
             };
+
+
+
+// ===== 衛福部 EMT 受訓紀錄查詢邏輯 =====
+const isEmtRecordModalOpen = ref(false);
+const isLoadingMohw = ref(false);
+const mohwRecordData = ref(null);
+
+const openEmtRecordModal = async () => {
+    isEmtRecordModalOpen.value = true;
+    isLoadingMohw.value = true;
+    
+    try {
+        // 從 mohw_records 集合中，尋找以 "姓名" 為文件 ID 的資料
+        const docRef = doc(db, "mohw_records", userData.value.姓名);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+            mohwRecordData.value = docSnap.data();
+            
+            // 由於截圖中只有看到 basic_info，如果您的爬蟲將表格清單存成了 records 陣列，上面 HTML 才能正常讀取。
+            // 若您的陣列欄位名稱不是 'records'，請在 HTML 中把 .records 換成您的欄位名稱。
+        } else {
+            mohwRecordData.value = null;
+        }
+    } catch (error) {
+        console.error("獲取衛福部資料失敗:", error);
+        showAppAlert('error', '查詢失敗', '無法取得衛福部系統資料，請稍後再試。');
+    } finally {
+        isLoadingMohw.value = false;
+    }
+};
+
 // ===== 最新消息狀態 (支援多筆與數字提示) =====
             const isNewsModalOpen = ref(false);
             const unreadCount = ref(0);
@@ -5723,7 +5896,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
     selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,isAddMemberModalOpen, newMemberForm, openAddMemberModal, submitAddMember,
-isDeleteMemberConfirmOpen, memberToDelete, confirmDeleteMember, executeDeleteMember, toggleSuspendMember,showLoginPassword,
+isDeleteMemberConfirmOpen, memberToDelete, confirmDeleteMember, executeDeleteMember, toggleSuspendMember,showLoginPassword,isEmtRecordModalOpen, isLoadingMohw, mohwRecordData, openEmtRecordModal,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
         }
