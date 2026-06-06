@@ -282,7 +282,7 @@
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p><p class="text-[15px] font-num">{{ userData['honor_expiry'] || '無' }}</p></div><div class="text-left pl-6"><p class="text-[9px] opacity-60 font-bold mb-1 uppercase">累計總時數</p><p class="text-[15px] font-num">{{ totalYearlyHours }}</p></div></div>
                     </div>
                     
-                    <!-- 第三張：EMT 救護證照 (已修復並加上點擊事件) -->
+                    <!-- 第三張：EMT 救護證照 -->
                     <div @click="openEmtRecordModal" class="bank-card cursor-pointer active:scale-[0.98] transition-transform" style="background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%) !important;">
                         <!-- 右上角加入點擊提示 -->
                         <div class="absolute top-4 right-4 bg-white/20 px-2.5 py-1 rounded-lg text-[10px] font-black backdrop-blur-sm flex items-center gap-1 shadow-sm">
@@ -296,14 +296,15 @@
                             <div class="mb-4 mt-2">
                                 <h3 class="text-2xl font-black">{{ userData['emt_level'] || 'EMT-1' }}</h3>
                                 <p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">
-                                    剩餘 <span class="font-num">{{ calculateDays(userData['emt_expiry']) }}</span> 天
+                                    剩餘 <span class="font-num">{{ calculateDays(displayEmtExpiry.replace(/\//g, '-')) }}</span> 天
                                 </p>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1">
                             <div class="border-r border-white/10 text-left pl-1">
                                 <p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p>
-                                <p class="text-[15px] font-num">{{ userData['emt_expiry'] || '無' }}</p>
+                                <!-- 這裡改成自動同步的日期 -->
+                                <p class="text-[15px] font-num">{{ displayEmtExpiry }}</p>
                             </div>
                             <div class="text-left pl-6">
                                 <p class="text-[9px] opacity-60 font-bold mb-1 uppercase">核發單位</p>
@@ -3056,43 +3057,63 @@ const isForcedLogout = ref(false);
 
 
 
-// ===== 衛福部 EMT 受訓紀錄查詢邏輯 =====
-const isEmtRecordModalOpen = ref(false);
-const isLoadingMohw = ref(false);
-const mohwRecordData = ref(null);
+// ===== 衛福部 EMT 受訓紀錄查詢邏輯 (含首頁連動) =====
+            const isEmtRecordModalOpen = ref(false);
+            const isLoadingMohw = ref(false);
+            const mohwRecordData = ref(null);
 
-const openEmtRecordModal = async () => {
-    isEmtRecordModalOpen.value = true;
-    isLoadingMohw.value = true;
-    
-    try {
-        // 從 mohw_records 集合中，尋找以 "姓名" 為文件 ID 的資料
-        const docRef = doc(db, "mohw_records", userData.value.姓名);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-            let data = docSnap.data();
-            
-            // 🌟 針對 training_data 陣列處理，為每筆資料加入 isExpanded 屬性
-            if (data.training_data && Array.isArray(data.training_data)) {
-                data.training_data = data.training_data.map((item, index) => ({
-                    ...item,
-                    // 預設將最新的一筆（第0筆）打開，其他的收合
-                    isExpanded: index === 0 
-                }));
-            }
-            
-            mohwRecordData.value = data;
-        } else {
-            mohwRecordData.value = null;
-        }
-    } catch (error) {
-        console.error("獲取衛福部資料失敗:", error);
-        showAppAlert('error', '查詢失敗', '無法取得衛福部系統資料，請稍後再試。');
-    } finally {
-        isLoadingMohw.value = false;
-    }
-};
+            // 1. 監聽登入者名稱，一旦登入就自動去抓取衛福部資料 (背景自動同步)
+            watch(loginUserName, (newName) => {
+                if (newName) {
+                    const docRef = doc(db, "mohw_records", newName);
+                    onSnapshot(docRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            let data = docSnap.data();
+                            if (data.training_data && Array.isArray(data.training_data)) {
+                                data.training_data = data.training_data.map((item, index) => ({
+                                    ...item,
+                                    isExpanded: index === 0 // 預設展開第一筆
+                                }));
+                            }
+                            mohwRecordData.value = data;
+                        } else {
+                            mohwRecordData.value = null;
+                        }
+                    });
+                }
+            });
+
+            // 2. 動態計算首頁卡片的到期日 (優先抓衛福部資料，沒有才用手動輸入的)
+            const displayEmtExpiry = computed(() => {
+                // 如果有抓到衛福部資料，且有「證書有效期間」
+                if (mohwRecordData.value && mohwRecordData.value.basic_info && mohwRecordData.value.basic_info['證書有效期間']) {
+                    const dateStr = mohwRecordData.value.basic_info['證書有效期間'];
+                    // 字串長這樣："115年08月18日 至 118年08月18日"，我們用 "至" 切開拿後面那段
+                    const parts = dateStr.split('至');
+                    if (parts.length > 1) {
+                        const endDateStr = parts[1].trim(); 
+                        // 用正則表達式把 年、月、日 抓出來
+                        const match = endDateStr.match(/(\d+)年(\d+)月(\d+)日/);
+                        if (match) {
+                            const y = parseInt(match[1]) + 1911; // 民國轉西元
+                            const m = match[2].padStart(2, '0');
+                            const d = match[3].padStart(2, '0');
+                            return `${y}/${m}/${d}`; // 組合成 2029/08/18 格式
+                        }
+                    }
+                }
+                // 如果爬蟲還沒抓到資料，先退回使用系統內手動設定的日期
+                return userData.value['emt_expiry'] ? userData.value['emt_expiry'].replace(/-/g, '/') : '無';
+            });
+
+            // 3. 點擊卡片開啟彈窗
+            const openEmtRecordModal = () => {
+                isEmtRecordModalOpen.value = true;
+                if (!mohwRecordData.value) {
+                    isLoadingMohw.value = true;
+                    setTimeout(() => { isLoadingMohw.value = false; }, 800); // 防呆轉圈圈
+                }
+            };
 
 // ===== 最新消息狀態 (支援多筆與數字提示) =====
             const isNewsModalOpen = ref(false);
@@ -5933,7 +5954,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 // 協勤專屬
                 assistanceStep, assistanceForm, goToAddCase, addCase, removeCase, goToConfirmStep, submitAssistanceToFirebase, myAssistSearchQuery, myAssistFilterYear, myAssistFilterMonth, filteredMyAssistanceRecords,
                 isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
-                activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll, dynamicMemberHours,
+                activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll, dynamicMemberHours,displayEmtExpiry,
                 myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
                  authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,adminEditSections,isAdminMemberMenuOpen, adminSelectedMember, openAdminMemberMenu,
                 // 全域 UI 工具與搜尋
