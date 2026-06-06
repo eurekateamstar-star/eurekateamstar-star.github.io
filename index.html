@@ -1434,7 +1434,7 @@
             </div>
 
             <!-- 其他基本資料 -->
-            <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm grid grid-cols-2 gap-y-3 gap-x-4 text-sm">
+            <div class="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm grid grid-cols-2 gap-y-3 gap-x-4 text-sm mt-3">
                 <div class="text-slate-500 font-bold text-xs">證書有效期間</div>
                 <div class="text-right font-num font-black text-slate-800 text-[13px]">{{ mohwRecordData.basic_info?.['證書有效期間'] || '--' }}</div>
                 
@@ -1449,35 +1449,59 @@
             <div class="mt-4">
                 <h5 class="text-[11px] font-black text-slate-400 uppercase mb-3 px-1 flex items-center justify-between">
                     <span><i class="fa-solid fa-list-check mr-1"></i>上課紀錄明細</span>
-                    <span>共 {{ mohwRecordData.records?.length || 0 }} 筆</span>
+                    <span>共 {{ mohwRecordData.training_data?.length || 0 }} 筆</span>
                 </h5>
                 
-                <div v-if="mohwRecordData.records && mohwRecordData.records.length > 0" class="space-y-3">
-                    <div v-for="(rec, idx) in mohwRecordData.records" :key="idx" class="bg-white border border-slate-100 shadow-sm rounded-2xl p-3 flex gap-3 items-center hover:border-blue-200 transition-colors">
+                <!-- 針對 training_data 陣列進行迴圈 -->
+                <div v-if="mohwRecordData.training_data && mohwRecordData.training_data.length > 0" class="space-y-3">
+                    <div v-for="(rec, idx) in mohwRecordData.training_data" :key="idx" class="bg-white border border-slate-100 shadow-sm rounded-2xl p-3 transition-colors">
                         
-                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shrink-0 border border-blue-100">
-                            <span class="text-[16px] font-black font-num leading-none">{{ rec['上課時數'] || 0 }}</span>
-                            <span class="text-[9px] font-bold mt-1 uppercase">hrs</span>
-                        </div>
-                        
-                        <div class="flex-1 min-w-0 py-1">
-                            <p class="text-[13px] font-black text-slate-800 truncate mb-1">
-                                {{ rec['資格/課程'] || '一般課程' }}
-                            </p>
-                            <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-400">
-                                <span><i class="fa-solid fa-building text-slate-300 mr-1"></i>{{ rec['訓練機構'] || '未知機構' }}</span>
-                                <span class="font-num"><i class="fa-solid fa-calendar-day text-slate-300 mr-1"></i>{{ rec['上課期間'] || '--' }}</span>
+                        <!-- 上半部：主資訊列 (點擊展開/收合) -->
+                        <div @click="rec.isExpanded = !rec.isExpanded" class="flex gap-3 items-center cursor-pointer active:scale-[0.98] transition-transform">
+                            <!-- 總時數 -->
+                            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex flex-col items-center justify-center shrink-0 border border-blue-100">
+                                <span class="text-[16px] font-black font-num leading-none">{{ rec.R_CB_SUM || 0 }}</span>
+                                <span class="text-[9px] font-bold mt-1 uppercase">hrs</span>
+                            </div>
+                            
+                            <!-- 課程標題與機構 -->
+                            <div class="flex-1 min-w-0 py-1">
+                                <!-- v-html 用來解析你資料中的 <br /> 標籤 -->
+                                <p class="text-[13px] font-black text-slate-800 truncate mb-1" v-html="rec.R_CH_CLSLEVEL || '一般課程'"></p>
+                                <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold text-slate-400">
+                                    <span><i class="fa-solid fa-building text-slate-300 mr-1"></i>{{ rec.R_NCH_DEPTNAME || '未知機構' }}</span>
+                                    <span class="font-num"><i class="fa-solid fa-calendar-day text-slate-300 mr-1"></i>{{ rec.R_CH_DATE || '--' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- 狀態與展開箭頭 -->
+                            <div class="shrink-0 flex flex-col items-end gap-1.5">
+                                <div class="text-[10px] font-black px-2 py-1 rounded-lg border" 
+                                     :class="rec.R_NCP_STSEXTIME === '通過' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'">
+                                    {{ rec.R_NCP_STSEXTIME || '未知' }}
+                                </div>
+                                <i class="fa-solid text-slate-300 text-[10px] transition-transform duration-300" :class="rec.isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
                             </div>
                         </div>
 
-                        <div class="shrink-0 text-[10px] font-black px-2 py-1 rounded-lg border" 
-                             :class="rec['狀態'] === '通過' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200'">
-                            {{ rec['狀態'] || '未知' }}
+                        <!-- 下半部：展開的 Details 細項 -->
+                        <div v-show="rec.isExpanded && rec.Details && rec.Details.length > 0" class="mt-3 pt-3 border-t border-dashed border-slate-200 space-y-2">
+                            <div v-for="(detail, dIdx) in rec.Details" :key="dIdx" class="bg-slate-50 rounded-xl p-2.5 flex items-start gap-2.5 border border-slate-100/50">
+                                <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex flex-col items-center justify-center font-num font-black text-blue-500 shrink-0 border border-slate-100">
+                                    <span class="text-xs leading-none">{{ detail['上課時數'] }}</span>
+                                    <span class="text-[7px] opacity-50">hr</span>
+                                </div>
+                                <div class="flex-1 min-w-0 pt-0.5">
+                                    <p class="text-[10px] font-black text-blue-600 mb-0.5 truncate">{{ detail['模組'] }}</p>
+                                    <p class="text-[11px] font-bold text-slate-600 leading-snug">{{ detail['科目內容'] }}</p>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
                 
-                <div v-else class="text-center text-xs font-bold text-slate-400 py-6 bg-slate-50 rounded-2xl border border-slate-100 border-dashed">
+                <div v-else class="text-center text-xs font-bold text-slate-400 py-6 bg-slate-50 rounded-2xl border border-slate-100 border-dashed mt-2">
                     目前尚無上課紀錄明細
                 </div>
             </div>
@@ -3038,10 +3062,18 @@ const openEmtRecordModal = async () => {
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-            mohwRecordData.value = docSnap.data();
+            let data = docSnap.data();
             
-            // 由於截圖中只有看到 basic_info，如果您的爬蟲將表格清單存成了 records 陣列，上面 HTML 才能正常讀取。
-            // 若您的陣列欄位名稱不是 'records'，請在 HTML 中把 .records 換成您的欄位名稱。
+            // 🌟 針對 training_data 陣列處理，為每筆資料加入 isExpanded 屬性
+            if (data.training_data && Array.isArray(data.training_data)) {
+                data.training_data = data.training_data.map((item, index) => ({
+                    ...item,
+                    // 預設將最新的一筆（第0筆）打開，其他的收合
+                    isExpanded: index === 0 
+                }));
+            }
+            
+            mohwRecordData.value = data;
         } else {
             mohwRecordData.value = null;
         }
