@@ -5022,7 +5022,7 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 if (typeof leaveData === 'string') return leaveData.includes(monthStr);
                 return false;
             };
-const openAdminEditMember = (m) => {
+const openAdminEditMember = async (m) => { // 🌟 加上 async
                 adminEditTarget.value = m;
                 const toInputDate = (dStr) => {
                     if (!dStr || dStr === '無' || dStr.includes('-/-')) return '';
@@ -5035,7 +5035,7 @@ const openAdminEditMember = (m) => {
                 if (Array.isArray(m.leave_month)) { currentLeaves = [...m.leave_month]; } 
                 else if (typeof m.leave_month === 'string' && m.leave_month.trim() !== '') { currentLeaves = m.leave_month.split(',').map(s => s.trim()); }
 
-                // 🌟 1. 讀取並配對既有的榮譽獎章資料
+                // 1. 讀取並配對既有的榮譽獎章資料
                 const getMedalVal = (mId) => {
                     const keys = Object.keys(m);
                     const foundKey = keys.find(k => k.startsWith('medal_') && mId.split(/[- \n]+/).every(p => k.includes(p)));
@@ -5046,13 +5046,14 @@ const openAdminEditMember = (m) => {
                     medalsObj[medal.id] = getMedalVal(medal.id);
                 });
 
-                // 🌟 2. 讀取歷年時數資料 (只讀去年度以前)
+                // 2. 讀取歷年時數資料 (只讀去年度以前)
                 const historyObj = {};
                 const currentY = new Date().getFullYear() - 1911;
                 for (let y = 93; y < currentY; y++) {
                     historyObj['hist_' + y] = m['hist_' + y] || '';
                 }
 
+                // 先載入系統內原有的資料
                 adminEditForm.value = {
                     duty_group:   m.duty_group   || '幹部',
                     duty_title:   m.duty_title   || '隊員',
@@ -5068,10 +5069,46 @@ const openAdminEditMember = (m) => {
                     medals:       medalsObj,
                     history:      historyObj
                 };
-     adminEditSections.value = { duty: false, stats: false, cert: false, medal: false, history: false, security: false, google: false };
+                adminEditSections.value = { duty: false, stats: false, cert: false, medal: false, history: false, security: false, google: false };
 
                 showEditPassword.value = false;
                 isAdminEditMemberOpen.value = true;
+
+                // 🌟 3. 核心新增：背景自動抓取該隊員的衛福部資料並覆寫表單
+                try {
+                    const docRef = doc(db, "mohw_records", m.姓名);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const mohwData = docSnap.data();
+                        if (mohwData.basic_info) {
+                            // 自動同步 EMT 等級
+                            if (mohwData.basic_info['資格']) {
+                                const levelStr = mohwData.basic_info['資格'];
+                                if (levelStr.includes('初級')) adminEditForm.value.emt_level = '初級技術員';
+                                else if (levelStr.includes('中級')) adminEditForm.value.emt_level = '中級技術員';
+                                else if (levelStr.includes('高級')) adminEditForm.value.emt_level = '高級技術員';
+                            }
+                            // 自動同步 EMT 到期日
+                            if (mohwData.basic_info['證書有效期間']) {
+                                const dateStr = mohwData.basic_info['證書有效期間'];
+                                const parts = dateStr.split('至');
+                                if (parts.length > 1) {
+                                    const endDateStr = parts[1].trim();
+                                    const match = endDateStr.match(/(\d+)年(\d+)月(\d+)日/);
+                                    if (match) {
+                                        const y = parseInt(match[1]) + 1911; // 民國轉西元
+                                        const mo = match[2].padStart(2, '0');
+                                        const d = match[3].padStart(2, '0');
+                                        // 直接改變表單內 input=date 的值 (格式為 YYYY-MM-DD)
+                                        adminEditForm.value.emt_expiry = `${y}-${mo}-${d}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.warn("無法取得該員衛福部資料", e);
+                }
             };
 
          const submitAdminEditMember = async () => {
