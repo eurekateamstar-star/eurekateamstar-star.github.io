@@ -268,7 +268,7 @@
 
         <!-- 首頁 -->
         <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
-            <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
+           <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
                     <!-- 第一張：年度累計協勤 -->
                     <div class="bank-card bg-card-blue">
@@ -303,7 +303,6 @@
                         <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1">
                             <div class="border-r border-white/10 text-left pl-1">
                                 <p class="text-[9px] opacity-60 font-bold mb-1 uppercase">到期日期</p>
-                                <!-- 這裡改成自動同步的日期 -->
                                 <p class="text-[15px] font-num">{{ displayEmtExpiry }}</p>
                             </div>
                             <div class="text-left pl-6">
