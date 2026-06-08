@@ -3232,6 +3232,7 @@ const extractInfo = (body, type) => {
             const members = ref([]);
             const loginForm = ref({ name:'', pass:'' });
             const loginUserName = ref('');
+const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
             const errMsg = ref('');
             const slider = ref(null);
             const scheduleSlider = ref(null);
@@ -3806,7 +3807,7 @@ const executeDeleteMember = async () => {
             // 👆👆👆 新增結束 👆👆👆
 
 
-            const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
+            
 
             // ===== 衛福部 EMT 受訓紀錄查詢邏輯 (含首頁連動) =====
 const isEmtRecordModalOpen = ref(false);
@@ -4540,139 +4541,66 @@ const sortedCashHistory = computed(() => {
             });
 
 
-         onMounted(() => {
-                // 🌟 新增：將所有需要讀取資料庫的動作包裝成一個函數
-                const startDataListeners = () => {
-                    // 1. 監聽最新公告
-                    const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
-                    let isFirstNewsLoad = true;
-                    onSnapshot(newsQuery, (snap) => {
-                        const arr = [];
-                        snap.forEach((docData) => {
-                            const data = docData.data();
-                            arr.push({ id: docData.id, ...data, msgTime: data.timestamp ? data.timestamp.toDate().getTime() : Date.now() });
-                        });
-                        rawSystemNews.value = arr; 
-                        const previousUnread = unreadCount.value;
-                        processNews();             
-                        if (!isFirstNewsLoad && unreadCount.value > previousUnread && currPage.value !== 'login') {
-                            setTimeout(() => { if (typeof window.forceOpenNews === 'function') { window.forceOpenNews(); } }, 500);
-                        }
-                        isFirstNewsLoad = false;
-                    });
-
-                    // 2. 監聽成員
-                    onSnapshot(collection(db, "members"), (snap) => { 
-                        members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); 
-                        if (loginUserName.value && currPage.value !== 'login') {
-                            const currentUser = members.value.find(m => m.姓名 === loginUserName.value);
-                            if (currentUser && currentUser.is_suspended) {
-                                isForcedLogout.value = true;
-                                signOut(auth);
-                                loginUserName.value = '';
-                                googleUser.value = null;
-                                currPage.value = 'login';
-                                setTimeout(() => { showAppAlert('error', '帳號已停用', '您的權限已被管理員即時暫停，已強制登出。'); }, 300);
-                            }
-                        }
-                    });
-
-                    // 3. 監聽排班與其他任務
-                    onSnapshot(collection(db, "shifts"), (snap) => { const obj = {}; snap.docs.forEach(doc => { const data = doc.data(); if (!obj[data.date]) obj[data.date] = []; obj[data.date].push(data); }); userShifts.value = obj; });
-                    onSnapshot(collection(db, "official_tasks"), (snap) => { officialTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
-                    onSnapshot(collection(db, "meeting_tasks"), (snap) => { meetingTasks.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
-                    onSnapshot(collection(db, "registrations"), (snap) => { registrations.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); });
-                    onSnapshot(collection(db, "push_logs"), (snap) => { pushLogs.value = snap.docs.map(d => ({ id: d.id, ...d.data() })); });
-                    
-                    // 4. 監聽零用金 (Squad Fund)
-                    onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
-                        if (docSnap.exists()) {
-                            const data = docSnap.data();
-                            try {
-                                const historyArray = data.cash_history ? JSON.parse(data.cash_history) : [];
-                                let totalInc = 0; let totalExp = 0; let currentBalance = 0;
-                                if (historyArray.length > 0) {
-                                    historyArray.sort((a, b) => new Date(b.date) - new Date(a.date));
-                                    currentBalance = historyArray[0].balance || 0;
-                                    const latestYear = historyArray[0].date.substring(0, 4);
-                                    historyArray.forEach(item => {
-                                        if (item.date && item.date.startsWith(latestYear)) {
-                                            totalInc += Number(item.income) || 0;
-                                            totalExp += Number(item.expense) || 0;
-                                        }
-                                    });
-                                }
-                                squadFinance.value = { balance: currentBalance, income: totalInc, expense: totalExp, history: historyArray };
-                            } catch (e) { console.error("解析零用金資料失敗:", e); }
-                        }
-                    });
-
-                    // 5. 監聽協勤紀錄
-                    onSnapshot(collection(db, "assistance_records"), (snap) => { 
-                        const allRecs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        allAssistanceRecords.value = allRecs.sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
-                        if (loginUserName.value) {
-                            myAssistanceRecords.value = allRecs.filter(r => r.userName === loginUserName.value)
-                                .sort((a, b) => new Date(b.date) - new Date(a.date) || String(b.timestamp).localeCompare(String(a.timestamp)));
-                        }
-                    });
-                }; // 結束 startDataListeners
-
-                // 🌟 監聽 Google 登入狀態
+            onMounted(() => {
+                // 監聽 Google 登入狀態 (自動秒登入邏輯)
+             // 監聽 Google 登入狀態 (自動秒登入邏輯)
                 onAuthStateChanged(auth, async (user) => {
-                    if (isForcedLogout.value) {
-                        isForcedLogout.value = false;
-                        authLoading.value = false;
-                        return;
-                    }
+    // 🌟 如果是被強制登出的，直接跳過，避免無限循環
+    if (isForcedLogout.value) {
+        isForcedLogout.value = false;
+        authLoading.value = false;
+        return;
+    }
 
-                    if (user) {
-                        googleUser.value = user;
-                        
-                        // 🌟 關鍵修改：確認登入了，才啟動資料庫連線，拿取資料！
-                        startDataListeners();
+    if (user) {
+        googleUser.value = user;
+        const q = query(collection(db, "members"), where("uid", "==", user.uid));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            const memberData = snap.docs[0].data();
+            if (memberData.is_suspended) {
+                isForcedLogout.value = true; // 🌟 設旗標，避免登出後再次觸發
+                await signOut(auth);
+                googleUser.value = null;
+                loginUserName.value = '';
+                currPage.value = 'login';
+                authLoading.value = false;
+                setTimeout(() => {
+                    showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
+                }, 300);
+            } else {
+                appAlert.value.show = false;
+                executeSystemLogin(memberData.姓名);
+            }
+        } else {
+            authLoading.value = false;
+        }
+    } else {
+        googleUser.value = null;
+        if (currPage.value !== 'login') {
+            currPage.value = 'login';
+        }
+        authLoading.value = false;
+    }
+});
 
-                        const q = query(collection(db, "members"), where("uid", "==", user.uid));
-                        const snap = await getDocs(q);
-                        if (!snap.empty) {
-                            const memberData = snap.docs[0].data();
-                            if (memberData.is_suspended) {
-                                isForcedLogout.value = true;
-                                await signOut(auth);
-                                googleUser.value = null;
-                                loginUserName.value = '';
-                                currPage.value = 'login';
-                                authLoading.value = false;
-                                setTimeout(() => {
-                                    showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
-                                }, 300);
-                            } else {
-                                appAlert.value.show = false;
-                                executeSystemLogin(memberData.姓名);
-                            }
-                        } else {
-                            authLoading.value = false;
-                        }
-                    } else {
-                        googleUser.value = null;
-                        if (currPage.value !== 'login') {
-                            currPage.value = 'login';
-                        }
-                        authLoading.value = false;
-                    }
-                });
-
-                // 以下保留原本的事件監聽器
+    // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
+    // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
                 window.addEventListener('trigger-open-news', () => {
                     if (typeof window.forceOpenNews === 'function') {
-                        window.forceOpenNews(); 
+                        window.forceOpenNews(); // 觸發打開小鈴鐺
                     }
                 });
-                
+                // 👇👇👇 新增：監聽來自考核系統 (Iframe) 的推播請求 👇👇👇
                 window.addEventListener('message', async (event) => {
+                    // 確認收到的動作是申請權限
                     if (event.data && event.data.action === 'notifyAdminForAccess') {
                         const requesterName = event.data.requestName;
+                        
+                        // 1. 在主系統名單中尋找管理員「劉奕昕」
                         const adminMember = members.value.find(m => m.姓名 === '劉奕昕');
+                        
+                        // 2. 如果找到且他有訂閱推播，就發送通知
                         if (adminMember && adminMember.pushSubscription) {
                             try {
                                 await fetch(CLOUD_RUN_URL + 'push-single', {
@@ -4685,13 +4613,51 @@ const sortedCashHistory = computed(() => {
                                         body: `${requesterName} 正在申請解鎖教官模式，請前往審核同意！`
                                     })
                                 });
+                                console.log("✅ 成功發送教官申請推播給劉奕昕");
                             } catch (e) {
                                 console.error("❌ 發送推播失敗:", e);
                             }
                         }
                     }
                 });
+                // 👆👆👆 新增結束 👆👆👆
+                // 👇👇👇 監聽 Firestore 的最新公告 👇👇👇
+                const newsQuery = query(collection(db, "system_news"), orderBy("timestamp", "desc"), limit(20));
+                
+                let isFirstNewsLoad = true; // 🌟 標記是否為網頁剛打開的第一次載入
 
+                onSnapshot(newsQuery, (snap) => {
+                    const arr = [];
+                    snap.forEach((docData) => {
+                        const data = docData.data();
+                        arr.push({
+                            id: docData.id,
+                            ...data,
+                            msgTime: data.timestamp ? data.timestamp.toDate().getTime() : Date.now()
+                        });
+                    });
+                    // 把資料存進原始陣列
+                    rawSystemNews.value = arr; 
+                    
+                    // 記錄更新「前」的未讀數量
+                    const previousUnread = unreadCount.value;
+                    
+                    // 更新畫面與紅點
+                    processNews();             
+
+                    // 🌟 核心判斷：如果「不是」第一次載入，且「未讀數量變多」了，且「人已經登入了」
+                    if (!isFirstNewsLoad && unreadCount.value > previousUnread && currPage.value !== 'login') {
+                        // 延遲半秒鐘，直接強制彈出最新消息視窗！
+                        setTimeout(() => {
+                            if (typeof window.forceOpenNews === 'function') {
+                                window.forceOpenNews();
+                            }
+                        }, 500);
+                    }
+
+                    isFirstNewsLoad = false; // 第一次載入結束，改為 false
+                });
+                // 👆👆👆 監聽結束 👆👆👆
                 if ('clearAppBadge' in navigator) {
                     navigator.clearAppBadge();
                 }
@@ -4706,7 +4672,6 @@ const sortedCashHistory = computed(() => {
                         }
                     }
                 });
-            });
 
                onSnapshot(collection(db, "members"), (snap) => { 
     members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); 
