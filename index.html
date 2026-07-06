@@ -1179,12 +1179,20 @@
                         <div v-if="isAdmin">
                             <div class="flex justify-between items-center mb-4 px-1">
                                 <div>
-                                    <h3 class="text-xl font-black text-slate-800">全隊協勤紀錄</h3>
-                                    <p class="text-[10px] text-rose-500 font-bold uppercase tracking-widest">TEAM ASSISTANCE HISTORY</p>
-                                </div>
-                                <button @click="exportAssistanceToExcel" class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shadow-sm">
-                                    <i class="fa-solid fa-file-excel"></i>
-                                </button>
+                                    <div>
+    <h3 class="text-xl font-black text-slate-800">全隊協勤紀錄</h3>
+    <p class="text-[10px] text-rose-500 font-bold uppercase tracking-widest">TEAM ASSISTANCE HISTORY</p>
+</div>
+<div class="flex items-center gap-2">
+    <!-- 原本的明細表匯出 -->
+    <button @click="exportAssistanceToExcel" class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shadow-sm active:scale-95 transition-transform" title="匯出明細表">
+        <i class="fa-solid fa-file-excel"></i>
+    </button>
+    <!-- 🌟 新增的紙本統計表匯出 -->
+    <button @click="exportPaperFormatToExcel" class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center shadow-sm active:scale-95 transition-transform" title="匯出紙本統計表">
+        <i class="fa-solid fa-table-cells"></i>
+    </button>
+</div>
                             </div>
 
                             <!-- 搜尋篩選區域 (與匯出連動) -->
@@ -5295,7 +5303,175 @@ const exportAssistanceToExcel = () => {
         </thead>
         <tbody>
     `;
+// 🌟 匯出「紙本格式」統計表 (1~31天網格)
+            const exportPaperFormatToExcel = () => {
+                // 1. 防呆：必須選擇特定月份才能產生 1~31 號的報表
+                if (!assistFilterYear.value || !assistFilterMonth.value) {
+                    return showAppAlert('error', '無法匯出', '請先在上方搜尋列選擇「特定年份」與「特定月份」，才能產生該月的紙本報表。');
+                }
 
+                const y = parseInt(assistFilterYear.value);
+                const m = parseInt(assistFilterMonth.value);
+                const minguoYear = y - 1911;
+
+                // 2. 取得該月份總天數與星期陣列
+                const daysInMonth = new Date(y, m, 0).getDate();
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+                // 3. 建立所有人員的資料儲存結構 (依據排序好的名單)
+                const reportData = {};
+                sortedMembersList.value.forEach(member => {
+                    reportData[member.姓名] = {
+                        hours: Array(daysInMonth + 1).fill(0),   // 服勤時數 (索引 1~31)
+                        shifts: Array(daysInMonth + 1).fill(0),  // 協勤次數
+                        cases: Array(daysInMonth + 1).fill(0),   // 出勤次數
+                        rescues: Array(daysInMonth + 1).fill(0)  // 救出人數
+                    };
+                });
+
+                // 4. 計算時間差 (時數)
+                const calcHours = (start, end) => {
+                    if (!start || !end || !start.includes(':') || !end.includes(':')) return 0;
+                    const [h1, m1] = start.split(':').map(Number);
+                    const [h2, m2] = end.split(':').map(Number);
+                    return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+                };
+
+                // 5. 遍歷所有協勤紀錄，將數據填入對應日期
+                allAssistanceRecords.value.forEach(r => {
+                    if (!r.date || !r.userName) return;
+                    const [ry, rm, rd] = r.date.split('-');
+                    
+                    // 只處理當前選定年月的資料
+                    if (ry === assistFilterYear.value && rm === assistFilterMonth.value) {
+                        const day = parseInt(rd);
+                        const name = r.userName;
+                        
+                        if (reportData[name]) {
+                            // 累加時數
+                            const h = calcHours(r.shiftStart, r.shiftEnd);
+                            reportData[name].hours[day] += h;
+
+                            // 累加協勤次數 (打卡一次算 1 次)
+                            reportData[name].shifts[day] += 1;
+
+                            // 累加出勤案件數 與 救出人數
+                            if (r.cases && r.cases.length > 0) {
+                                reportData[name].cases[day] += r.cases.length;
+                                r.cases.forEach(c => {
+                                    reportData[name].rescues[day] += (Number(c.rescuedCount) || 0);
+                                });
+                            } else if (r.caseType) { // 相容舊版資料
+                                reportData[name].cases[day] += 1;
+                                reportData[name].rescues[day] += (Number(r.rescuedCount) || 0);
+                            }
+                        }
+                    }
+                });
+
+                // 6. 組合 HTML 表格以產生 Excel
+                let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                <meta charset="utf-8">
+                <style>
+                    table { border-collapse: collapse; font-family: 'DFKai-SB', '標楷體', serif; }
+                    th, td { border: 1px solid #000000; text-align: center; vertical-align: middle; font-size: 11pt; mso-number-format:'\\@'; }
+                    .title { font-size: 16pt; font-weight: bold; height: 50px; text-align: center; border: none; }
+                    .header-bg { background-color: #e2efda; font-weight: bold; }
+                    .name-cell { font-weight: bold; font-size: 12pt; background-color: #f2f2f2; }
+                    .item-cell { background-color: #f2f2f2; }
+                    .total-cell { font-weight: bold; background-color: #fff2cc; }
+                </style>
+                </head>
+                <body>
+                <table>
+                    <!-- 標題列 -->
+                    <tr>
+                        <td colspan="${daysInMonth + 3}" class="title">新北市政府消防局海山義消救護分隊${minguoYear}年${m}月份出勤次數統計表</td>
+                    </tr>
+                    
+                    <!-- 日期列 (1~31) -->
+                    <tr class="header-bg">
+                        <td rowspan="2" width="80">姓名</td>
+                        <td rowspan="2" width="100">日期<br>項目</td>
+                `;
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    html += `<td width="35">${i}</td>`;
+                }
+                html += `<td rowspan="2" width="60">統計</td></tr><tr class="header-bg">`;
+
+                // 星期列 (一、二、三...)
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dateObj = new Date(y, m - 1, i);
+                    html += `<td>${weekdays[dateObj.getDay()]}</td>`;
+                }
+                html += `</tr>`;
+
+                // 7. 渲染每位人員的 4 橫列資料
+                sortedMembersList.value.forEach(member => {
+                    const name = member.姓名;
+                    const data = reportData[name];
+                    
+                    // 計算月總和
+                    const sumArr = (arr) => arr.reduce((a, b) => a + b, 0);
+                    const totalH = sumArr(data.hours);
+                    const totalS = sumArr(data.shifts);
+                    const totalC = sumArr(data.cases);
+                    const totalR = sumArr(data.rescues);
+
+                    // 建立單列每日格子的函式 (大於 0 才顯示數字，畫面較乾淨)
+                    const makeDataCells = (arr, isFloat = false) => {
+                        let cells = '';
+                        for (let i = 1; i <= daysInMonth; i++) {
+                            let val = arr[i];
+                            let displayVal = val > 0 ? (isFloat ? val.toFixed(1).replace('.0', '') : val) : '';
+                            cells += `<td>${displayVal}</td>`;
+                        }
+                        return cells;
+                    };
+
+                    html += `
+                    <tr>
+                        <td rowspan="4" class="name-cell">${name}</td>
+                        <td class="item-cell">服勤時數</td>
+                        ${makeDataCells(data.hours, true)}
+                        <td class="total-cell">${totalH > 0 ? totalH.toFixed(1).replace('.0', '') : 0}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-cell">協勤次數</td>
+                        ${makeDataCells(data.shifts)}
+                        <td class="total-cell">${totalS}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-cell">出勤次數</td>
+                        ${makeDataCells(data.cases)}
+                        <td class="total-cell">${totalC}</td>
+                    </tr>
+                    <tr>
+                        <td class="item-cell">救出人數</td>
+                        ${makeDataCells(data.rescues)}
+                        <td class="total-cell">${totalR}</td>
+                    </tr>
+                    `;
+                });
+
+                html += `</table></body></html>`;
+
+                // 8. 觸發下載
+                const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute("download", `海山義消_${minguoYear}年${m}月_出勤次數紙本統計表.xls`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+
+
+    
     // 建立單列資料的輔助函式 (移除單引號，改用 inline CSS 強制轉為純文字格式)
     const makeRow = (col1, col2, col3, col4, col5, col6, col7, col8, col9, col10, col11, col12, col13, col14) => {
         // mso-number-format:'\@' 是 Excel HTML 專用，用來強制該儲存格為「文字格式」
@@ -6015,7 +6191,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
     selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,isAddMemberModalOpen, newMemberForm, openAddMemberModal, submitAddMember,
 isDeleteMemberConfirmOpen, memberToDelete, confirmDeleteMember, executeDeleteMember, toggleSuspendMember,showLoginPassword,isEmtRecordModalOpen, isLoadingMohw, mohwRecordData, openEmtRecordModal,
-                assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
+                assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel, exportPaperFormatToExcel
             };
         }
     }).mount('#app');
