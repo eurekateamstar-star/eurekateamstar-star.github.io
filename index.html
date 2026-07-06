@@ -5367,7 +5367,7 @@ const exportAssistanceToExcel = () => {
     document.body.removeChild(link);
 };
 
-// 🌟 匯出「紙本格式」統計表 (完美還原官方格式、自動橫式、對角線、底部簽名欄)
+// 🌟 匯出「紙本格式」統計表 (完美還原、橫式、對角線、每頁重複標頭標尾、人員灰白相間底色)
 const exportPaperFormatToExcel = () => {
     if (!assistFilterYear.value || !assistFilterMonth.value) {
         return showAppAlert('error', '無法匯出', '請先在上方搜尋列選擇「特定年份」與「特定月份」，才能產生該月的紙本報表。');
@@ -5431,7 +5431,6 @@ const exportPaperFormatToExcel = () => {
           xmlns="http://www.w3.org/TR/REC-html40">
     <head>
     <meta charset="utf-8">
-    <!-- Excel 列印排版 XML 設定 -->
     <xml>
         <x:ExcelWorkbook>
             <x:ExcelWorksheets>
@@ -5445,17 +5444,15 @@ const exportPaperFormatToExcel = () => {
                             <x:VerticalResolution>600</x:VerticalResolution>
                         </x:Print>
                         <x:Selected/>
-                        <!-- 設定所有欄位縮放至一頁寬度 -->
                         <x:FitToPage/>
                         <x:Print>
                             <x:FitWidth>1</x:FitWidth>
                             <x:FitHeight>0</x:FitHeight>
                         </x:Print>
-                        <!-- 設定邊界、橫向列印與頁尾(自動頁碼) -->
                         <x:PageSetup>
                             <x:Layout x:Orientation="Landscape"/> <!-- 橫式列印 -->
-                            <x:PageMargins x:Bottom="0.75" x:Left="0.25" x:Right="0.25" x:Top="0.75"/> <!-- 窄邊界 -->
-                            <x:Footer x:Margin="0.3" x:Data="&amp;R第&amp;P頁，共&amp;N頁"/> <!-- 右下角頁碼 -->
+                            <x:PageMargins x:Bottom="0.75" x:Left="0.25" x:Right="0.25" x:Top="0.75"/>
+                            <x:Footer x:Margin="0.3" x:Data="&amp;R第&amp;P頁，共&amp;N頁"/> <!-- 頁碼 -->
                         </x:PageSetup>
                     </x:WorksheetOptions>
                 </x:ExcelWorksheet>
@@ -5463,9 +5460,7 @@ const exportPaperFormatToExcel = () => {
         </x:ExcelWorkbook>
     </xml>
     <style>
-        /* 強制橫向列印與中文字型 */
         @page { mso-page-orientation: landscape; }
-        
         table { border-collapse: collapse; font-family: '標楷體', 'DFKai-SB', serif; }
         td { 
             border: 0.5pt solid windowtext; 
@@ -5475,139 +5470,127 @@ const exportPaperFormatToExcel = () => {
             mso-number-format:'\\@'; 
             height: 20pt; 
         }
-        
         .title-row { height: 45pt; }
-        .title { font-size: 16pt; font-weight: bold; text-align: center; border: none !important; letter-spacing: 1px; }
-        
-        /* 姓名儲存格：粗體 */
+        .title { font-size: 16pt; font-weight: bold; text-align: center; border: none !important; letter-spacing: 1px; background-color: #ffffff; }
         .name-cell { font-weight: bold; font-size: 12pt; }
         .total-cell { font-weight: bold; }
-        
-        /* 儲存格斜線 (Excel 專用語法) */
-        .diagonal-cell { 
-            mso-diagonal-down: 0.5pt solid windowtext; 
-            font-size: 10pt;
-            font-weight: bold;
-        }
-        
-        /* 底部備註欄：無邊框、靠左 */
-        .footer-cell {
-            border: none !important;
-            text-align: left;
-            font-size: 10pt;
-            padding-top: 10px;
-        }
+        .diagonal-cell { mso-diagonal-down: 0.5pt solid windowtext; font-size: 10pt; font-weight: bold; background-color: #ffffff; }
+        .footer-cell { border: none !important; text-align: left; font-size: 10pt; padding-top: 10px; background-color: #ffffff; }
     </style>
     </head>
     <body>
     <table>
-        <!-- 定義精準欄寬 -->
         <colgroup>
-            <col width="65">  <!-- 姓名 -->
-            <col width="80">  <!-- 項目 -->
+            <col width="65">
+            <col width="80">
     `;
     
-    for (let i = 1; i <= daysInMonth; i++) html += `<col width="28">`; // 1~31天
-    
-    html += `
-            <col width="45">  <!-- 統計 -->
-        </colgroup>
+    for (let i = 1; i <= daysInMonth; i++) html += `<col width="28">`;
+    html += `<col width="45"></colgroup>`;
 
-        <!-- 大標題列 -->
-        <tr class="title-row">
-            <td colspan="${daysInMonth + 3}" class="title">新北市政府消防局海山義消救護分隊${minguoYear}年${m}月份出勤次數統計表</td>
-        </tr>
-        
-        <!-- 表頭第一列 -->
-        <tr>
-            <td rowspan="2" class="name-cell">姓名</td>
-            <!-- 帶有對角斜線的儲存格 -->
-            <td rowspan="2" class="diagonal-cell">
-                <div style="text-align: right; padding-right: 2px;">日期</div>
-                <div style="text-align: left; padding-left: 2px;">項目</div>
-            </td>
+    // 🌟 【<thead> 區塊】：Excel 會自動將這裡面的內容鎖定在每頁的頂端
+    html += `
+        <thead>
+            <tr class="title-row">
+                <td colspan="${daysInMonth + 3}" class="title">新北市政府消防局海山義消救護分隊${minguoYear}年${m}月份出勤次數統計表</td>
+            </tr>
+            <tr>
+                <td rowspan="2" class="name-cell" style="background-color: #ffffff;">姓名</td>
+                <td rowspan="2" class="diagonal-cell">
+                    <div style="text-align: right; padding-right: 2px;">日期</div>
+                    <div style="text-align: left; padding-left: 2px;">項目</div>
+                </td>
     `;
 
     for (let i = 1; i <= daysInMonth; i++) {
-        html += `<td style="font-weight: bold;">${i}</td>`;
+        html += `<td style="font-weight: bold; background-color: #ffffff;">${i}</td>`;
     }
-    html += `<td rowspan="2" style="font-weight: bold;">統計</td></tr><tr>`;
+    html += `<td rowspan="2" style="font-weight: bold; background-color: #ffffff;">統計</td></tr><tr>`;
 
-    // 表頭第二列 (星期)
     for (let i = 1; i <= daysInMonth; i++) {
         const dateObj = new Date(y, m - 1, i);
-        html += `<td style="font-weight: bold;">${weekdays[dateObj.getDay()]}</td>`;
+        html += `<td style="font-weight: bold; background-color: #ffffff;">${weekdays[dateObj.getDay()]}</td>`;
     }
-    html += `</tr>`;
+    html += `</tr></thead><tbody>`;
 
-    // 渲染每位人員的資料 (移除所有底色，純黑白)
-    sortedMembersList.value.forEach(member => {
+    // 🌟 【<tbody> 區塊】：渲染人員資料，並加入灰白底色邏輯
+    sortedMembersList.value.forEach((member, index) => {
         const name = member.姓名;
         const data = reportData[name];
         
+        // 判斷底色：雙數列白色，單數列淺灰 (#f2f2f2)
+        const rowBgColor = (index % 2 === 0) ? '#ffffff' : '#f2f2f2';
+        const styleStr = `style="background-color: ${rowBgColor};"`;
+
         const sumArr = (arr) => arr.reduce((a, b) => a + b, 0);
         const totalH = sumArr(data.hours);
         const totalS = sumArr(data.shifts);
         const totalC = sumArr(data.cases);
         const totalR = sumArr(data.rescues);
 
-        // 如果數值大於 0 顯示數字，否則留白
-        const makeDataCells = (arr, isFloat = false) => {
+        const makeDataCells = (arr, isFloat = false, referenceArr = null) => {
             let cells = '';
             for (let i = 1; i <= daysInMonth; i++) {
                 let val = arr[i];
-                let displayVal = val > 0 ? (isFloat ? val.toFixed(1).replace('.0', '') : val) : '';
-                cells += `<td>${displayVal}</td>`;
+                let displayVal = '';
+                
+                if (val > 0) {
+                    displayVal = isFloat ? val.toFixed(1).replace('.0', '') : val;
+                } else if (referenceArr && referenceArr[i] > 0) {
+                    displayVal = '0'; // 有出勤但沒救出人，補 0
+                }
+                
+                // 套用底色
+                cells += `<td ${styleStr}>${displayVal}</td>`;
             }
             return cells;
         };
 
         html += `
         <tr>
-            <td rowspan="4" class="name-cell">${name}</td>
-            <td>服勤時數</td>
+            <td rowspan="4" class="name-cell" ${styleStr}>${name}</td>
+            <td ${styleStr}>服勤時數</td>
             ${makeDataCells(data.hours, true)}
-            <td class="total-cell">${totalH > 0 ? totalH.toFixed(1).replace('.0', '') : 0}</td>
+            <td class="total-cell" ${styleStr}>${totalH > 0 ? totalH.toFixed(1).replace('.0', '') : 0}</td>
         </tr>
         <tr>
-            <td>協勤次數</td>
+            <td ${styleStr}>協勤次數</td>
             ${makeDataCells(data.shifts)}
-            <td class="total-cell">${totalS > 0 ? totalS : 0}</td>
+            <td class="total-cell" ${styleStr}>${totalS > 0 ? totalS : 0}</td>
         </tr>
         <tr>
-            <td>出勤次數</td>
+            <td ${styleStr}>出勤次數</td>
             ${makeDataCells(data.cases)}
-            <td class="total-cell">${totalC > 0 ? totalC : 0}</td>
+            <td class="total-cell" ${styleStr}>${totalC > 0 ? totalC : 0}</td>
         </tr>
         <tr>
-            <td>救出人數</td>
-            ${makeDataCells(data.rescues)}
-            <td class="total-cell">${totalR > 0 ? totalR : 0}</td>
+            <td ${styleStr}>救出人數</td>
+            ${makeDataCells(data.rescues, false, data.cases)}
+            <td class="total-cell" ${styleStr}>${totalR > 0 ? totalR : 0}</td>
         </tr>
         `;
     });
 
-    // 🌟 底部專屬簽名欄與備註說明 (跨越所有欄位)
+    // 🌟 【<tfoot> 區塊】：Excel 會自動將這裡面的內容鎖定在每頁的底端
     const colSplit = Math.floor((daysInMonth + 3) / 3);
     const colSplitLast = (daysInMonth + 3) - (colSplit * 2);
 
     html += `
-        <!-- 空白緩衝行 -->
-        <tr><td colspan="${daysInMonth + 3}" style="border: none !important; height: 10px;"></td></tr>
-        
-        <!-- 填表說明 -->
-        <tr>
-            <td colspan="${daysInMonth + 3}" class="footer-cell">
-                填表說明：本表由各義消救護(志工)審核編製，一式2份，送由大隊彙整，1份逕送緊急救護科備查，一份大隊自存。
-            </td>
-        </tr>
-        
-        <!-- 簽名欄 -->
-        <tr>
-            <td colspan="${colSplit}" class="footer-cell" style="padding-top: 20px; padding-left: 20px;">承辦人：</td>
-            <td colspan="${colSplit}" class="footer-cell" style="padding-top: 20px; text-align: center;">分隊長：</td>
-            <td colspan="${colSplitLast}" class="footer-cell" style="padding-top: 20px; text-align: center;">大隊：</td>
-        </tr>
+        </tbody>
+        <tfoot>
+            <!-- 填表說明 -->
+            <tr>
+                <td colspan="${daysInMonth + 3}" class="footer-cell">
+                    填表說明：本表由各義消救護(志工)審核編製，一式2份，送由大隊彙整，1份逕送緊急救護科備查，一份大隊自存。
+                </td>
+            </tr>
+            <!-- 簽名欄 -->
+            <tr>
+                <td colspan="${colSplit}" class="footer-cell" style="padding-top: 15px; padding-left: 20px;">承辦人：</td>
+                <td colspan="${colSplit}" class="footer-cell" style="padding-top: 15px; text-align: center;">分隊長：</td>
+                <td colspan="${colSplitLast}" class="footer-cell" style="padding-top: 15px; text-align: center; padding-right: 50px;">大隊：</td>
+            </tr>
+        </tfoot>
     </table>
     </body>
     </html>`;
