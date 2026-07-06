@@ -5367,7 +5367,7 @@ const exportAssistanceToExcel = () => {
     document.body.removeChild(link);
 };
 
-// 🌟 匯出「紙本格式」統計表 (1~31天網格)
+// 🌟 匯出「紙本格式」統計表 (完美排版、橫式列印、A4一頁)
 const exportPaperFormatToExcel = () => {
     if (!assistFilterYear.value || !assistFilterMonth.value) {
         return showAppAlert('error', '無法匯出', '請先在上方搜尋列選擇「特定年份」與「特定月份」，才能產生該月的紙本報表。');
@@ -5380,6 +5380,7 @@ const exportPaperFormatToExcel = () => {
     const daysInMonth = new Date(y, m, 0).getDate();
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
 
+    // 建立所有人員的資料儲存結構
     const reportData = {};
     sortedMembersList.value.forEach(member => {
         reportData[member.姓名] = {
@@ -5423,41 +5424,94 @@ const exportPaperFormatToExcel = () => {
         }
     });
 
+    // 🌟 核心：加入 Microsoft Office 專屬 XML 與 CSS，強制橫式列印與調整欄寬
     let html = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+          xmlns:x="urn:schemas-microsoft-com:office:excel" 
+          xmlns="http://www.w3.org/TR/REC-html40">
     <head>
     <meta charset="utf-8">
+    <!-- 加入 Excel 列印設定 XML -->
+    <xml>
+        <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+                <x:ExcelWorksheet>
+                    <x:Name>出勤次數統計表</x:Name>
+                    <x:WorksheetOptions>
+                        <x:Print>
+                            <x:ValidPrinterInfo/>
+                            <x:PaperSizeIndex>9</x:PaperSizeIndex> <!-- A4 -->
+                            <x:HorizontalResolution>600</x:HorizontalResolution>
+                            <x:VerticalResolution>600</x:VerticalResolution>
+                        </x:Print>
+                        <x:FitToPage/> <!-- 縮放至一頁寬 -->
+                    </x:WorksheetOptions>
+                </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+    </xml>
     <style>
+        /* 強制橫向列印與邊距 */
+        @page { mso-page-orientation: landscape; margin: 0.3in 0.3in 0.3in 0.3in; }
+        
         table { border-collapse: collapse; font-family: 'DFKai-SB', '標楷體', serif; }
-        th, td { border: 1px solid #000000; text-align: center; vertical-align: middle; font-size: 11pt; mso-number-format:'\\@'; }
-        .title { font-size: 16pt; font-weight: bold; height: 50px; text-align: center; border: none; }
-        .header-bg { background-color: #e2efda; font-weight: bold; }
-        .name-cell { font-weight: bold; font-size: 12pt; background-color: #f2f2f2; }
-        .item-cell { background-color: #f2f2f2; }
-        .total-cell { font-weight: bold; background-color: #fff2cc; }
+        td { 
+            border: 0.5pt solid windowtext; 
+            text-align: center; 
+            vertical-align: middle; 
+            font-size: 11pt; 
+            mso-number-format:'\\@'; 
+            height: 22pt; /* 固定行高 */
+        }
+        
+        .title-row { height: 40pt; }
+        .title { font-size: 16pt; font-weight: bold; text-align: center; border: none; }
+        
+        /* 顏色設定：淺綠表頭、淺黃總計 */
+        .bg-green { background-color: #e2efda; font-weight: bold; }
+        .bg-yellow { background-color: #fff2cc; font-weight: bold; }
+        .name-cell { font-weight: bold; font-size: 12pt; }
+        .item-cell { font-size: 11pt; }
     </style>
     </head>
     <body>
     <table>
-        <tr>
+        <!-- 定義精準欄寬 -->
+        <colgroup>
+            <col width="70">  <!-- 姓名 -->
+            <col width="85">  <!-- 日期/項目 -->
+    `;
+    
+    for (let i = 1; i <= daysInMonth; i++) html += `<col width="28">`; // 1~31天的欄寬統一
+    
+    html += `
+            <col width="45">  <!-- 統計 -->
+        </colgroup>
+
+        <!-- 標題列 -->
+        <tr class="title-row">
             <td colspan="${daysInMonth + 3}" class="title">新北市政府消防局海山義消救護分隊${minguoYear}年${m}月份出勤次數統計表</td>
         </tr>
-        <tr class="header-bg">
-            <td rowspan="2" width="80">姓名</td>
-            <td rowspan="2" width="100">日期<br>項目</td>
+        
+        <!-- 表頭第一列 (姓名、日期項目、1~31、統計) -->
+        <tr class="bg-green">
+            <td rowspan="2">姓名</td>
+            <td rowspan="2">日期<br>項目</td>
     `;
 
     for (let i = 1; i <= daysInMonth; i++) {
-        html += `<td width="35">${i}</td>`;
+        html += `<td>${i}</td>`;
     }
-    html += `<td rowspan="2" width="60">統計</td></tr><tr class="header-bg">`;
+    html += `<td rowspan="2">統計</td></tr><tr class="bg-green">`;
 
+    // 表頭第二列 (星期幾)
     for (let i = 1; i <= daysInMonth; i++) {
         const dateObj = new Date(y, m - 1, i);
         html += `<td>${weekdays[dateObj.getDay()]}</td>`;
     }
     html += `</tr>`;
 
+    // 渲染每位人員的資料
     sortedMembersList.value.forEach(member => {
         const name = member.姓名;
         const data = reportData[name];
@@ -5468,6 +5522,7 @@ const exportPaperFormatToExcel = () => {
         const totalC = sumArr(data.cases);
         const totalR = sumArr(data.rescues);
 
+        // 如果數值大於 0 顯示數字，否則留白 (畫面更乾淨)
         const makeDataCells = (arr, isFloat = false) => {
             let cells = '';
             for (let i = 1; i <= daysInMonth; i++) {
@@ -5483,37 +5538,37 @@ const exportPaperFormatToExcel = () => {
             <td rowspan="4" class="name-cell">${name}</td>
             <td class="item-cell">服勤時數</td>
             ${makeDataCells(data.hours, true)}
-            <td class="total-cell">${totalH > 0 ? totalH.toFixed(1).replace('.0', '') : 0}</td>
+            <td class="bg-yellow">${totalH > 0 ? totalH.toFixed(1).replace('.0', '') : 0}</td>
         </tr>
         <tr>
             <td class="item-cell">協勤次數</td>
             ${makeDataCells(data.shifts)}
-            <td class="total-cell">${totalS}</td>
+            <td class="bg-yellow">${totalS}</td>
         </tr>
         <tr>
             <td class="item-cell">出勤次數</td>
             ${makeDataCells(data.cases)}
-            <td class="total-cell">${totalC}</td>
+            <td class="bg-yellow">${totalC}</td>
         </tr>
         <tr>
             <td class="item-cell">救出人數</td>
             ${makeDataCells(data.rescues)}
-            <td class="total-cell">${totalR}</td>
+            <td class="bg-yellow">${totalR}</td>
         </tr>
         `;
     });
 
     html += `</table></body></html>`;
 
+    // 觸發下載
     const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `海山義消_${minguoYear}年${m}月_出勤次數紙本統計表.xls`);
+    link.setAttribute("download", `海山義消_${minguoYear}年${m}月_出勤次數統計表.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 };
-
 // ── 排名專用的搜尋與過濾狀態 ──
 
 // ── 排名專用的搜尋與過濾狀態 ──
