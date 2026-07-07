@@ -1183,13 +1183,8 @@
                                     <p class="text-[10px] text-rose-500 font-bold uppercase tracking-widest">TEAM ASSISTANCE HISTORY</p>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <!-- 原本的明細表匯出 -->
-                                    <button @click="exportAssistanceToExcel" class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shadow-sm active:scale-95 transition-transform" title="匯出明細表">
-                                        <i class="fa-solid fa-file-excel"></i>
-                                    </button>
-                                    <!-- 🌟 新增的紙本統計表匯出 -->
-                                    <button @click="exportPaperFormatToExcel" class="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 border border-orange-100 flex items-center justify-center shadow-sm active:scale-95 transition-transform" title="匯出紙本統計表">
-                                        <i class="fa-solid fa-table-cells"></i>
+                                    <button @click="isExportModalOpen = true" class="px-4 h-10 rounded-xl bg-emerald-50 text-emerald-600 font-black text-[13px] border border-emerald-100 flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+                                        <i class="fa-solid fa-file-export mr-1.5"></i>匯出報表
                                     </button>
                                 </div>
                             </div>
@@ -1396,7 +1391,31 @@
         allow="fullscreen; geolocation; microphone; camera; display-capture">
     </iframe>
 </div>
-
+<!-- ===== 匯出報表選擇選項 Modal ===== -->
+        <div class="bottom-sheet-overlay" :class="{ active: isExportModalOpen }" @click="isExportModalOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isExportModalOpen }">
+            <div class="flex justify-between items-center mb-5 shrink-0">
+                <div>
+                    <h4 class="text-xl font-black text-slate-800">選擇匯出報表</h4>
+                    <p class="text-xs font-bold text-slate-400 mt-1">請選擇您要下載的 Excel 格式</p>
+                </div>
+                <button @click="isExportModalOpen = false" class="w-10 h-10 flex items-center justify-center text-slate-400"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-3 pb-4">
+                <button @click="exportAssistanceToExcel(); isExportModalOpen=false;" class="w-full p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-4 active:bg-slate-50 transition-colors text-left shadow-sm">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-table-list"></i></div>
+                    <div class="flex-1"><h5 class="font-black text-slate-700">1. 勤務明細總表</h5><p class="text-[10px] font-bold text-slate-400 mt-0.5">包含所有案件、地點、救出人數詳細列表</p></div>
+                </button>
+                <button @click="exportPaperFormatToExcel(); isExportModalOpen=false;" class="w-full p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-4 active:bg-slate-50 transition-colors text-left shadow-sm">
+                    <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-table-cells"></i></div>
+                    <div class="flex-1"><h5 class="font-black text-slate-700">2. 出勤次數統計表</h5><p class="text-[10px] font-bold text-slate-400 mt-0.5">橫式紙本 1~31 天網格，含標頭與簽名欄</p></div>
+                </button>
+                <button @click="exportShiftAssignmentToExcel(); isExportModalOpen=false;" class="w-full p-4 rounded-xl border border-slate-200 bg-white flex items-center gap-4 active:bg-slate-50 transition-colors text-left shadow-sm">
+                    <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div class="flex-1"><h5 class="font-black text-slate-700">3. 協勤分配表 (前8小時)</h5><p class="text-[10px] font-bold text-slate-400 mt-0.5">自動過濾每人當月前 8 小時紀錄，橫式排版</p></div>
+                </button>
+            </div>
+        </div>
 <!-- ===== 衛福部 EMT 受訓紀錄查詢 Modal ===== -->
 <div class="bottom-sheet-overlay" :class="{ active: isEmtRecordModalOpen }" @click="isEmtRecordModalOpen = false"></div>
 <div class="bottom-sheet" :class="{ active: isEmtRecordModalOpen }" style="padding-top: 20px;">
@@ -5593,6 +5612,196 @@ const exportPaperFormatToExcel = () => {
     document.body.removeChild(link);
 };
 // ── 排名專用的搜尋與過濾狀態 ──
+// 控制匯出選項選單
+            const isExportModalOpen = ref(false);
+
+            // 🌟 匯出「協勤分配表」 (自動過濾每人當月前 8 小時)
+            const exportShiftAssignmentToExcel = () => {
+                if (!assistFilterYear.value || !assistFilterMonth.value) {
+                    return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的協勤分配表。');
+                }
+
+                const y = parseInt(assistFilterYear.value);
+                const m = parseInt(assistFilterMonth.value);
+                const minguoYear = y - 1911;
+                const daysInMonth = new Date(y, m, 0).getDate();
+                const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+                // 1. 初始化每人的累積時數 (用來判斷是否滿8小時)
+                const memberHours = {};
+                sortedMembersList.value.forEach(member => {
+                    memberHours[member.姓名] = 0;
+                });
+
+                // 2. 初始化每一天的班表陣列
+                const dailyShifts = {};
+                for (let i = 1; i <= daysInMonth; i++) dailyShifts[i] = [];
+
+                // 輔助函式：計算時數
+                const calcHours = (start, end) => {
+                    if (!start || !end || !start.includes(':') || !end.includes(':')) return 0;
+                    const [h1, m1] = start.split(':').map(Number);
+                    const [h2, m2] = end.split(':').map(Number);
+                    return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+                };
+
+                // 輔助函式：取得該員職稱
+                const getTitle = (name) => {
+                    const member = members.value.find(x => x.姓名 === name);
+                    return member ? (member.duty_title || '隊員') : '隊員';
+                };
+
+                // 3. 處理資料 (必須按日期與時間先後排序，才能正確抓到"前"8小時)
+                const sortedRecords = [...allAssistanceRecords.value].filter(r => {
+                    if(!r.date || !r.userName) return false;
+                    const [ry, rm] = r.date.split('-');
+                    return ry === assistFilterYear.value && rm === assistFilterMonth.value;
+                }).sort((a, b) => {
+                    // 先排日期，再排時間
+                    if (a.date !== b.date) return a.date.localeCompare(b.date);
+                    return (a.shiftStart || '').localeCompare(b.shiftStart || '');
+                });
+
+                // 核心過濾邏輯：只抓前 8 小時
+                sortedRecords.forEach(r => {
+                    const day = parseInt(r.date.split('-')[2]);
+                    const name = r.userName;
+                    const h = calcHours(r.shiftStart, r.shiftEnd);
+
+                    if (memberHours[name] !== undefined) {
+                        // 如果該員當月累積時數還不到 8 小時，就排進表內
+                        if (memberHours[name] < 8) {
+                            dailyShifts[day].push({
+                                timeStr: `${r.shiftStart}-${r.shiftEnd}`,
+                                title: getTitle(name),
+                                name: name
+                            });
+                            memberHours[name] += h; // 累加時數
+                        }
+                    }
+                });
+
+                // 找出單日最多有幾個人排班，決定要動態畫幾組 [時段, 職稱, 姓名] 欄位
+                // 為了排版美觀，預設最少畫 5 組
+                let maxColumns = 5;
+                for (let i = 1; i <= daysInMonth; i++) {
+                    if (dailyShifts[i].length > maxColumns) {
+                        maxColumns = dailyShifts[i].length;
+                    }
+                }
+
+                // 4. 產生 HTML (套用 Excel XML 設定)
+                let html = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                <meta charset="utf-8">
+                <xml>
+                    <x:ExcelWorkbook>
+                        <x:ExcelWorksheets>
+                            <x:ExcelWorksheet>
+                                <x:Name>協勤分配表</x:Name>
+                                <x:WorksheetOptions>
+                                    <x:Print>
+                                        <x:ValidPrinterInfo/>
+                                        <x:PaperSizeIndex>9</x:PaperSizeIndex> <!-- A4 紙張 -->
+                                        <x:HorizontalResolution>600</x:HorizontalResolution>
+                                        <x:VerticalResolution>600</x:VerticalResolution>
+                                    </x:Print>
+                                    <x:Selected/>
+                                    <x:FitToPage/>
+                                    <x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>0</x:FitHeight></x:Print>
+                                    <x:PrintTitleRows>$1:$3</x:PrintTitleRows> <!-- 鎖定前3行為標題列 -->
+                                    <x:PageSetup>
+                                        <x:Layout x:Orientation="Landscape"/> <!-- 橫式列印 -->
+                                        <x:PageMargins x:Bottom="0.5" x:Left="0.25" x:Right="0.25" x:Top="0.5"/>
+                                    </x:PageSetup>
+                                </x:WorksheetOptions>
+                            </x:ExcelWorksheet>
+                        </x:ExcelWorksheets>
+                    </x:ExcelWorkbook>
+                </xml>
+                <style>
+                    @page { mso-page-orientation: landscape; }
+                    table { border-collapse: collapse; font-family: '標楷體', 'DFKai-SB', serif; }
+                    td { border: 0.5pt solid windowtext; text-align: center; vertical-align: middle; font-size: 12pt; height: 22pt; mso-number-format:'\\@'; }
+                    .title-row { height: 40pt; }
+                    .title { font-size: 16pt; font-weight: bold; text-align: center; border: none !important; letter-spacing: 1px; }
+                    .sub-title { border: none !important; text-align: left; font-size: 12pt; font-weight: bold; }
+                    .bg-yellow { background-color: #ffff00; font-weight: bold; }
+                </style>
+                </head>
+                <body>
+                <table>
+                    <thead>
+                        <!-- 大標題列 -->
+                        <tr class="title-row">
+                            <td colspan="${2 + (maxColumns * 3)}" class="title">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤分配表</td>
+                        </tr>
+                        <!-- 簽核列 -->
+                        <tr>
+                            <td colspan="4" class="sub-title" style="padding-left: 50px;">承辦人：</td>
+                            <td colspan="${Math.ceil(maxColumns * 3 / 2)}" class="sub-title">義消分隊長：</td>
+                            <td colspan="${Math.floor(maxColumns * 3 / 2) - 2}" class="sub-title">單位主管：</td>
+                        </tr>
+                        <!-- 欄位標頭 -->
+                        <tr>
+                            <td class="bg-yellow" width="40">日期</td>
+                            <td class="bg-yellow" width="40">星期</td>
+                `;
+
+                // 動態產生欄位標頭 [時段, 職稱, 姓名]
+                for (let i = 0; i < maxColumns; i++) {
+                    html += `
+                        <td class="bg-yellow" width="70">時段</td>
+                        <td class="bg-yellow" width="80">職稱</td>
+                        <td class="bg-yellow" width="70">姓名</td>
+                    `;
+                }
+                html += `</tr></thead><tbody>`;
+
+                // 產生 1~31 天資料
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dateObj = new Date(y, m - 1, i);
+                    const weekdayStr = weekdays[dateObj.getDay()];
+                    
+                    // 判斷六日字體變紅 (依照截圖樣式)
+                    let dateStyle = (dateObj.getDay() === 0 || dateObj.getDay() === 6) ? 'color: red;' : '';
+
+                    html += `<tr>
+                        <td class="bg-yellow" style="${dateStyle}">${i}</td>
+                        <td class="bg-yellow" style="${dateStyle}">${weekdayStr}</td>
+                    `;
+
+                    const shifts = dailyShifts[i];
+                    for (let col = 0; col < maxColumns; col++) {
+                        if (col < shifts.length) {
+                            html += `
+                                <td>${shifts[col].timeStr}</td>
+                                <td>${shifts[col].title}</td>
+                                <td>${shifts[col].name}</td>
+                            `;
+                        } else {
+                            // 空白格子補滿
+                            html += `<td></td><td></td><td></td>`;
+                        }
+                    }
+                    html += `</tr>`;
+                }
+
+                html += `</tbody></table></body></html>`;
+
+                const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute("download", `海山義消_${minguoYear}年${m}月_協勤分配表.xls`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+
+
+            
             const rankingFilterYear = ref(new Date().getFullYear().toString());
             const rankingFilterMonth = ref('');
             const rankingType = ref('hours'); 
@@ -6193,7 +6402,7 @@ const goToConfirmStep = (onlyShift = false) => {
                  authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,adminEditSections,isAdminMemberMenuOpen, adminSelectedMember, openAdminMemberMenu,showFinanceAmount,
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
-    selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,isAddMemberModalOpen, newMemberForm, openAddMemberModal, submitAddMember,exportPaperFormatToExcel,
+    selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,isAddMemberModalOpen, newMemberForm, openAddMemberModal, submitAddMember,exportPaperFormatToExcel, exportShiftAssignmentToExcel, isExportModalOpen,
 isDeleteMemberConfirmOpen, memberToDelete, confirmDeleteMember, executeDeleteMember, toggleSuspendMember,showLoginPassword,isEmtRecordModalOpen, isLoadingMohw, mohwRecordData, openEmtRecordModal,
                 assistSearchQuery, assistFilterYear, assistFilterMonth, filteredAllAssistanceRecords, exportAssistanceToExcel
             };
