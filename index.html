@@ -5615,7 +5615,7 @@ const exportPaperFormatToExcel = () => {
 // 控制匯出選項選單
             const isExportModalOpen = ref(false);
 
-        // 🌟 匯出「協勤分配表」 (極淺細字浮水印、完美還原表格樣式)
+        // 🌟 匯出「協勤分配表」 (日期/星期橫向排版、灰底星期、取消粗體、智能裁切)
             const exportShiftAssignmentToExcel = () => {
                 if (!assistFilterYear.value || !assistFilterMonth.value) {
                     return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的協勤分配表。');
@@ -5637,7 +5637,6 @@ const exportPaperFormatToExcel = () => {
                 const dailyShifts = {};
                 for (let i = 1; i <= daysInMonth; i++) dailyShifts[i] = [];
 
-                // 輔助函式：取得該員職稱
                 const getTitle = (name) => {
                     const member = members.value.find(x => x.姓名 === name);
                     return member ? (member.duty_title || '隊員') : '隊員';
@@ -5679,7 +5678,6 @@ const exportPaperFormatToExcel = () => {
                     }
                 });
 
-                // 決定最大欄數 (預設至少給 5 組)
                 let maxColumns = 5;
                 for (let i = 1; i <= daysInMonth; i++) {
                     if (dailyShifts[i].length > maxColumns) {
@@ -5687,18 +5685,16 @@ const exportPaperFormatToExcel = () => {
                     }
                 }
 
-                // 🌟 定義通用的 Inline Style 變數
+                // 🌟 樣式設定
                 const fontBase = "font-family:'標楷體', 'DFKai-SB', serif; font-size: 12pt; text-align: center; vertical-align: middle;";
                 const border = "border: 0.5pt solid #000000;";
-                const cellStyle = `${fontBase} ${border} height: 18pt;`; // 稍微調小行高，讓整月擠進一頁
-                const yellowBg = "background-color: #ffff00; font-weight: bold;";
-                
-                // 🌟 關鍵修改：極淺灰、取消粗體 (normal) 的浮水印姓名樣式
+                const cellStyle = `${fontBase} ${border} height: 18pt;`; 
+                const yellowBg = "background-color: #ffff00; font-weight: normal;"; // 取消粗體
+                const grayBg = "background-color: #f2f2f2; font-weight: normal;"; // 星期的灰色背景
                 const nameStyle = `${cellStyle} color: #d9d9d9; font-weight: normal;`; 
 
                 const totalCols = 2 + (maxColumns * 3);
 
-                // 4. 產生 HTML (強制套用 Microsoft Office 專屬 XML 設定)
                 let html = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
@@ -5711,14 +5707,14 @@ const exportPaperFormatToExcel = () => {
                                 <x:WorksheetOptions>
                                     <x:Print>
                                         <x:ValidPrinterInfo/>
-                                        <x:PaperSizeIndex>9</x:PaperSizeIndex> <!-- A4 -->
+                                        <x:PaperSizeIndex>9</x:PaperSizeIndex>
                                         <x:HorizontalResolution>600</x:HorizontalResolution>
                                         <x:VerticalResolution>600</x:VerticalResolution>
                                     </x:Print>
                                     <x:Selected/>
                                     <x:FitToPage/>
                                     <x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>1</x:FitHeight></x:Print>
-                                    <x:PrintTitleRows>$1:$3</x:PrintTitleRows> <!-- 鎖定前3行為標題列 -->
+                                    <x:PrintTitleRows>$1:$3</x:PrintTitleRows>
                                     <x:PageSetup>
                                         <x:Layout x:Orientation="Landscape"/>
                                         <x:PageMargins x:Bottom="0.5" x:Left="0.25" x:Right="0.25" x:Top="0.5"/>
@@ -5736,23 +5732,22 @@ const exportPaperFormatToExcel = () => {
                 <body>
                 <table>
                     <colgroup>
-                        <col width="40"> <!-- 日期 -->
-                        <col width="40"> <!-- 星期 -->
+                        <col width="40">
+                        <col width="40">
                 `;
 
                 for (let i = 0; i < maxColumns; i++) {
-                    html += `<col width="75"><col width="85"><col width="75">`; // 時段, 職稱, 姓名
+                    html += `<col width="75"><col width="85"><col width="75">`; 
                 }
                 html += `</colgroup><thead>`;
 
-                // 第一行：大標題
+                // 標題與簽名列
                 html += `
                     <tr>
                         <td colspan="${totalCols}" style="text-align: center; font-size: 16pt; font-weight: bold; font-family:'標楷體', serif; height: 35pt; border: none;">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤分配表</td>
                     </tr>
                 `;
 
-                // 第二行：簽名欄
                 const colSplit = Math.ceil(maxColumns * 3 / 2);
                 html += `
                     <tr>
@@ -5762,7 +5757,7 @@ const exportPaperFormatToExcel = () => {
                     </tr>
                 `;
 
-                // 第三行：黃色表頭
+                // 🌟 修改：日期與星期橫向並排
                 html += `
                     <tr>
                         <td style="${cellStyle} ${yellowBg}">日期</td>
@@ -5778,17 +5773,18 @@ const exportPaperFormatToExcel = () => {
                 }
                 html += `</tr></thead><tbody>`;
 
-                // 內容資料 (1~31天)
+                // 內容資料
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dateObj = new Date(y, m - 1, i);
                     const weekdayStr = weekdays[dateObj.getDay()];
                     
-                    // 判斷六日字體變紅，並加上粗體
-                    const dayColor = (dateObj.getDay() === 0 || dateObj.getDay() === 6) ? 'color: red; font-weight: bold;' : 'font-weight: bold;';
-
+                    // 🌟 修改：星期背景設為灰色，日期背景為黃色。只有紅字部分保留粗體
+                    const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
+                    const dateColor = isWeekend ? 'color: red; font-weight: bold;' : 'font-weight: normal;';
+                    
                     html += `<tr>
-                        <td style="${cellStyle} ${yellowBg} ${dayColor}">${i}</td>
-                        <td style="${cellStyle} ${yellowBg} ${dayColor}">${weekdayStr}</td>
+                        <td style="${cellStyle} ${yellowBg} ${dateColor}">${i}</td>
+                        <td style="${cellStyle} ${grayBg} ${dateColor}">${weekdayStr}</td>
                     `;
 
                     const shifts = dailyShifts[i];
@@ -5808,7 +5804,6 @@ const exportPaperFormatToExcel = () => {
 
                 html += `</tbody></table></body></html>`;
 
-                // 觸發下載
                 const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -5817,7 +5812,6 @@ const exportPaperFormatToExcel = () => {
                 link.click();
                 document.body.removeChild(link);
             };
-
             
             const rankingFilterYear = ref(new Date().getFullYear().toString());
             const rankingFilterMonth = ref('');
