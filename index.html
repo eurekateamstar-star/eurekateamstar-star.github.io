@@ -5615,7 +5615,7 @@ const exportPaperFormatToExcel = () => {
 // 控制匯出選項選單
             const isExportModalOpen = ref(false);
 
-        // 🌟 匯出「協勤分配表」 (智能時間裁切：每人最多精準 8 小時)
+        // 🌟 匯出「協勤分配表」 (像素級還原截圖格式：標楷體、黃底、灰字簽名、前8小時智能裁切)
             const exportShiftAssignmentToExcel = () => {
                 if (!assistFilterYear.value || !assistFilterMonth.value) {
                     return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的協勤分配表。');
@@ -5643,7 +5643,7 @@ const exportPaperFormatToExcel = () => {
                     return member ? (member.duty_title || '隊員') : '隊員';
                 };
 
-                // 3. 處理資料 (按日期與時間先後排序)
+                // 3. 處理資料並篩選前 8 小時
                 const sortedRecords = [...allAssistanceRecords.value].filter(r => {
                     if(!r.date || !r.userName) return false;
                     const [ry, rm] = r.date.split('-');
@@ -5653,29 +5653,21 @@ const exportPaperFormatToExcel = () => {
                     return (a.shiftStart || '').localeCompare(b.shiftStart || '');
                 });
 
-                // 🌟 核心：智能時間裁切邏輯
                 sortedRecords.forEach(r => {
                     const day = parseInt(r.date.split('-')[2]);
                     const name = r.userName;
                     
                     if (memberHours[name] !== undefined && memberHours[name] < 8) {
-                        // 解析起訖時間 (例如 "08:00")
                         let startHour = parseInt(r.shiftStart.split(':')[0]);
                         let endHour = parseInt(r.shiftEnd.split(':')[0]);
-                        
-                        // 計算這筆排班的時數
                         let currentShiftHours = endHour - startHour;
-                        
-                        // 判斷此員還剩下多少額度
                         let remainingQuota = 8 - memberHours[name];
                         
-                        // 如果這筆排班會讓總時數超過 8 小時，就進行「裁切」
                         if (currentShiftHours > remainingQuota) {
-                            endHour = startHour + remainingQuota; // 強制將下班時間提早
+                            endHour = startHour + remainingQuota;
                             currentShiftHours = remainingQuota;
                         }
 
-                        // 將時間格式化為 "08-16"
                         const formatTime = String(startHour).padStart(2, '0') + '-' + String(endHour).padStart(2, '0');
                         
                         dailyShifts[day].push({
@@ -5683,13 +5675,11 @@ const exportPaperFormatToExcel = () => {
                             title: getTitle(name),
                             name: name
                         });
-                        
-                        // 累加時數
                         memberHours[name] += currentShiftHours;
                     }
                 });
 
-                // 找出單日最多有幾個人排班，決定要動態畫幾組 [時段, 職稱, 姓名] 欄位
+                // 決定最大欄數 (預設至少給 5 組)
                 let maxColumns = 5;
                 for (let i = 1; i <= daysInMonth; i++) {
                     if (dailyShifts[i].length > maxColumns) {
@@ -5697,7 +5687,16 @@ const exportPaperFormatToExcel = () => {
                     }
                 }
 
-                // 4. 產生 HTML (套用 Excel XML 設定)
+                // 定義通用的 Inline Style 變數，保證 Excel 絕對聽話
+                const fontBase = "font-family:'標楷體', 'DFKai-SB', serif; font-size: 12pt; text-align: center; vertical-align: middle;";
+                const border = "border: 0.5pt solid #000000;";
+                const cellStyle = `${fontBase} ${border} height: 22pt;`;
+                const yellowBg = "background-color: #ffff00; font-weight: bold;";
+                const nameStyle = `${cellStyle} color: #a0a0a0; font-weight: bold;`; // 🌟 淺灰色浮水印姓名
+
+                const totalCols = 2 + (maxColumns * 3);
+
+                // 4. 產生 HTML (強制套用 Microsoft Office 專屬 XML 設定)
                 let html = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
@@ -5710,14 +5709,14 @@ const exportPaperFormatToExcel = () => {
                                 <x:WorksheetOptions>
                                     <x:Print>
                                         <x:ValidPrinterInfo/>
-                                        <x:PaperSizeIndex>9</x:PaperSizeIndex>
+                                        <x:PaperSizeIndex>9</x:PaperSizeIndex> <!-- A4 -->
                                         <x:HorizontalResolution>600</x:HorizontalResolution>
                                         <x:VerticalResolution>600</x:VerticalResolution>
                                     </x:Print>
                                     <x:Selected/>
                                     <x:FitToPage/>
                                     <x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>0</x:FitHeight></x:Print>
-                                    <x:PrintTitleRows>$1:$3</x:PrintTitleRows>
+                                    <x:PrintTitleRows>$1:$3</x:PrintTitleRows> <!-- 鎖定前3行為標題列 -->
                                     <x:PageSetup>
                                         <x:Layout x:Orientation="Landscape"/>
                                         <x:PageMargins x:Bottom="0.5" x:Left="0.25" x:Right="0.25" x:Top="0.5"/>
@@ -5729,60 +5728,78 @@ const exportPaperFormatToExcel = () => {
                 </xml>
                 <style>
                     @page { mso-page-orientation: landscape; }
-                    table { border-collapse: collapse; font-family: '標楷體', 'DFKai-SB', serif; }
-                    td { border: 0.5pt solid windowtext; text-align: center; vertical-align: middle; font-size: 12pt; height: 22pt; mso-number-format:'\\@'; }
-                    .title-row { height: 40pt; }
-                    .title { font-size: 16pt; font-weight: bold; text-align: center; border: none !important; letter-spacing: 1px; }
-                    .sub-title { border: none !important; text-align: left; font-size: 12pt; font-weight: bold; }
-                    .bg-yellow { background-color: #ffff00; font-weight: bold; }
-                    .watermark-name { color: #b0b0b0; font-weight: bold; font-family: '標楷體', serif; }
+                    table { border-collapse: collapse; }
                 </style>
                 </head>
                 <body>
                 <table>
-                    <thead>
-                        <tr class="title-row">
-                            <td colspan="${2 + (maxColumns * 3)}" class="title">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤分配表</td>
-                        </tr>
-                        <tr>
-                            <td colspan="4" class="sub-title" style="padding-left: 50px;">承辦人：</td>
-                            <td colspan="${Math.ceil(maxColumns * 3 / 2)}" class="sub-title">義消分隊長：</td>
-                            <td colspan="${Math.floor(maxColumns * 3 / 2) - 2}" class="sub-title">單位主管：</td>
-                        </tr>
-                        <tr>
-                            <td class="bg-yellow" width="40">日期</td>
-                            <td class="bg-yellow" width="40">星期</td>
+                    <colgroup>
+                        <col width="40"> <!-- 日期 -->
+                        <col width="40"> <!-- 星期 -->
+                `;
+
+                for (let i = 0; i < maxColumns; i++) {
+                    html += `<col width="75"><col width="85"><col width="75">`; // 時段, 職稱, 姓名
+                }
+                html += `</colgroup><thead>`;
+
+                // 🌟 第一行：大標題
+                html += `
+                    <tr>
+                        <td colspan="${totalCols}" style="text-align: center; font-size: 16pt; font-weight: bold; font-family:'標楷體', serif; height: 40pt; border: none;">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤分配表</td>
+                    </tr>
+                `;
+
+                // 🌟 第二行：簽名欄 (對齊您的截圖)
+                const colSplit = Math.ceil(maxColumns * 3 / 2);
+                html += `
+                    <tr>
+                        <td colspan="4" style="text-align: left; font-size: 12pt; font-weight: bold; font-family:'標楷體', serif; padding-left: 20px; border: none; height: 30pt;">承辦人：</td>
+                        <td colspan="${colSplit}" style="text-align: left; font-size: 12pt; font-weight: bold; font-family:'標楷體', serif; border: none;">義消分隊長：</td>
+                        <td colspan="${totalCols - 4 - colSplit}" style="text-align: left; font-size: 12pt; font-weight: bold; font-family:'標楷體', serif; border: none;">單位主管：</td>
+                    </tr>
+                `;
+
+                // 🌟 第三行：黃色表頭
+                html += `
+                    <tr>
+                        <td style="${cellStyle} ${yellowBg}">日期</td>
+                        <td style="${cellStyle} ${yellowBg}">星期</td>
                 `;
 
                 for (let i = 0; i < maxColumns; i++) {
                     html += `
-                        <td class="bg-yellow" width="70">時段</td>
-                        <td class="bg-yellow" width="80">職稱</td>
-                        <td class="bg-yellow" width="70">姓名</td>
+                        <td style="${cellStyle} ${yellowBg}">時段</td>
+                        <td style="${cellStyle} ${yellowBg}">職稱</td>
+                        <td style="${cellStyle} ${yellowBg}">姓名</td>
                     `;
                 }
                 html += `</tr></thead><tbody>`;
 
+                // 🌟 內容資料 (1~31天)
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dateObj = new Date(y, m - 1, i);
                     const weekdayStr = weekdays[dateObj.getDay()];
-                    let dateStyle = (dateObj.getDay() === 0 || dateObj.getDay() === 6) ? 'color: red;' : '';
+                    
+                    // 判斷六日字體變紅
+                    const dayColor = (dateObj.getDay() === 0 || dateObj.getDay() === 6) ? 'color: red;' : '';
 
                     html += `<tr>
-                        <td class="bg-yellow" style="${dateStyle}">${i}</td>
-                        <td class="bg-yellow" style="${dateStyle}">${weekdayStr}</td>
+                        <td style="${cellStyle} ${yellowBg} ${dayColor}">${i}</td>
+                        <td style="${cellStyle} ${yellowBg} ${dayColor}">${weekdayStr}</td>
                     `;
 
                     const shifts = dailyShifts[i];
                     for (let col = 0; col < maxColumns; col++) {
                         if (col < shifts.length) {
                             html += `
-                                <td>${shifts[col].timeStr}</td>
-                                <td>${shifts[col].title}</td>
-                                <td class="watermark-name">${shifts[col].name}</td>
+                                <td style="${cellStyle} mso-number-format:'\\@';">${shifts[col].timeStr}</td>
+                                <td style="${cellStyle}">${shifts[col].title}</td>
+                                <td style="${nameStyle}">${shifts[col].name}</td>
                             `;
                         } else {
-                            html += `<td></td><td></td><td></td>`;
+                            // 空白格子也要畫出黑框
+                            html += `<td style="${cellStyle}"></td><td style="${cellStyle}"></td><td style="${cellStyle}"></td>`;
                         }
                     }
                     html += `</tr>`;
@@ -5790,6 +5807,7 @@ const exportPaperFormatToExcel = () => {
 
                 html += `</tbody></table></body></html>`;
 
+                // 觸發下載
                 const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -5798,8 +5816,6 @@ const exportPaperFormatToExcel = () => {
                 link.click();
                 document.body.removeChild(link);
             };
-
-
 
             
             const rankingFilterYear = ref(new Date().getFullYear().toString());
