@@ -5818,7 +5818,7 @@ const exportPaperFormatToExcel = () => {
                 document.body.removeChild(link);
             };
 
-// 🌟 匯出「協勤費印領清冊」 (究極還原版：正常姓名顏色、加寬欄位、救災全灰橫線、強制補0、專屬指定排序)
+// 🌟 匯出「協勤費印領清冊」 (究極排版版：欄寬36、精準表頭合併、救災完全空白、黃底橫線)
             const exportPaymentRequestToExcel = () => {
                 if (!assistFilterYear.value || !assistFilterMonth.value) {
                     return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的印領清冊。');
@@ -5838,7 +5838,6 @@ const exportPaperFormatToExcel = () => {
                     '林聖欽', '莊麗雲', '蒲琦佩', '史民其', '呂庭佳', '林宛萱'
                 ];
 
-                // 根據專屬順序重新排序名單
                 const exportSortedMembers = [...members.value].sort((a, b) => {
                     const idxA = EXPORT_NAME_ORDER.indexOf(a.姓名);
                     const idxB = EXPORT_NAME_ORDER.indexOf(b.姓名);
@@ -5847,9 +5846,9 @@ const exportPaperFormatToExcel = () => {
 
                 // 2. 初始化資料結構
                 const reportData = {};
-                const dailyColSums = Array(daysInMonth + 1).fill(0); // 每日協勤時數小計
-                const dailyHeadcounts = Array(daysInMonth + 1).fill(0); // 當天協勤次數(人數)
-                let grandTotalHours = 0; // 全隊總時數
+                const dailyColSums = Array(daysInMonth + 1).fill(0);
+                const dailyHeadcounts = Array(daysInMonth + 1).fill(0);
+                let grandTotalHours = 0; 
 
                 exportSortedMembers.forEach(member => {
                     reportData[member.姓名] = {
@@ -5893,7 +5892,7 @@ const exportPaperFormatToExcel = () => {
                         reportData[name].hoursArray[day] += currentShiftHours;
                         reportData[name].totalHours += currentShiftHours;
                         dailyColSums[day] += currentShiftHours;
-                        dailyHeadcounts[day] += 1; // 增加當天協勤人次
+                        dailyHeadcounts[day] += 1;
                         grandTotalHours += currentShiftHours;
                     }
                 });
@@ -5909,24 +5908,20 @@ const exportPaperFormatToExcel = () => {
                     let unitPos = 0;
                     while (n > 0) {
                         let digit = n % 10;
-                        if (digit !== 0) {
-                            str = digits[digit] + units[unitPos] + str;
-                        } else {
-                            if (str.charAt(0) !== '零' && str !== '') str = '零' + str;
-                        }
+                        if (digit !== 0) str = digits[digit] + units[unitPos] + str;
+                        else if (str.charAt(0) !== '零' && str !== '') str = '零' + str;
                         n = Math.floor(n / 10);
                         unitPos++;
                     }
                     return str.replace(/零+$/, '').replace(/零萬/, '萬') + '元整';
                 };
 
-                // 4. 準備 Excel 樣式 (取消粗體、姓名改為正常顏色、加入救災灰底)
-                const fontBase = "font-family:'標楷體', 'DFKai-SB', serif; font-size: 12pt; text-align: center; vertical-align: middle;";
+                // 4. 準備 Excel 樣式
+                const fontBase = "font-family:'標楷體', 'DFKai-SB', serif; font-size: 11pt; text-align: center; vertical-align: middle;";
                 const border = "border: 0.5pt solid #000000;";
-                const cellStyle = `${fontBase} ${border} height: 20pt; font-weight: normal;`;
+                const cellStyle = `${fontBase} ${border} height: 18pt; mso-number-format:'\\@'; font-weight: normal;`;
                 const yellowBg = "background-color: #ffff00;";
                 const grayBgTop = "background-color: #a6a6a6;"; // 頂部統計灰底
-                const grayBgRow = "background-color: #f2f2f2;"; // 🌟 救災整列的淺灰底色
                 
                 const totalCols = daysInMonth + 7;
 
@@ -5949,7 +5944,7 @@ const exportPaperFormatToExcel = () => {
                                     <x:Selected/>
                                     <x:FitToPage/>
                                     <x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>1</x:FitHeight></x:Print>
-                                    <x:PrintTitleRows>$2:$4</x:PrintTitleRows>
+                                    <x:PrintTitleRows>$1:$5</x:PrintTitleRows> <!-- 🌟 鎖定前5行表頭 -->
                                     <x:PageSetup>
                                         <x:Layout x:Orientation="Landscape"/>
                                         <x:PageMargins x:Bottom="0.5" x:Left="0.25" x:Right="0.25" x:Top="0.5"/>
@@ -5966,18 +5961,18 @@ const exportPaperFormatToExcel = () => {
                 </head>
                 <body>
                 <table>
-                    <!-- 🌟 精準欄位寬度設定 (加寬職稱與姓名) -->
                     <colgroup>
                         <col width="30">  <!-- 編號 -->
-                        <col width="85">  <!-- 職稱 -->
-                        <col width="85">  <!-- 姓名 -->
+                        <col width="65">  <!-- 職稱 -->
+                        <col width="65">  <!-- 姓名 -->
                         <col width="45">  <!-- 日期/星期 -->
                 `;
 
-                for (let i = 1; i <= daysInMonth; i++) html += `<col width="22">`; 
+                // 🌟 設定天數格子寬度為 36
+                for (let i = 1; i <= daysInMonth; i++) html += `<col width="36">`; 
                 html += `<col width="40"><col width="65"><col width="85"></colgroup><tbody>`;
 
-                // Row 1: 當天協勤次數 (灰色底)
+                // 🌟 Row 1: 當天協勤次數 (灰色底)
                 html += `<tr style="height: 18pt;">
                     <td colspan="4" style="${fontBase} ${grayBgTop} ${border} font-size: 10pt;">當天協勤<br>次數</td>`;
                 for (let i = 1; i <= daysInMonth; i++) {
@@ -5985,35 +5980,37 @@ const exportPaperFormatToExcel = () => {
                 }
                 html += `<td colspan="3" style="${border} ${grayBgTop}"></td></tr>`;
 
-                // Row 2: 大標題
+                // 🌟 Row 2: 大標題
                 html += `
                     <tr style="height: 35pt;">
-                        <td colspan="${totalCols - 1}" style="${fontBase} ${yellowBg} border: none; font-size: 14pt;">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤及救災費申請印領清冊(每小時150元)</td>
+                        <td colspan="${totalCols - 1}" style="${fontBase} ${yellowBg} border: none; font-size: 14pt; font-weight: bold;">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤及救災費申請印領清冊(每小時150元)</td>
                         <td style="${fontBase} ${yellowBg} border: none; font-size: 9pt; text-align: left; vertical-align: top; padding-top: 5px;">簽收清冊與印領清冊各印一份</td>
                     </tr>
                 `;
 
-                // Row 3: 表頭上半部
+                // 🌟 Row 3: 結構還原 (編號/職稱/姓名/協勤日期及時數/總額/簽章)
                 html += `
                     <tr>
-                        <td rowspan="2" style="${cellStyle} ${yellowBg}">編<br>號</td>
-                        <td rowspan="2" style="${cellStyle} ${yellowBg}">職稱</td>
-                        <td rowspan="2" style="${cellStyle} ${yellowBg}">姓名</td>
-                        <td style="${cellStyle} ${yellowBg}">日期</td>
-                `;
-
-                for (let i = 1; i <= daysInMonth; i++) {
-                    html += `<td style="${cellStyle} ${yellowBg}">${i}</td>`;
-                }
-
-                html += `
-                        <td rowspan="2" style="${cellStyle} ${yellowBg}">協勤及救<br>災時數</td>
-                        <td rowspan="2" style="${cellStyle} ${yellowBg}">領款金額</td>
-                        <td rowspan="2" style="${cellStyle} ${yellowBg}">領款簽章</td>
+                        <td rowspan="3" style="${cellStyle} ${yellowBg}">編<br>號</td>
+                        <td rowspan="3" style="${cellStyle} ${yellowBg}">職稱</td>
+                        <td rowspan="3" style="${cellStyle} ${yellowBg}">姓名</td>
+                        <td colspan="${daysInMonth + 1}" style="${cellStyle} ${yellowBg}">協勤日期及時數</td>
+                        <td colspan="2" style="${cellStyle} ${yellowBg}">協勤及救<br>災總額</td>
+                        <td rowspan="3" style="${cellStyle} ${yellowBg}">領款簽章</td>
                     </tr>
                 `;
 
-                // Row 4: 表頭下半部 (星期)
+                // 🌟 Row 4: 日期 與 時數/金額 切分
+                html += `<tr><td style="${cellStyle} ${yellowBg}">日期</td>`;
+                for (let i = 1; i <= daysInMonth; i++) {
+                    html += `<td style="${cellStyle} ${yellowBg}">${i}</td>`;
+                }
+                html += `
+                    <td rowspan="2" style="${cellStyle} ${yellowBg}">時數</td>
+                    <td rowspan="2" style="${cellStyle} ${yellowBg}">領款金<br>額</td>
+                </tr>`;
+
+                // 🌟 Row 5: 星期
                 html += `<tr><td style="${cellStyle} ${yellowBg}">星期</td>`;
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dateObj = new Date(y, m - 1, i);
@@ -6028,6 +6025,7 @@ const exportPaperFormatToExcel = () => {
                     const data = reportData[name];
                     const money = data.totalHours * 150;
 
+                    // 協勤的資料產生器
                     const makeDataCells = (arr) => {
                         let cells = '';
                         for (let i = 1; i <= daysInMonth; i++) {
@@ -6037,14 +6035,14 @@ const exportPaperFormatToExcel = () => {
                         return cells;
                     };
 
-                    // 🌟 產生救災整列的灰底與橫線
-                    const makeGrayEmptyCells = () => {
+                    // 🌟 救災空白格產生器 (完全空白，不帶任何橫線與底色)
+                    const makeEmptyCells = () => {
                         let cells = '';
-                        for (let i = 1; i <= daysInMonth; i++) cells += `<td style="${cellStyle} ${grayBgRow}">-</td>`;
+                        for (let i = 1; i <= daysInMonth; i++) cells += `<td style="${cellStyle}"></td>`;
                         return cells;
                     };
 
-                    // 第一列：協勤 (名字為正常黑色、總計為0時強制寫0)
+                    // 第一列：協勤
                     html += `
                     <tr>
                         <td rowspan="2" style="${cellStyle}">${rowCount++}</td>
@@ -6058,13 +6056,13 @@ const exportPaperFormatToExcel = () => {
                     </tr>
                     `;
                     
-                    // 第二列：救災 (全列灰底 + 橫線)
+                    // 第二列：救災 (天數格子全白空白，最後兩個統計格為黃底 - 號)
                     html += `
                     <tr>
-                        <td style="${cellStyle} ${grayBgRow}">救災</td>
-                        ${makeGrayEmptyCells()}
-                        <td style="${cellStyle} ${grayBgRow}">-</td>
-                        <td style="${cellStyle} ${grayBgRow}">-</td>
+                        <td style="${cellStyle}">救災</td>
+                        ${makeEmptyCells()}
+                        <td style="${cellStyle} ${yellowBg}">-</td>
+                        <td style="${cellStyle} ${yellowBg}">-</td>
                     </tr>
                     `;
                 });
@@ -6097,7 +6095,7 @@ const exportPaperFormatToExcel = () => {
                 // 中文大寫總計列
                 html += `
                     <tr>
-                        <td colspan="${totalCols}" style="${cellStyle} ${yellowBg} text-align: left; padding-left: 10px;">總計新臺幣：${toChineseAmount(grandTotalMoney)}</td>
+                        <td colspan="${totalCols}" style="${cellStyle} ${yellowBg} text-align: left; padding-left: 10px; font-weight: bold;">總計新臺幣：${toChineseAmount(grandTotalMoney)}</td>
                     </tr>
                 `;
 
@@ -6105,9 +6103,9 @@ const exportPaperFormatToExcel = () => {
                 const splitCol = Math.floor(totalCols / 3);
                 html += `
                     <tr>
-                        <td colspan="${splitCol}" style="border: none !important; text-align: left; padding-top: 15px; font-size: 12pt; font-family:'標楷體', serif;">承辦人：</td>
-                        <td colspan="${splitCol}" style="border: none !important; text-align: center; padding-top: 15px; font-size: 12pt; font-family:'標楷體', serif;">義消分隊長：</td>
-                        <td colspan="${totalCols - (splitCol * 2)}" style="border: none !important; text-align: left; padding-top: 15px; font-size: 12pt; font-family:'標楷體', serif;">分隊主管：</td>
+                        <td colspan="${splitCol}" style="border: none !important; text-align: left; padding-top: 15px; font-size: 12pt; font-family:'標楷體', serif; font-weight: bold;">承辦人：</td>
+                        <td colspan="${splitCol}" style="border: none !important; text-align: center; padding-top: 15px; font-size: 12pt; font-family:'標楷體', serif; font-weight: bold;">義消分隊長：</td>
+                        <td colspan="${totalCols - (splitCol * 2)}" style="border: none !important; text-align: left; padding-top: 15px; font-size: 12pt; font-family:'標楷體', serif; font-weight: bold;">分隊主管：</td>
                     </tr>
                 `;
 
@@ -6121,8 +6119,6 @@ const exportPaperFormatToExcel = () => {
                 link.click();
                 document.body.removeChild(link);
             };
-
-
 
             
             const rankingFilterYear = ref(new Date().getFullYear().toString());
