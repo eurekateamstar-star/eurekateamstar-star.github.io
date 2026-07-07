@@ -5818,7 +5818,7 @@ const exportPaperFormatToExcel = () => {
                 document.body.removeChild(link);
             };
 
-// 🌟 匯出「協勤費印領清冊」 (究極排版版：救災全灰底、欄寬36、精準表頭合併)
+// 🌟 匯出「協勤費印領清冊」 (究極排版版：加深頂部灰底、救災天數全白、時數金額留橫線)
             const exportPaymentRequestToExcel = () => {
                 if (!assistFilterYear.value || !assistFilterMonth.value) {
                     return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的印領清冊。');
@@ -5921,8 +5921,7 @@ const exportPaperFormatToExcel = () => {
                 const border = "border: 0.5pt solid #000000;";
                 const cellStyle = `${fontBase} ${border} height: 18pt; mso-number-format:'\\@'; font-weight: normal;`;
                 const yellowBg = "background-color: #ffff00;";
-                const grayBgTop = "background-color: #a6a6a6;"; // 頂部統計灰底
-                const grayBgRow = "background-color: #f2f2f2;"; // 🌟 救災整列的淺灰底色
+                const grayBgTop = "background-color: #808080;"; // 🌟 加深頂部統計灰底
                 
                 const totalCols = daysInMonth + 7;
 
@@ -5945,7 +5944,7 @@ const exportPaperFormatToExcel = () => {
                                     <x:Selected/>
                                     <x:FitToPage/>
                                     <x:Print><x:FitWidth>1</x:FitWidth><x:FitHeight>1</x:FitHeight></x:Print>
-                                    <x:PrintTitleRows>$1:$5</x:PrintTitleRows> <!-- 🌟 鎖定前5行表頭 -->
+                                    <x:PrintTitleRows>$1:$5</x:PrintTitleRows>
                                     <x:PageSetup>
                                         <x:Layout x:Orientation="Landscape"/>
                                         <x:PageMargins x:Bottom="0.5" x:Left="0.25" x:Right="0.25" x:Top="0.5"/>
@@ -5969,11 +5968,10 @@ const exportPaperFormatToExcel = () => {
                         <col width="45">  <!-- 日期/星期 -->
                 `;
 
-                // 🌟 設定天數格子寬度為 36
                 for (let i = 1; i <= daysInMonth; i++) html += `<col width="36">`; 
                 html += `<col width="40"><col width="65"><col width="85"></colgroup><tbody>`;
 
-                // 🌟 Row 1: 當天協勤次數 (深灰色底)
+                // Row 1: 當天協勤次數 (深灰色底)
                 html += `<tr style="height: 18pt;">
                     <td colspan="4" style="${fontBase} ${grayBgTop} ${border} font-size: 10pt;">當天協勤<br>次數</td>`;
                 for (let i = 1; i <= daysInMonth; i++) {
@@ -5981,7 +5979,7 @@ const exportPaperFormatToExcel = () => {
                 }
                 html += `<td colspan="3" style="${border} ${grayBgTop}"></td></tr>`;
 
-                // 🌟 Row 2: 大標題
+                // Row 2: 大標題
                 html += `
                     <tr style="height: 35pt;">
                         <td colspan="${totalCols - 1}" style="${fontBase} ${yellowBg} border: none; font-size: 14pt; font-weight: bold;">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤及救災費申請印領清冊(每小時150元)</td>
@@ -5989,7 +5987,7 @@ const exportPaperFormatToExcel = () => {
                     </tr>
                 `;
 
-                // 🌟 Row 3: 結構還原 (編號/職稱/姓名/協勤日期及時數/總額/簽章)
+                // Row 3: 結構還原
                 html += `
                     <tr>
                         <td rowspan="3" style="${cellStyle} ${yellowBg}">編<br>號</td>
@@ -6001,7 +5999,7 @@ const exportPaperFormatToExcel = () => {
                     </tr>
                 `;
 
-                // 🌟 Row 4: 日期 與 時數/金額 切分
+                // Row 4: 日期 與 時數/金額 切分
                 html += `<tr><td style="${cellStyle} ${yellowBg}">日期</td>`;
                 for (let i = 1; i <= daysInMonth; i++) {
                     html += `<td style="${cellStyle} ${yellowBg}">${i}</td>`;
@@ -6011,7 +6009,7 @@ const exportPaperFormatToExcel = () => {
                     <td rowspan="2" style="${cellStyle} ${yellowBg}">領款金<br>額</td>
                 </tr>`;
 
-                // 🌟 Row 5: 星期
+                // Row 5: 星期
                 html += `<tr><td style="${cellStyle} ${yellowBg}">星期</td>`;
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dateObj = new Date(y, m - 1, i);
@@ -6019,7 +6017,7 @@ const exportPaperFormatToExcel = () => {
                 }
                 html += `</tr>`;
 
-                // 🌟 內容資料 (每人兩列：協勤、救災)
+                // 內容資料
                 let rowCount = 1;
                 exportSortedMembers.forEach((member) => {
                     const name = member.姓名;
@@ -6035,16 +6033,14 @@ const exportPaperFormatToExcel = () => {
                         return cells;
                     };
 
-                    // 🌟 救災格子產生器 (加入灰底與橫線)
-                    const makeGrayEmptyCells = () => {
+                    // 🌟 救災空白格產生器 (完全空白，不帶任何橫線與底色)
+                    const makeEmptyCells = () => {
                         let cells = '';
-                        for (let i = 1; i <= daysInMonth; i++) {
-                            cells += `<td style="${cellStyle} ${grayBgRow}">-</td>`;
-                        }
+                        for (let i = 1; i <= daysInMonth; i++) cells += `<td style="${cellStyle}"></td>`;
                         return cells;
                     };
 
-                    // 第一列：協勤 (名字為正常黑色)
+                    // 第一列：協勤
                     html += `
                     <tr>
                         <td rowspan="2" style="${cellStyle}">${rowCount++}</td>
@@ -6052,19 +6048,19 @@ const exportPaperFormatToExcel = () => {
                         <td rowspan="2" style="${cellStyle}">${name}</td>
                         <td style="${cellStyle} ${yellowBg}">協勤</td>
                         ${makeDataCells(data.hoursArray)}
-                        <td style="${cellStyle} ${yellowBg}">${data.totalHours > 0 ? data.totalHours : '0'}</td> <!-- 強制補0 -->
-                        <td style="${cellStyle} ${yellowBg}">${money > 0 ? money.toLocaleString() : '0'}</td> <!-- 強制補0 -->
+                        <td style="${cellStyle} ${yellowBg}">${data.totalHours > 0 ? data.totalHours : '0'}</td>
+                        <td style="${cellStyle} ${yellowBg}">${money > 0 ? money.toLocaleString() : '0'}</td>
                         <td rowspan="2" style="${cellStyle}"></td>
                     </tr>
                     `;
                     
-                    // 第二列：救災 (全列淺灰底 + 橫線)
+                    // 🌟 第二列：救災 (天數完全空白不帶任何底色，但最後的時數跟領款金額有黃底跟 - 號)
                     html += `
                     <tr>
-                        <td style="${cellStyle} ${grayBgRow}">救災</td>
-                        ${makeGrayEmptyCells()}
-                        <td style="${cellStyle} ${grayBgRow}">-</td>
-                        <td style="${cellStyle} ${grayBgRow}">-</td>
+                        <td style="${cellStyle}">救災</td>
+                        ${makeEmptyCells()}
+                        <td style="${cellStyle} ${yellowBg}">-</td>
+                        <td style="${cellStyle} ${yellowBg}">-</td>
                     </tr>
                     `;
                 });
