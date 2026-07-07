@@ -5615,7 +5615,7 @@ const exportPaperFormatToExcel = () => {
 // 控制匯出選項選單
             const isExportModalOpen = ref(false);
 
-           // 🌟 匯出「協勤分配表」 (自動過濾每人當月前 8 小時、精簡時間、姓名淺灰簽名用)
+        // 🌟 匯出「協勤分配表」 (智能時間裁切：每人最多精準 8 小時)
             const exportShiftAssignmentToExcel = () => {
                 if (!assistFilterYear.value || !assistFilterMonth.value) {
                     return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的協勤分配表。');
@@ -5627,7 +5627,7 @@ const exportPaperFormatToExcel = () => {
                 const daysInMonth = new Date(y, m, 0).getDate();
                 const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
 
-                // 1. 初始化每人的累積時數 (用來判斷是否滿8小時)
+                // 1. 初始化每人的累積時數
                 const memberHours = {};
                 sortedMembersList.value.forEach(member => {
                     memberHours[member.姓名] = 0;
@@ -5637,50 +5637,55 @@ const exportPaperFormatToExcel = () => {
                 const dailyShifts = {};
                 for (let i = 1; i <= daysInMonth; i++) dailyShifts[i] = [];
 
-                // 輔助函式：計算時數
-                const calcHours = (start, end) => {
-                    if (!start || !end || !start.includes(':') || !end.includes(':')) return 0;
-                    const [h1, m1] = start.split(':').map(Number);
-                    const [h2, m2] = end.split(':').map(Number);
-                    return ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
-                };
-
                 // 輔助函式：取得該員職稱
                 const getTitle = (name) => {
                     const member = members.value.find(x => x.姓名 === name);
                     return member ? (member.duty_title || '隊員') : '隊員';
                 };
 
-                // 3. 處理資料 (必須按日期與時間先後排序，才能正確抓到"前"8小時)
+                // 3. 處理資料 (按日期與時間先後排序)
                 const sortedRecords = [...allAssistanceRecords.value].filter(r => {
                     if(!r.date || !r.userName) return false;
                     const [ry, rm] = r.date.split('-');
                     return ry === assistFilterYear.value && rm === assistFilterMonth.value;
                 }).sort((a, b) => {
-                    // 先排日期，再排時間
                     if (a.date !== b.date) return a.date.localeCompare(b.date);
                     return (a.shiftStart || '').localeCompare(b.shiftStart || '');
                 });
 
-                // 核心過濾邏輯：只抓前 8 小時
+                // 🌟 核心：智能時間裁切邏輯
                 sortedRecords.forEach(r => {
                     const day = parseInt(r.date.split('-')[2]);
                     const name = r.userName;
-                    const h = calcHours(r.shiftStart, r.shiftEnd);
-
-                    if (memberHours[name] !== undefined) {
-                        // 如果該員當月累積時數還不到 8 小時，就排進表內
-                        if (memberHours[name] < 8) {
-                            // 🌟 修正時間格式：只抓冒號前面的小時數 (例: 08:00 -> 08)
-                            const formatTime = r.shiftStart.split(':')[0] + '-' + r.shiftEnd.split(':')[0];
-                            
-                            dailyShifts[day].push({
-                                timeStr: formatTime,
-                                title: getTitle(name),
-                                name: name
-                            });
-                            memberHours[name] += h; // 累加時數
+                    
+                    if (memberHours[name] !== undefined && memberHours[name] < 8) {
+                        // 解析起訖時間 (例如 "08:00")
+                        let startHour = parseInt(r.shiftStart.split(':')[0]);
+                        let endHour = parseInt(r.shiftEnd.split(':')[0]);
+                        
+                        // 計算這筆排班的時數
+                        let currentShiftHours = endHour - startHour;
+                        
+                        // 判斷此員還剩下多少額度
+                        let remainingQuota = 8 - memberHours[name];
+                        
+                        // 如果這筆排班會讓總時數超過 8 小時，就進行「裁切」
+                        if (currentShiftHours > remainingQuota) {
+                            endHour = startHour + remainingQuota; // 強制將下班時間提早
+                            currentShiftHours = remainingQuota;
                         }
+
+                        // 將時間格式化為 "08-16"
+                        const formatTime = String(startHour).padStart(2, '0') + '-' + String(endHour).padStart(2, '0');
+                        
+                        dailyShifts[day].push({
+                            timeStr: formatTime,
+                            title: getTitle(name),
+                            name: name
+                        });
+                        
+                        // 累加時數
+                        memberHours[name] += currentShiftHours;
                     }
                 });
 
@@ -5730,24 +5735,20 @@ const exportPaperFormatToExcel = () => {
                     .title { font-size: 16pt; font-weight: bold; text-align: center; border: none !important; letter-spacing: 1px; }
                     .sub-title { border: none !important; text-align: left; font-size: 12pt; font-weight: bold; }
                     .bg-yellow { background-color: #ffff00; font-weight: bold; }
-                    /* 🌟 姓名浮水印樣式 (淺灰色) */
                     .watermark-name { color: #b0b0b0; font-weight: bold; font-family: '標楷體', serif; }
                 </style>
                 </head>
                 <body>
                 <table>
                     <thead>
-                        <!-- 大標題列 -->
                         <tr class="title-row">
                             <td colspan="${2 + (maxColumns * 3)}" class="title">新北市政府消防局第一大隊海山分隊${minguoYear}年${m}月義消人員協勤分配表</td>
                         </tr>
-                        <!-- 簽核列 -->
                         <tr>
                             <td colspan="4" class="sub-title" style="padding-left: 50px;">承辦人：</td>
                             <td colspan="${Math.ceil(maxColumns * 3 / 2)}" class="sub-title">義消分隊長：</td>
                             <td colspan="${Math.floor(maxColumns * 3 / 2) - 2}" class="sub-title">單位主管：</td>
                         </tr>
-                        <!-- 欄位標頭 -->
                         <tr>
                             <td class="bg-yellow" width="40">日期</td>
                             <td class="bg-yellow" width="40">星期</td>
@@ -5775,7 +5776,6 @@ const exportPaperFormatToExcel = () => {
                     const shifts = dailyShifts[i];
                     for (let col = 0; col < maxColumns; col++) {
                         if (col < shifts.length) {
-                            // 🌟 將姓名欄位加上 .watermark-name 的 class
                             html += `
                                 <td>${shifts[col].timeStr}</td>
                                 <td>${shifts[col].title}</td>
