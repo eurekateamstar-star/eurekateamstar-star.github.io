@@ -5818,7 +5818,7 @@ const exportPaperFormatToExcel = () => {
                 document.body.removeChild(link);
             };
 
-// 🌟 匯出「協勤費印領清冊」 (究極排版版：加深頂部灰底、救災天數全白、時數金額留橫線)
+// 🌟 匯出「協勤費印領清冊」 (究極排版版：救災整列全灰底、天數空白、時數金額橫線)
             const exportPaymentRequestToExcel = () => {
                 if (!assistFilterYear.value || !assistFilterMonth.value) {
                     return showAppAlert('error', '無法匯出', '請先選擇「特定年份」與「特定月份」，才能產生該月的印領清冊。');
@@ -5921,7 +5921,8 @@ const exportPaperFormatToExcel = () => {
                 const border = "border: 0.5pt solid #000000;";
                 const cellStyle = `${fontBase} ${border} height: 18pt; mso-number-format:'\\@'; font-weight: normal;`;
                 const yellowBg = "background-color: #ffff00;";
-                const grayBgTop = "background-color: #808080;"; // 🌟 加深頂部統計灰底
+                const grayBgTop = "background-color: #808080;"; // 頂端當天協勤次數深灰底
+                const grayBgRow = "background-color: #eaeaea;"; // 🌟 救災整列的淺灰底色
                 
                 const totalCols = daysInMonth + 7;
 
@@ -5987,7 +5988,7 @@ const exportPaperFormatToExcel = () => {
                     </tr>
                 `;
 
-                // Row 3: 結構還原
+                // Row 3: 表頭上半部
                 html += `
                     <tr>
                         <td rowspan="3" style="${cellStyle} ${yellowBg}">編<br>號</td>
@@ -6033,10 +6034,12 @@ const exportPaperFormatToExcel = () => {
                         return cells;
                     };
 
-                    // 🌟 救災空白格產生器 (完全空白，不帶任何橫線與底色)
-                    const makeEmptyCells = () => {
+                    // 🌟 救災格子產生器 (整列套用淺灰底)
+                    const makeGrayEmptyCells = () => {
                         let cells = '';
-                        for (let i = 1; i <= daysInMonth; i++) cells += `<td style="${cellStyle}"></td>`;
+                        for (let i = 1; i <= daysInMonth; i++) {
+                            cells += `<td style="${cellStyle} ${grayBgRow}"></td>`;
+                        }
                         return cells;
                     };
 
@@ -6054,13 +6057,13 @@ const exportPaperFormatToExcel = () => {
                     </tr>
                     `;
                     
-                    // 🌟 第二列：救災 (天數完全空白不帶任何底色，但最後的時數跟領款金額有黃底跟 - 號)
+                    // 🌟 第二列：救災 (從「救災」字眼、1~31天、到最後的時數金額，整條都是灰底)
                     html += `
                     <tr>
-                        <td style="${cellStyle}">救災</td>
-                        ${makeEmptyCells()}
-                        <td style="${cellStyle} ${yellowBg}">-</td>
-                        <td style="${cellStyle} ${yellowBg}">-</td>
+                        <td style="${cellStyle} ${grayBgRow}">救災</td>
+                        ${makeGrayEmptyCells()}
+                        <td style="${cellStyle} ${grayBgRow}">-</td>
+                        <td style="${cellStyle} ${grayBgRow}">-</td>
                     </tr>
                     `;
                 });
@@ -6082,6 +6085,7 @@ const exportPaperFormatToExcel = () => {
                     <tr>
                         <td colspan="4" style="${cellStyle} ${yellowBg}">救災時數合計(小計)</td>
                 `;
+                // 救災小計列維持黃底橫線
                 for (let i = 1; i <= daysInMonth; i++) html += `<td style="${cellStyle} ${yellowBg}">-</td>`;
                 html += `
                         <td style="${cellStyle} ${yellowBg}">-</td>
