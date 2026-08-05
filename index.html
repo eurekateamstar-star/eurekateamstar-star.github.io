@@ -4575,42 +4575,59 @@ const sortedCashHistory = computed(() => {
             onMounted(() => {
                 // 監聽 Google 登入狀態 (自動秒登入邏輯)
              // 監聽 Google 登入狀態 (自動秒登入邏輯)
-                onAuthStateChanged(auth, async (user) => {
-    // 🌟 如果是被強制登出的，直接跳過，避免無限循環
-    if (isForcedLogout.value) {
-        isForcedLogout.value = false;
+            // ✅ 修正後的程式碼（加入 5 秒自動超時防卡死 + try...catch...finally 機制）
+let authTimer = setTimeout(() => {
+    if (authLoading.value) {
+        console.warn("⚠️ 身分驗證超時，強制關閉載入動畫");
         authLoading.value = false;
-        return;
     }
+}, 5000); // 5秒內若資料庫沒有回應，強制解鎖畫面
 
-    if (user) {
-        googleUser.value = user;
-        const q = query(collection(db, "members"), where("uid", "==", user.uid));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-            const memberData = snap.docs[0].data();
-            if (memberData.is_suspended) {
-                isForcedLogout.value = true; // 🌟 設旗標，避免登出後再次觸發
-                await signOut(auth);
-                googleUser.value = null;
-                loginUserName.value = '';
-                currPage.value = 'login';
-                authLoading.value = false;
-                setTimeout(() => {
-                    showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
-                }, 300);
-            } else {
-                appAlert.value.show = false;
-                executeSystemLogin(memberData.姓名);
+onAuthStateChanged(auth, async (user) => {
+    try {
+        if (isForcedLogout.value) {
+            isForcedLogout.value = false;
+            return;
+        }
+
+        if (user) {
+            googleUser.value = user;
+            const q = query(collection(db, "members"), where("uid", "==", user.uid));
+            
+            // 針對資料庫查詢加上 try...catch 保護，防止網路死鎖
+            try {
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                    const memberData = snap.docs[0].data();
+                    if (memberData.is_suspended) {
+                        isForcedLogout.value = true;
+                        await signOut(auth);
+                        googleUser.value = null;
+                        loginUserName.value = '';
+                        currPage.value = 'login';
+                        setTimeout(() => {
+                            showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
+                        }, 300);
+                    } else {
+                        appAlert.value.show = false;
+                        executeSystemLogin(memberData.姓名);
+                    }
+                }
+            } catch (dbError) {
+                console.error("Firestore 身分查詢失敗/連線超時:", dbError);
+                showAppAlert('error', '連線不穩定', '無法讀取身分資料，請確認網路後重新整理。');
             }
         } else {
-            authLoading.value = false;
+            googleUser.value = null;
+            if (currPage.value !== 'login') {
+                currPage.value = 'login';
+            }
         }
-    } else {
-        googleUser.value = null;
-        if (currPage.value !== 'login') {
-            currPage.value = 'login';
-        }
+    } catch (authError) {
+        console.error("Auth 驗證發生錯誤:", authError);
+    } finally {
+        // 🌟 核心修正：無論成功、失敗還是例外，保證必定結束載入轉圈
+        clearTimeout(authTimer);
         authLoading.value = false;
     }
 });
