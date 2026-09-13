@@ -4577,76 +4577,59 @@ const sortedCashHistory = computed(() => {
 
             onMounted(() => {
                 // 監聽 Google 登入狀態 (自動秒登入邏輯)
-             // 監聽 Google 登入狀態 (自動秒登入邏輯)
-            // ✅ 修正後的程式碼（加入 5 秒自動超時防卡死 + try...catch...finally 機制）
-let authTimer = setTimeout(() => {
-    if (authLoading.value) {
-        console.warn("⚠️ 身分驗證超時，強制關閉載入動畫");
-        authLoading.value = false;
-    }
-}, 5000); // 5秒內若資料庫沒有回應，強制解鎖畫面
-
-let authTimer = setTimeout(() => {
-    if (authLoading.value) {
-        console.warn("⚠️ 身分驗證超時，強制解除載入狀態");
-        authLoading.value = false;
-    }
-}, 4000); // 4秒內若資料庫沒有回應，強制解鎖畫面，防止卡死
-
-onAuthStateChanged(auth, async (user) => {
-    try {
-        clearTimeout(authTimer);
-        
-        if (isForcedLogout.value) {
-            isForcedLogout.value = false;
-            authLoading.value = false;
-            return;
-        }
-
-        if (user) {
-            googleUser.value = user;
-            const q = query(collection(db, "members"), where("uid", "==", user.uid));
-            
-            try {
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    const memberData = snap.docs[0].data();
-                    if (memberData.is_suspended) {
-                        isForcedLogout.value = true;
-                        await signOut(auth);
-                        googleUser.value = null;
-                        loginUserName.value = '';
-                        currPage.value = 'login';
-                        setTimeout(() => {
-                            showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
-                        }, 300);
-                    } else {
-                        appAlert.value.show = false;
-                        executeSystemLogin(memberData.姓名);
+                let authTimer = setTimeout(() => {
+                    if (authLoading.value) {
+                        console.warn("⚠️ 身分驗證超時，強制關閉載入動畫");
+                        authLoading.value = false;
                     }
-                } else {
-                    // 雖然 Google 登入但資料庫找不到綁定記錄
-                    googleUser.value = user;
-                    currPage.value = 'login';
-                }
-            } catch (dbError) {
-                console.error("Firestore 身分查詢失敗/連線超時:", dbError);
-                currPage.value = 'login';
-            }
-        } else {
-            googleUser.value = null;
-            if (currPage.value !== 'login') {
-                currPage.value = 'login';
-            }
-        }
-    } catch (authError) {
-        console.error("Auth 驗證發生錯誤:", authError);
-        currPage.value = 'login';
-    } finally {
-        // 絕對確保轉圈圈動畫會關閉
-        authLoading.value = false;
-    }
-});
+                }, 5000); // 5秒內若資料庫沒有回應，強制解鎖畫面
+
+                onAuthStateChanged(auth, async (user) => {
+                    try {
+                        if (isForcedLogout.value) {
+                            isForcedLogout.value = false;
+                            return;
+                        }
+
+                        if (user) {
+                            googleUser.value = user;
+                            const q = query(collection(db, "members"), where("uid", "==", user.uid));
+                            
+                            try {
+                                const snap = await getDocs(q);
+                                if (!snap.empty) {
+                                    const memberData = snap.docs[0].data();
+                                    if (memberData.is_suspended) {
+                                        isForcedLogout.value = true;
+                                        await signOut(auth);
+                                        googleUser.value = null;
+                                        loginUserName.value = '';
+                                        currPage.value = 'login';
+                                        setTimeout(() => {
+                                            showAppAlert('error', '帳號已停用', '您的權限已被管理員暫停，請聯繫管理員。');
+                                        }, 300);
+                                    } else {
+                                        appAlert.value.show = false;
+                                        executeSystemLogin(memberData.姓名);
+                                    }
+                                }
+                            } catch (dbError) {
+                                console.error("Firestore 身分查詢失敗/連線超時:", dbError);
+                                showAppAlert('error', '連線不穩定', '無法讀取身分資料，請確認網路後重新整理。');
+                            }
+                        } else {
+                            googleUser.value = null;
+                            if (currPage.value !== 'login') {
+                                currPage.value = 'login';
+                            }
+                        }
+                    } catch (authError) {
+                        console.error("Auth 驗證發生錯誤:", authError);
+                    } finally {
+                        clearTimeout(authTimer);
+                        authLoading.value = false;
+                    }
+                });
 
     // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
     // 👇👇👇 監聽黑色提示框的點擊事件 👇👇👇
