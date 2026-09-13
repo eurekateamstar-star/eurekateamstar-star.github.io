@@ -2964,7 +2964,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, getDoc, updateDoc, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getMessaging, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
-    import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = { apiKey:"AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q", authDomain:"star-c5e91.firebaseapp.com", projectId:"star-c5e91", storageBucket:"star-c5e91.firebasestorage.app", messagingSenderId:"804810488246", appId:"1:804810488246:web:477340ff049b90ed68e917" };
     const fireApp = initializeApp(firebaseConfig);
@@ -4818,15 +4818,26 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 }
             });
 
-      const loginWithGoogle = async () => {
+   const loginWithGoogle = async () => {
     appAlert.value.show = false; 
     authLoading.value = true;
     try {
-        // 改用轉址登入，完美解決手機 LINE / Safari 內建瀏覽器 sessionStorage 遺失的問題
-        await signInWithRedirect(auth, googleProvider);
+        // 針對手機內建瀏覽器（如 LINE），強制設定清除快取與彈窗憑證
+        googleProvider.setCustomParameters({
+            prompt: 'select_account' // 每次登入都讓使用者明確選擇帳號，避免快取衝突
+        });
+        
+        await signInWithPopup(auth, googleProvider);
     } catch (error) {
         authLoading.value = false;
-        showAppAlert('error', 'Google 登入失敗', error.message);
+        console.error("Google 登入錯誤代碼:", error.code, error.message);
+        
+        // 如果是 LINE / 隱私模式阻擋 Popup，跳出提示引導使用者用外部瀏覽器開
+        if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            showAppAlert('error', '瀏覽器阻擋', '請點擊右上角選單，選擇「在 Safari / Chrome 中開啟」以順利完成 Google 登入。');
+        } else {
+            showAppAlert('error', 'Google 登入失敗', error.message);
+        }
     }
 };
 
