@@ -171,7 +171,10 @@
                 <!-- 狀態 1：檢查登入狀態中 (自動秒登入) -->
                 <div v-if="authLoading" class="text-center py-8">
                     <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
-                    <p class="text-sm font-black text-slate-500">系統身分驗證中...</p>
+                    <p class="text-sm font-black text-slate-500 mb-4">系統身分驗證中...</p>
+                    <button @click="window.location.reload()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-all">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> 卡住不動？點此重新整理
+                    </button>
                 </div>
 
                 <!-- 狀態 2：尚未 Google 登入 -->
@@ -4583,10 +4586,20 @@ let authTimer = setTimeout(() => {
     }
 }, 5000); // 5秒內若資料庫沒有回應，強制解鎖畫面
 
+let authTimer = setTimeout(() => {
+    if (authLoading.value) {
+        console.warn("⚠️ 身分驗證超時，強制解除載入狀態");
+        authLoading.value = false;
+    }
+}, 4000); // 4秒內若資料庫沒有回應，強制解鎖畫面，防止卡死
+
 onAuthStateChanged(auth, async (user) => {
     try {
+        clearTimeout(authTimer);
+        
         if (isForcedLogout.value) {
             isForcedLogout.value = false;
+            authLoading.value = false;
             return;
         }
 
@@ -4594,7 +4607,6 @@ onAuthStateChanged(auth, async (user) => {
             googleUser.value = user;
             const q = query(collection(db, "members"), where("uid", "==", user.uid));
             
-            // 針對資料庫查詢加上 try...catch 保護，防止網路死鎖
             try {
                 const snap = await getDocs(q);
                 if (!snap.empty) {
@@ -4612,10 +4624,14 @@ onAuthStateChanged(auth, async (user) => {
                         appAlert.value.show = false;
                         executeSystemLogin(memberData.姓名);
                     }
+                } else {
+                    // 雖然 Google 登入但資料庫找不到綁定記錄
+                    googleUser.value = user;
+                    currPage.value = 'login';
                 }
             } catch (dbError) {
                 console.error("Firestore 身分查詢失敗/連線超時:", dbError);
-                showAppAlert('error', '連線不穩定', '無法讀取身分資料，請確認網路後重新整理。');
+                currPage.value = 'login';
             }
         } else {
             googleUser.value = null;
@@ -4625,9 +4641,9 @@ onAuthStateChanged(auth, async (user) => {
         }
     } catch (authError) {
         console.error("Auth 驗證發生錯誤:", authError);
+        currPage.value = 'login';
     } finally {
-        // 🌟 核心修正：無論成功、失敗還是例外，保證必定結束載入轉圈
-        clearTimeout(authTimer);
+        // 絕對確保轉圈圈動畫會關閉
         authLoading.value = false;
     }
 });
