@@ -2966,13 +2966,23 @@
 </div>
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, getDoc, updateDoc, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, onSnapshot, addDoc, deleteDoc, doc, query, where, getDocs, getDoc, updateDoc, orderBy, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
     import { getMessaging, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = { apiKey:"AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q", authDomain:"star-c5e91.firebaseapp.com", projectId:"star-c5e91", storageBucket:"star-c5e91.firebasestorage.app", messagingSenderId:"804810488246", appId:"1:804810488246:web:477340ff049b90ed68e917" };
     const fireApp = initializeApp(firebaseConfig);
-    const db = getFirestore(fireApp);
+    // 🌟 開啟本機快取（第二次開啟起資料瞬間顯示）+ 自動偵測長輪詢（避開會卡住 WebChannel 的網路）
+    let db;
+    try {
+        db = initializeFirestore(fireApp, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+            experimentalAutoDetectLongPolling: true
+        });
+    } catch (e) {
+        console.warn("本機快取啟用失敗，改用一般模式:", e);
+        db = getFirestore(fireApp);
+    }
     const messaging = getMessaging(fireApp);
     const auth = getAuth(fireApp);
     const googleProvider = new GoogleAuthProvider();
@@ -3078,6 +3088,8 @@ onMessage(messaging, (payload) => {
             const googleUser = ref(null);  
             const showLoginPassword = ref(false); // 控制登入密碼是否顯示
             const executeSystemLogin = (name) => {
+                if (loginUserName.value === name && currPage.value !== 'login') return; // 已登入，避免重複執行
+                try { if (googleUser.value?.uid) localStorage.setItem('haishan_login_' + googleUser.value.uid, name); } catch(e) {}
                 loginUserName.value = name;
                 processNews();
                 currPage.value = 'dashboard';
@@ -4599,6 +4611,16 @@ onAuthStateChanged(auth, async (user) => {
 
         if (user) {
             googleUser.value = user;
+
+            // 🌟 秒登入：這台裝置上次登入過，就先直接進入，身分驗證在背景繼續跑
+            let cachedName = null;
+            try { cachedName = localStorage.getItem('haishan_login_' + user.uid); } catch(e) {}
+            if (cachedName) {
+                clearTimeout(authTimer);
+                authLoading.value = false;
+                executeSystemLogin(cachedName);
+            }
+
             const q = query(collection(db, "members"), where("uid", "==", user.uid));
             
             // 針對資料庫查詢加上 try...catch 保護，防止網路死鎖
@@ -4815,6 +4837,12 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 !!googleUser.value && members.value.some(m => m.uid && m.uid === googleUser.value.uid)
             );
             watch([members, googleUser], () => {
+                // 已登入：若管理員解除了這個 Google 帳號的綁定，就登出（避免秒登入記憶失效後仍可進入）
+                if (currPage.value !== 'login' && googleUser.value && loginUserName.value && members.value.length > 0) {
+                    const cur = members.value.find(m => m.姓名 === loginUserName.value);
+                    if (!cur || cur.uid !== googleUser.value.uid) logout();
+                    return;
+                }
                 if (currPage.value !== 'login' || !googleUser.value || loginUserName.value) return;
                 const me = members.value.find(m => m.uid && m.uid === googleUser.value.uid);
                 if (!me || me.is_suspended) return;
@@ -4887,6 +4915,7 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
 };
 
             const logout = async () => {
+                try { if (googleUser.value?.uid) localStorage.removeItem('haishan_login_' + googleUser.value.uid); } catch(e) {}
                 await signOut(auth);
                 currPage.value = 'login';
                 loginUserName.value = '';
