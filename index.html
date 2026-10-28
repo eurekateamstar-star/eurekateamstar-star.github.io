@@ -191,7 +191,14 @@
                     </div>
                     
                     <!-- 還有尚未綁定的人員時顯示 -->
-                    <template v-if="sortedLoginMembers.length > 0">
+                    <!-- 已綁定的帳號 / 名單尚未載入：顯示連線中，避免誤顯示綁定畫面 -->
+                    <div v-if="isBoundGoogleUser || members.length === 0" class="text-center py-8">
+                        <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                        <p class="text-sm font-black text-slate-500">正在同步隊員資料...</p>
+                        <p class="text-[11px] font-bold text-slate-400 mt-2">若久候未進入，請檢查網路後重新整理</p>
+                    </div>
+
+                    <template v-else-if="sortedLoginMembers.length > 0">
                         <p class="text-xs font-black text-rose-500 mb-2"><i class="fa-solid fa-circle-exclamation mr-1"></i>首次使用請綁定您的隊員身分</p>
                         
                         <div class="relative flex items-center">
@@ -4802,6 +4809,20 @@ onSnapshot(doc(db, "finance", "squad_fund"), (docSnap) => {
                 });
             });
 
+            // 🌟 防呆：Google 已登入、但第一次身分查詢失敗或回傳空的(網路不穩/剛從背景喚醒)
+            // 等隊員名單即時同步進來後，若找到已綁定此 Google 帳號的人員，就自動登入
+            const isBoundGoogleUser = computed(() =>
+                !!googleUser.value && members.value.some(m => m.uid && m.uid === googleUser.value.uid)
+            );
+            watch([members, googleUser], () => {
+                if (currPage.value !== 'login' || !googleUser.value || loginUserName.value) return;
+                const me = members.value.find(m => m.uid && m.uid === googleUser.value.uid);
+                if (!me || me.is_suspended) return;
+                appAlert.value.show = false;
+                authLoading.value = false;
+                executeSystemLogin(me.姓名);
+            });
+
          const hasAutoShownNews = ref(false); // 紀錄這次登入是否已經彈出過了
 
             // 🌟 自動監聽：解決載入時間差導致沒跳出視窗的問題
@@ -6737,7 +6758,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 isAssistTimeModalOpen, assistTempStart, assistTempEnd, openAssistTimeModal, selectAssistHour, resetAssistTimeSelection, confirmAssistTime, isAssistHourDisabled,
                 activeAssistTab, visibleAssistTabs, assistSlider, assistTabsScrollRef, scrollToAssistTab, onAssistSliderScroll, dynamicMemberHours,displayEmtExpiry,exportPaymentRequestToExcel,
                 myAssistanceRecords, allAssistanceRecords, isAssistEditModalOpen, editingAssistRecord, openAssistEditModal, submitAssistEdit, deleteAssistRecord, handleTimeInput,
-                 authLoading, googleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,adminEditSections,isAdminMemberMenuOpen, adminSelectedMember, openAdminMemberMenu,showFinanceAmount,
+                 authLoading, googleUser, isBoundGoogleUser, loginWithGoogle, bindAndLogin, unbindGoogleAccount,adminEditSections,isAdminMemberMenuOpen, adminSelectedMember, openAdminMemberMenu,showFinanceAmount,
                 // 全域 UI 工具與搜尋
                 appAlert, appConfirm, showAppAlert, showAppConfirm, handleAddressInput, selectStreet, hideSuggestions, squadFinance, sortedCashHistory, personalCaseCounts, isCaseDetailModalOpen, selectedCaseType, 
     selectedCaseDetails, openCaseDetailModal, personalYearlyStats, toggleAdminStatus,isAddMemberModalOpen, newMemberForm, openAddMemberModal, submitAddMember,exportPaperFormatToExcel, exportShiftAssignmentToExcel, isExportModalOpen,
