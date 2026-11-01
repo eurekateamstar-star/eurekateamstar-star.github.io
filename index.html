@@ -1741,6 +1741,11 @@
             </div>
             <div class="modal-scroll-area space-y-4">
                 <div v-if="postType==='meeting'" class="space-y-4">
+                    <!-- 一鍵帶入當月常訓 -->
+                    <button v-if="!editingTaskId" @click="fillMonthlyTraining" :disabled="isFillingTraining" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-black shadow-lg shadow-blue-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid" :class="isFillingTraining ? 'fa-spinner fa-spin' : 'fa-calendar-check'"></i>
+                        {{ isFillingTraining ? '讀取常訓排程中...' : '一鍵帶入當月常訓' }}
+                    </button>
                     <div class="flex gap-2">
                         <button v-for="cat in ['一般會議','旅遊','聚餐']" :key="cat" @click="newTask.category = cat" class="flex-1 py-3 rounded-xl text-xs font-black border transition-all" :class="newTask.category === cat ? 'bg-purple-600 text-white border-purple-700' : 'bg-slate-50 text-slate-400 border-slate-200'">{{cat}}</button>
                     </div>
@@ -3608,6 +3613,42 @@ const openEditTaskModal = (task, type) => {
     isPostModalOpen.value = true;
 };
             const postToLine = ref(true);
+
+            // 🌟 一鍵帶入當月常訓（讀取「常訓」分頁的排程 training_data_年份/月份）
+            const isFillingTraining = ref(false);
+            const TRAINING_DEFAULT_TEAMS = { 1:'第一小隊',2:'第一小隊',3:'第二小隊',4:'第二小隊',5:'第三小隊',6:'第三小隊',7:'第一小隊',8:'第一小隊',9:'第二小隊',10:'第二小隊',11:'第三小隊',12:'第三小隊' };
+            const fillMonthlyTraining = async () => {
+                isFillingTraining.value = true;
+                try {
+                    const now = new Date();
+                    const load = async (y, mo) => {
+                        let data = {};
+                        try {
+                            const snap = await getDoc(doc(db, `training_data_${y}`, String(mo)));
+                            if (snap.exists()) data = snap.data();
+                        } catch (e) { console.warn('讀取常訓排程失敗', e); }
+                        const m = String(data.dateStr || '').match(/(\d+)月(\d+)日/);
+                        const day = m ? parseInt(m[2]) : 5;
+                        return { y, mo, day, team: data.team || TRAINING_DEFAULT_TEAMS[mo], title: data.title || '常訓' };
+                    };
+                    let t = await load(now.getFullYear(), now.getMonth() + 1);
+                    // 當月常訓已經過了，就帶下個月的
+                    if (new Date(t.y, t.mo - 1, t.day, 22, 0) < now) {
+                        const n = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                        t = await load(n.getFullYear(), n.getMonth() + 1);
+                    }
+                    const pad = (n) => String(n).padStart(2, '0');
+                    newTask.value.category = '一般會議';
+                    newTask.value.title = `海山${t.mo}月份${t.title === '常訓' ? '常訓' : t.title}`;
+                    newTask.value.date = `${t.y}-${pad(t.mo)}-${pad(t.day)}`;
+                    newTask.value.startTime = '18:30';
+                    newTask.value.endTime = '22:00';
+                    newTask.value.location = '海山分隊';
+                    newTask.value.note = t.team;
+                } finally {
+                    isFillingTraining.value = false;
+                }
+            };
 
             // 🌟 發布到 LINE 群組（透過 Cloudflare Worker 保管金鑰；用 Firebase 登入憑證驗證身分，避免別人亂發）
             const announceToLineGroup = async (taskId, type, task) => {
@@ -6935,7 +6976,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 currentWeekStart, weekDates, currentWeekRangeText, changeWeek, hasShift, isPastDate, hourOptions,
                 isShiftModalOpen, isDeleteShiftModalOpen, selectedDay, tempStartTime, tempEndTime, isHourDisabled, isMyShift, userShifts,
                 currentCalendarDate, calendarTitle, calendarCells, changeCalendarMonth, getShiftsForCell, getShiftsCount, getWeekday,
-                officialTasks, meetingTasks, filteredOfficialTasks, filteredMeetingTasks, isPostModalOpen, postType, newTask, postToLine,
+                officialTasks, meetingTasks, filteredOfficialTasks, filteredMeetingTasks, isPostModalOpen, postType, newTask, postToLine, isFillingTraining, fillMonthlyTraining,
                     editingTaskId, sendEditPush, openEditTaskModal, 
                     openPostTaskModal, handlePostTask, handleDeleteTask, getTaskRegCount, getTaskParticipants, isUserSignedUp, toggleRegistration,
                 isMeetingRegModalOpen, regForm, openMeetingRegModal, submitMeetingReg, currentTask, getMeetingSummary, getDetailedRegs, getCategoryClass, isExpired, getFillingCount,
