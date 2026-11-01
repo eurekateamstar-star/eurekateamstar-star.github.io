@@ -16,6 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script>
         const FCM_VAPID_KEY = "BHyRR-j7j66BV3nHSW_z5bMlYMPbtn8LcpttaY7ZuDHTmVFFXxILG3SbHhzFPD6TEhM1AP1XRjwgchhJrlSkFyY";
+        // LINE 群組機器人（舊 Google Apps Script 的 /exec 網址；留空 = 不發 LINE）
+        const GAS_LINE_URL = "";
         const CLOUD_RUN_URL = "https://send-task-notification-804810488246.asia-east1.run.app/";
     </script>
     <style>
@@ -1762,6 +1764,12 @@
                 <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 ml-1">地點</label><input v-model="newTask.location" type="text" placeholder="輸入詳細地點" class="med-input w-full"></div>
          <div class="space-y-1"><label class="text-[10px] font-black text-slate-400 ml-1">備註資訊 (服裝等)</label><textarea v-model="newTask.note" placeholder="例如：穿著黑色POLO衫..." class="med-input w-full h-24"></textarea></div>
                 
+                <!-- 新增模式：同時發布到 LINE 群組 -->
+                <div v-if="!editingTaskId" class="flex items-center gap-2 mt-2 bg-green-50 p-3 rounded-xl border border-green-100">
+                    <input type="checkbox" id="postToLineCB" v-model="postToLine" class="w-4 h-4 text-green-600 rounded border-slate-300 focus:ring-green-500">
+                    <label for="postToLineCB" class="text-xs font-black text-slate-600 cursor-pointer flex-1 select-none"><i class="fa-brands fa-line text-green-500 mr-1"></i>同時發布到 LINE 群組</label>
+                </div>
+
                 <!-- 新增：編輯模式專屬的推播勾選框 -->
                 <div v-if="editingTaskId" class="flex items-center gap-2 mt-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
                     <input type="checkbox" id="sendEditPushCB" v-model="sendEditPush" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
@@ -3599,6 +3607,26 @@ const openEditTaskModal = (task, type) => {
     };
     isPostModalOpen.value = true;
 };
+            const postToLine = ref(true);
+
+            // 🌟 發布到 LINE 群組（透過 GAS 的群組機器人；用 Firebase 登入憑證驗證身分，避免別人亂發）
+            const announceToLineGroup = async (taskId, type, task) => {
+                if (!GAS_LINE_URL) return;
+                try {
+                    const idToken = await auth.currentUser.getIdToken();
+                    const res = await fetch(GAS_LINE_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 用 text/plain 避免 CORS 預檢
+                        body: JSON.stringify({ action: 'announce', idToken, taskId, type, task })
+                    });
+                    const r = await res.json();
+                    if (!r.success) throw new Error(r.message || '未知錯誤');
+                } catch (e) {
+                    console.error('LINE 群組發布失敗:', e);
+                    showAppAlert('error', 'LINE 群組發布失敗', '任務已發布成功，但 LINE 群組通知沒送出：' + e.message);
+                }
+            };
+
             const regForm = ref({ status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 });
             const aiRawInput = ref('');
             const isAiProcessing = ref(false);
@@ -4355,8 +4383,9 @@ const openEmtRecordModal = () => {
             }
         } else {
             // 新增模式
-            await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
+            const docRef = await addDoc(collection(db, collName), { ...newTask.value, creator: userData.value.姓名, timestamp: new Date() });
             isPostModalOpen.value = false;
+            if (postToLine.value) announceToLineGroup(docRef.id, postType.value === 'duty' ? 'task' : 'meeting', { ...newTask.value });
             const response = await fetch(CLOUD_RUN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -6906,7 +6935,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 currentWeekStart, weekDates, currentWeekRangeText, changeWeek, hasShift, isPastDate, hourOptions,
                 isShiftModalOpen, isDeleteShiftModalOpen, selectedDay, tempStartTime, tempEndTime, isHourDisabled, isMyShift, userShifts,
                 currentCalendarDate, calendarTitle, calendarCells, changeCalendarMonth, getShiftsForCell, getShiftsCount, getWeekday,
-                officialTasks, meetingTasks, filteredOfficialTasks, filteredMeetingTasks, isPostModalOpen, postType, newTask,
+                officialTasks, meetingTasks, filteredOfficialTasks, filteredMeetingTasks, isPostModalOpen, postType, newTask, postToLine,
                     editingTaskId, sendEditPush, openEditTaskModal, 
                     openPostTaskModal, handlePostTask, handleDeleteTask, getTaskRegCount, getTaskParticipants, isUserSignedUp, toggleRegistration,
                 isMeetingRegModalOpen, regForm, openMeetingRegModal, submitMeetingReg, currentTask, getMeetingSummary, getDetailedRegs, getCategoryClass, isExpired, getFillingCount,
