@@ -16,8 +16,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script>
         const FCM_VAPID_KEY = "BHyRR-j7j66BV3nHSW_z5bMlYMPbtn8LcpttaY7ZuDHTmVFFXxILG3SbHhzFPD6TEhM1AP1XRjwgchhJrlSkFyY";
-        // LINE 群組機器人（舊 Google Apps Script 的 /exec 網址；留空 = 不發 LINE）
-        const GAS_LINE_URL = "";
+        // LINE 群組機器人（Cloudflare Worker 網址；留空 = 不發 LINE）
+        const LINE_WORKER_URL = "";
         const CLOUD_RUN_URL = "https://send-task-notification-804810488246.asia-east1.run.app/";
     </script>
     <style>
@@ -3609,15 +3609,15 @@ const openEditTaskModal = (task, type) => {
 };
             const postToLine = ref(true);
 
-            // 🌟 發布到 LINE 群組（透過 GAS 的群組機器人；用 Firebase 登入憑證驗證身分，避免別人亂發）
+            // 🌟 發布到 LINE 群組（透過 Cloudflare Worker 保管金鑰；用 Firebase 登入憑證驗證身分，避免別人亂發）
             const announceToLineGroup = async (taskId, type, task) => {
-                if (!GAS_LINE_URL) return;
+                if (!LINE_WORKER_URL) return;
                 try {
                     const idToken = await auth.currentUser.getIdToken();
-                    const res = await fetch(GAS_LINE_URL, {
+                    const res = await fetch(LINE_WORKER_URL, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 用 text/plain 避免 CORS 預檢
-                        body: JSON.stringify({ action: 'announce', idToken, taskId, type, task })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken, taskId, type, task })
                     });
                     const r = await res.json();
                     if (!r.success) throw new Error(r.message || '未知錯誤');
