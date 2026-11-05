@@ -3508,26 +3508,30 @@ const userData = computed(() => members.value.find(m => m.姓名 === loginUserNa
                 const shortage = task.quota - getTaskRegCount(task.id);
                 if (shortage <= 0) return;
 
-                showAppConfirm('發送缺額廣播', `即將向全隊發送「${task.title} 尚缺 ${shortage} 人」的推播通知，確定執行嗎？`, async () => {
+                showAppConfirm('發送缺額廣播', `即將向全隊（App 推播 + LINE 群組）發送「${task.title} 尚缺 ${shortage} 人」的通知，確定執行嗎？`, async () => {
                     isReminding.value = task.id;
-                    try {
-                        const title = `🚨 缺額強力募集：${task.title}`;
-                        const body = `各位學長姐好，本公差任務尚缺 ${shortage} 名人員，再麻煩有空的學長姐踴躍至 App 內登記報名！`;
+                    const title = `🚨 缺額強力募集：${task.title}`;
+                    const body = `各位學長姐好，本公差任務尚缺 ${shortage} 名人員，再麻煩有空的學長姐踴躍至 App 內登記報名！`;
+                    const registered = getTaskRegCount(task.id);
 
-                        const response = await fetch(CLOUD_RUN_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ title, body })
-                        });
-                        const result = await response.json();
-                        if (result.stats) {
-                            showAppAlert('success', '全隊提醒已發送', `✅ 成功觸發推播指令！`);
-                        }
-                    } catch (e) {
-                        showAppAlert('error', '發送失敗', e.message);
-                    } finally {
-                        isReminding.value = '';
-                    }
+                    const pushJob = fetch(CLOUD_RUN_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, body })
+                    }).then(r => r.json()).then(r => ({ ok: !!r.stats, message: '' })).catch(e => ({ ok: false, message: e.message }));
+                    const lineJob = sendLineGroupCard({
+                        kind: 'shortage', taskId: task.id, type: 'task',
+                        task: { title: task.title, date: task.date, startTime: task.startTime, endTime: task.endTime, location: task.location, note: task.note, quota: task.quota },
+                        shortage, registered
+                    });
+
+                    const [pushRes, lineRes] = await Promise.all([pushJob, lineJob]);
+                    isReminding.value = '';
+                    const lines = [
+                        pushRes.ok ? '✅ App 推播已發送' : `❌ App 推播失敗${pushRes.message ? '：' + pushRes.message : ''}`,
+                        lineRes.ok ? (lineRes.message === '已發送過' ? '⏸️ LINE 群組 30 分鐘內已發過相同缺額，這次略過' : '✅ LINE 群組已發送') : `❌ LINE 群組失敗：${lineRes.message}`
+                    ];
+                    showAppAlert(pushRes.ok || lineRes.ok ? 'success' : 'error', '缺額廣播結果', lines.join('\n'));
                 });
             };
 
@@ -3651,21 +3655,27 @@ const openEditTaskModal = (task, type) => {
             };
 
             // 🌟 發布到 LINE 群組（透過 Cloudflare Worker 保管金鑰；用 Firebase 登入憑證驗證身分，避免別人亂發）
-            const announceToLineGroup = async (taskId, type, task) => {
-                if (!LINE_WORKER_URL) return;
+            // kind: 'announce'（新任務發布）/ 'shortage'（公差缺額招募）
+            const sendLineGroupCard = async (payload) => {
+                if (!LINE_WORKER_URL) return { ok: false, message: '尚未設定 LINE Worker' };
                 try {
                     const idToken = await auth.currentUser.getIdToken();
                     const res = await fetch(LINE_WORKER_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ idToken, taskId, type, task })
+                        body: JSON.stringify({ idToken, ...payload })
                     });
                     const r = await res.json();
                     if (!r.success) throw new Error(r.message || '未知錯誤');
+                    return { ok: true, message: r.message || '' };
                 } catch (e) {
-                    console.error('LINE 群組發布失敗:', e);
-                    showAppAlert('error', 'LINE 群組發布失敗', '任務已發布成功，但 LINE 群組通知沒送出：' + e.message);
+                    console.error('LINE 群組發送失敗:', e);
+                    return { ok: false, message: e.message };
                 }
+            };
+            const announceToLineGroup = async (taskId, type, task) => {
+                const r = await sendLineGroupCard({ kind: 'announce', taskId, type, task });
+                if (!r.ok && LINE_WORKER_URL) showAppAlert('error', 'LINE 群組發布失敗', '任務已發布成功，但 LINE 群組通知沒送出：' + r.message);
             };
 
             const regForm = ref({ status: '出席', diet: '葷食', plusAdult: 0, plusChild: 0 });
