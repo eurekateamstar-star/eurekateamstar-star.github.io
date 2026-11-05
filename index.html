@@ -3529,7 +3529,7 @@ const userData = computed(() => members.value.find(m => m.姓名 === loginUserNa
                     isReminding.value = '';
                     const lines = [
                         pushRes.ok ? '✅ App 推播已發送' : `❌ App 推播失敗${pushRes.message ? '：' + pushRes.message : ''}`,
-                        lineRes.ok ? (lineRes.message === '已發送過' ? '⏸️ LINE 群組 30 分鐘內已發過相同缺額，這次略過' : '✅ LINE 群組已發送（含 @All）' + (lineRes.message ? '\n' + lineRes.message : '')) : `❌ LINE 群組失敗：${lineRes.message}`
+                        lineRes.ok ? (lineRes.message === '已發送過' ? '⏸️ LINE 群組 30 分鐘內已發過相同缺額，這次略過' : '✅ LINE 群組已發送') : `❌ LINE 群組失敗：${lineRes.message}`
                     ];
                     showAppAlert(pushRes.ok || lineRes.ok ? 'success' : 'error', '缺額廣播結果', lines.join('\n'));
                 });
