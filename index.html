@@ -6471,7 +6471,7 @@ const exportPaperFormatToExcel = () => {
                             dataMap[record.userName].caseCount += record.cases.length;
                             record.cases.forEach(c => {
                                 // 案件出勤時間（跨午夜時自動加 24 小時）
-                                let ch = calcHours(c.startTime, c.endTime);
+                                let ch = calcHours(c.caseStart || c.startTime, c.caseEnd || c.endTime);
                                 if (ch < 0) ch += 24;
                                 if (ch > 0 && ch <= 24) dataMap[record.userName].caseHours += ch;
                                 if (c.caseType) {
