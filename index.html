@@ -1327,12 +1327,12 @@
                                     </select>
                                     <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none text-[10px]"></i>
                                 </div>
-                                <p class="text-[11px] font-bold text-slate-400 mt-2 px-1"><i class="fa-solid fa-circle-info mr-1"></i>累計協勤時數需達 {{ RANKING_MIN_HOURS }} 小時以上才列入排名</p>
+                                <p class="text-[11px] font-bold text-slate-400 mt-2 px-1 leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i>列入排名條件：協勤時數 {{ RANKING_MIN_HOURS }} 小時以上，且總出勤達 {{ rankingMinCases }} 件以上（{{ RANKING_MIN_HOURS }} 小時以上隊員平均出勤的一半）</p>
                             </div>
 
                             <div v-if="currentRankingList.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
                                 <i class="fa-solid fa-ranking-star text-4xl mb-4"></i>
-                                <p class="font-black text-sm">{{ rankingType === 'single_case' ? `目前沒有人達到 ${RANKING_MIN_HOURS} 小時門檻` : '該月份無任何排名資料' }}</p>
+                                <p class="font-black text-sm">{{ rankingType === 'single_case' ? '目前沒有人達到列入排名的門檻' : '該月份無任何排名資料' }}</p>
                             </div>
 
                             <!-- 排名列表 -->
@@ -6431,6 +6431,7 @@ const exportPaperFormatToExcel = () => {
             const rankingType = ref('hours'); 
             const rankingCaseType = ref('急病'); // 個別案件預設選中
             const RANKING_MIN_HOURS = 100; // 個別案件佔比排名：時數門檻
+            const RANKING_MIN_CASE_RATIO = 0.5; // 總出勤需達「時數達標隊員平均出勤」的 50%
 
             // 動態計算全隊排行資料
             const teamRankingData = computed(() => {
@@ -6492,6 +6493,14 @@ const exportPaperFormatToExcel = () => {
                 }));
             });
 
+            // 個別案件排名的出勤件數門檻：時數達標隊員的平均總出勤 × 50%（無條件進位）
+            const rankingMinCases = computed(() => {
+                const eligible = teamRankingData.value.filter(m => m.hours >= RANKING_MIN_HOURS && m.caseCount > 0);
+                if (eligible.length === 0) return 0;
+                const avg = eligible.reduce((sum, m) => sum + m.caseCount, 0) / eligible.length;
+                return Math.ceil(avg * RANKING_MIN_CASE_RATIO);
+            });
+
             // 根據選擇的 rankingType 進行排序過濾，並附加 displayScore 讓畫面直接渲染
             const currentRankingList = computed(() => {
                 const list = [...teamRankingData.value];
@@ -6527,7 +6536,7 @@ const exportPaperFormatToExcel = () => {
                         };
                     })
                     // 條件1：該案件數必須 > 0，且協勤時數達門檻才進榜（避免時數少的人比例虛高）
-                    .filter(m => m.specificCaseCount > 0 && m.hours >= RANKING_MIN_HOURS)
+                    .filter(m => m.specificCaseCount > 0 && m.hours >= RANKING_MIN_HOURS && m.caseCount >= rankingMinCases.value)
                     // 條件2：依照比例 (佔比) 由高到低排序
                     .sort((a, b) => b.displayScore - a.displayScore);
                 }
@@ -7026,7 +7035,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete, paymentPushLoading, pushPaymentReminder,
                 selectAdminHour, openAdminAddShift, submitAdminShift, addCaseToEdit, removeCaseFromEdit, isCollectionSummaryModalOpen, collectionSummaryList,
-                openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList, RANKING_MIN_HOURS,
+                openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList, RANKING_MIN_HOURS, rankingMinCases,
                 submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,rankingCaseType, paymentPushAllLoading, pushPaymentReminderToAll,
                 openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
                 
