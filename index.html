@@ -1358,6 +1358,7 @@
                                             <span v-if="rankingType !== 'hours'"><i class="fa-solid fa-clock mr-1 text-amber-500"></i>{{ member.hours }} hr</span>
                                             <span v-if="rankingType !== 'total_cases'"><i class="fa-solid fa-truck-medical mr-1 text-blue-500"></i>總出勤 {{ member.caseCount }} 件</span>
                                             
+                                            <span v-if="rankingType === 'single_case'"><i class="fa-solid fa-stopwatch mr-1 text-violet-500"></i>出勤 {{ member.caseHours }} hr</span>
                                             <span v-if="rankingType === 'case_hours' && member.hours > 0" class="text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded border border-violet-100">
                                                 <i class="fa-solid fa-chart-pie mr-1"></i>佔協勤 {{ Math.round(member.caseHours / member.hours * 100) }}%
                                             </span>
@@ -6512,12 +6513,12 @@ const exportPaperFormatToExcel = () => {
                                .sort((a, b) => b.displayScore - a.displayScore)
                                .filter(m => m.displayScore > 0);
                 } else {
-                    // 🌟 個別案件排名 (改為計算：特定案件數 ÷ 總時數 的比例)
+                    // 🌟 個別案件排名 (計算：特定案件數 ÷ 出勤時數 的比例)
                     const cType = rankingCaseType.value;
                     return list.map(m => {
                         const specificCaseCount = m.caseTypesCount[cType] || 0;
-                        // 計算比例：(件數 / 時數) * 100。防呆避免除以0
-                        const ratio = m.hours > 0 ? (specificCaseCount / m.hours) * 100 : 0;
+                        // 計算比例：(件數 / 出勤時數) * 100。防呆避免除以0
+                        const ratio = m.caseHours > 0 ? (specificCaseCount / m.caseHours) * 100 : 0;
                         
                         return { 
                             ...m, 
