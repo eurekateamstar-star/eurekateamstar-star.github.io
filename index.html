@@ -1312,9 +1312,12 @@
                         <!-- 排名類型切換按鈕 (更新為3個：時數、總出勤、個別案件) -->
                             <div class="flex gap-2 mb-3 px-1">
                                 <button @click="rankingType = 'hours'" class="flex-1 py-2 rounded-xl text-xs font-black transition-all border-2" :class="rankingType === 'hours' ? 'bg-amber-50 border-amber-400 text-amber-600 shadow-sm' : 'bg-white border-slate-100 text-slate-400'">時數</button>
+                                <button @click="rankingType = 'case_hours'" class="flex-1 py-2 rounded-xl text-xs font-black transition-all border-2" :class="rankingType === 'case_hours' ? 'bg-violet-50 border-violet-400 text-violet-600 shadow-sm' : 'bg-white border-slate-100 text-slate-400'">出勤時數</button>
                                 <button @click="rankingType = 'total_cases'" class="flex-1 py-2 rounded-xl text-xs font-black transition-all border-2" :class="rankingType === 'total_cases' ? 'bg-blue-50 border-blue-400 text-blue-600 shadow-sm' : 'bg-white border-slate-100 text-slate-400'">總出勤</button>
                                 <button @click="rankingType = 'single_case'" class="flex-1 py-2 rounded-xl text-xs font-black transition-all border-2" :class="rankingType === 'single_case' ? 'bg-emerald-50 border-emerald-400 text-emerald-600 shadow-sm' : 'bg-white border-slate-100 text-slate-400'">個別案件</button>
                             </div>
+
+                            <p v-if="rankingType === 'case_hours'" class="text-[11px] font-bold text-slate-400 mb-4 px-2 fade-in"><i class="fa-solid fa-circle-info mr-1"></i>出勤時數＝每件案件「出勤到返隊」的時間加總</p>
 
                             <!-- 案件種類專屬下拉選單 (只有選個別案件時才出現) -->
                             <div v-if="rankingType === 'single_case'" class="mb-4 px-1 fade-in">
@@ -1355,6 +1358,9 @@
                                             <span v-if="rankingType !== 'hours'"><i class="fa-solid fa-clock mr-1 text-amber-500"></i>{{ member.hours }} hr</span>
                                             <span v-if="rankingType !== 'total_cases'"><i class="fa-solid fa-truck-medical mr-1 text-blue-500"></i>總出勤 {{ member.caseCount }} 件</span>
                                             
+                                            <span v-if="rankingType === 'case_hours' && member.hours > 0" class="text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded border border-violet-100">
+                                                <i class="fa-solid fa-chart-pie mr-1"></i>佔協勤 {{ Math.round(member.caseHours / member.hours * 100) }}%
+                                            </span>
                                             <!-- 🌟 新增：個別案件時，明確顯示他實際跑了幾件這個特定案件 -->
                                             <span v-if="rankingType === 'single_case'" class="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
                                                 <i class="fa-solid fa-briefcase-medical mr-1"></i>{{ rankingCaseType }} {{ member.specificCaseCount }} 件
@@ -1364,7 +1370,7 @@
 
                                     <div class="text-right shrink-0 ml-2">
                                         <p class="text-[10px] font-black uppercase mb-0.5" 
-                                           :class="rankingType === 'hours' ? 'text-amber-500' : rankingType === 'total_cases' ? 'text-blue-500' : 'text-emerald-500'">
+                                           :class="rankingType === 'hours' ? 'text-amber-500' : rankingType === 'case_hours' ? 'text-violet-500' : rankingType === 'total_cases' ? 'text-blue-500' : 'text-emerald-500'">
                                             {{ member.displayLabel }}
                                         </p>
                                         <p class="text-3xl font-num text-slate-800 leading-none">
@@ -6435,6 +6441,7 @@ const exportPaperFormatToExcel = () => {
                         name: m.姓名,
                         title: m.duty_title || '隊員',
                         hours: 0,
+                        caseHours: 0,       // 每件案件出勤時間加總 (出勤時數)
                         caseCount: 0,       // 實際跑的救護案件總數 (總出勤)
                         caseTypesCount: {}  // 記錄各種案件的獨立數量
                     };
@@ -6463,6 +6470,10 @@ const exportPaperFormatToExcel = () => {
                         if (record.cases && record.cases.length > 0) {
                             dataMap[record.userName].caseCount += record.cases.length;
                             record.cases.forEach(c => {
+                                // 案件出勤時間（跨午夜時自動加 24 小時）
+                                let ch = calcHours(c.startTime, c.endTime);
+                                if (ch < 0) ch += 24;
+                                if (ch > 0 && ch <= 24) dataMap[record.userName].caseHours += ch;
                                 if (c.caseType) {
                                     dataMap[record.userName].caseTypesCount[c.caseType] = (dataMap[record.userName].caseTypesCount[c.caseType] || 0) + 1;
                                 }
@@ -6476,7 +6487,8 @@ const exportPaperFormatToExcel = () => {
 
                 return Object.values(dataMap).map(item => ({
                     ...item,
-                    hours: Number(item.hours.toFixed(1))
+                    hours: Number(item.hours.toFixed(1)),
+                    caseHours: Number(item.caseHours.toFixed(1))
                 }));
             });
 
@@ -6487,6 +6499,11 @@ const exportPaperFormatToExcel = () => {
                 if (rankingType.value === 'hours') {
                     // 時數排名 (高到低)
                     return list.map(m => ({ ...m, displayScore: m.hours, displayLabel: 'Total Hours' }))
+                               .sort((a, b) => b.displayScore - a.displayScore)
+                               .filter(m => m.displayScore > 0);
+                } else if (rankingType.value === 'case_hours') {
+                    // 出勤時數排名 (每件案件出勤時間加總，高到低)
+                    return list.map(m => ({ ...m, displayScore: m.caseHours, displayLabel: 'Case Hours' }))
                                .sort((a, b) => b.displayScore - a.displayScore)
                                .filter(m => m.displayScore > 0);
                 } else if (rankingType.value === 'total_cases') {
