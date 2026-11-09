@@ -1363,7 +1363,7 @@
                                             </span>
                                             <!-- 🌟 新增：個別案件時，明確顯示他實際跑了幾件這個特定案件 -->
                                             <span v-if="rankingType === 'single_case'" class="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                                                <i class="fa-solid fa-briefcase-medical mr-1"></i>{{ rankingCaseType }} {{ member.specificCaseCount }} 件
+                                                <i class="fa-solid fa-briefcase-medical mr-1"></i>{{ rankingCaseType }} {{ member.puaCaseCount > 0 ? `${member.baseCaseCount} + PUA ${member.puaCaseCount}` : member.specificCaseCount }} 件
                                             </span>
                                         </div>
                                     </div>
@@ -6527,13 +6527,22 @@ const exportPaperFormatToExcel = () => {
                     // 🌟 個別案件排名 (計算：特定案件數 ÷ 總出勤件數 的比例)
                     const cType = rankingCaseType.value;
                     return list.map(m => {
-                        const specificCaseCount = m.caseTypesCount[cType] || 0;
+                        // 「PUA:X」案件也併入 X 計算（例如 OHCA = OHCA + PUA:OHCA）
+                        const baseCount = m.caseTypesCount[cType] || 0;
+                        const norm = (k) => String(k).replace(/\s/g, '').replace('：', ':').toUpperCase();
+                        const puaKey = norm('PUA:' + cType);
+                        const puaCount = Object.entries(m.caseTypesCount)
+                            .filter(([k]) => k !== cType && norm(k) === puaKey)
+                            .reduce((sum, [, v]) => sum + v, 0);
+                        const specificCaseCount = baseCount + puaCount;
                         // 計算比例：(該類件數 / 總出勤件數) * 100。防呆避免除以0
                         const ratio = m.caseCount > 0 ? (specificCaseCount / m.caseCount) * 100 : 0;
                         
                         return { 
                             ...m, 
-                            specificCaseCount: specificCaseCount, // 保留原始件數供畫面顯示
+                            specificCaseCount: specificCaseCount, // 合計件數（含 PUA）
+                            baseCaseCount: baseCount,
+                            puaCaseCount: puaCount,
                             displayScore: Number(ratio.toFixed(1)), // 取小數點後 1 位 (如 18.5)
                             displayLabel: cType + ' 佔比'
                         };
