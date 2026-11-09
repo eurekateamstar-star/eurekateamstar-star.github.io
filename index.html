@@ -1330,7 +1330,7 @@
                                 <p class="text-[11px] font-bold text-slate-400 mt-2 px-1 leading-relaxed"><i class="fa-solid fa-circle-info mr-1"></i>列入排名條件：協勤時數 {{ RANKING_MIN_HOURS }} 小時以上，且總出勤達 {{ rankingMinCases }} 件以上（{{ RANKING_MIN_HOURS }} 小時以上隊員中，總出勤前 30%）</p>
                             </div>
 
-                            <div v-if="currentRankingList.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-300">
+                            <div v-if="currentRankingList.length === 0" class="flex flex-col items-center justify-center text-slate-300" :class="rankingType === 'single_case' && unrankedSingleCaseList.length > 0 ? 'py-8' : 'py-20'">
                                 <i class="fa-solid fa-ranking-star text-4xl mb-4"></i>
                                 <p class="font-black text-sm">{{ rankingType === 'single_case' ? '目前沒有人達到列入排名的門檻' : '該月份無任何排名資料' }}</p>
                             </div>
@@ -1378,6 +1378,35 @@
                                         </p>
                                     </div>
                                 </div>
+
+                                <!-- 個別案件：未列入排名的隊員 -->
+                                <template v-if="rankingType === 'single_case' && unrankedSingleCaseList.length > 0">
+                                    <div class="flex items-center gap-3 pt-6 pb-1 px-1">
+                                        <div class="h-px bg-slate-200 flex-1"></div>
+                                        <span class="text-[11px] font-black text-slate-400">未列入排名（{{ unrankedSingleCaseList.length }} 人）</span>
+                                        <div class="h-px bg-slate-200 flex-1"></div>
+                                    </div>
+                                    <div v-for="member in unrankedSingleCaseList" :key="'u-' + member.name" class="list-card px-4 py-3 flex items-center gap-4 bg-white/60 border border-slate-100">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-slate-50 text-slate-300 text-sm font-black">—</div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-baseline gap-2">
+                                                <span class="text-sm font-black text-slate-600">{{ member.name }}</span>
+                                                <span class="text-[10px] font-bold text-slate-400">{{ member.title }}</span>
+                                            </div>
+                                            <div class="text-[11px] font-bold mt-1 text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
+                                                <span><i class="fa-solid fa-clock mr-1"></i>{{ member.hours }} hr</span>
+                                                <span><i class="fa-solid fa-truck-medical mr-1"></i>總出勤 {{ member.caseCount }} 件</span>
+                                                <span v-if="member.specificCaseCount > 0">{{ rankingCaseType }} {{ member.puaCaseCount > 0 ? `${member.baseCaseCount} + PUA ${member.puaCaseCount}` : member.specificCaseCount }} 件</span>
+                                            </div>
+                                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                                <span v-for="r in member.reasons" :key="r" class="text-[10px] font-bold text-rose-400 bg-rose-50 px-1.5 py-0.5 rounded">{{ r }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right shrink-0 ml-2">
+                                            <p class="text-xl font-num text-slate-400 leading-none">{{ member.displayScore }}<span class="text-sm ml-0.5">%</span></p>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                         <div v-else class="flex flex-col items-center justify-center h-64 text-slate-300">
@@ -6524,35 +6553,46 @@ const exportPaperFormatToExcel = () => {
                                .sort((a, b) => b.displayScore - a.displayScore)
                                .filter(m => m.displayScore > 0);
                 } else {
-                    // 🌟 個別案件排名 (計算：特定案件數 ÷ 總出勤件數 的比例)
-                    const cType = rankingCaseType.value;
-                    return list.map(m => {
+                    // 🌟 個別案件排名：只列出達到門檻的人
+                    return singleCaseRows.value.filter(m => m.qualified);
+                }
+            });
+
+            // 個別案件：每位隊員的佔比與是否達標（排名、未列入排名共用）
+            const singleCaseRows = computed(() => {
+                const cType = rankingCaseType.value;
+                const norm = (k) => String(k).replace(/\s/g, '').replace('：', ':').toUpperCase();
+                const puaKey = norm('PUA:' + cType);
+                return teamRankingData.value
+                    .filter(m => m.hours > 0 || m.caseCount > 0) // 期間內完全沒協勤的不列
+                    .map(m => {
                         // 「PUA:X」案件也併入 X 計算（例如 OHCA = OHCA + PUA:OHCA）
                         const baseCount = m.caseTypesCount[cType] || 0;
-                        const norm = (k) => String(k).replace(/\s/g, '').replace('：', ':').toUpperCase();
-                        const puaKey = norm('PUA:' + cType);
                         const puaCount = Object.entries(m.caseTypesCount)
                             .filter(([k]) => k !== cType && norm(k) === puaKey)
                             .reduce((sum, [, v]) => sum + v, 0);
                         const specificCaseCount = baseCount + puaCount;
-                        // 計算比例：(該類件數 / 總出勤件數) * 100。防呆避免除以0
+                        // 計算比例：(該類件數 / 總出勤件數) * 100
                         const ratio = m.caseCount > 0 ? (specificCaseCount / m.caseCount) * 100 : 0;
-                        
-                        return { 
-                            ...m, 
-                            specificCaseCount: specificCaseCount, // 合計件數（含 PUA）
+                        // 未列入原因
+                        const reasons = [];
+                        if (m.hours < RANKING_MIN_HOURS) reasons.push(`協勤未滿 ${RANKING_MIN_HOURS} hr`);
+                        if (m.caseCount < rankingMinCases.value) reasons.push(`出勤未達 ${rankingMinCases.value} 件`);
+                        if (specificCaseCount === 0) reasons.push(`無 ${cType} 案件`);
+                        return {
+                            ...m,
+                            specificCaseCount,
                             baseCaseCount: baseCount,
                             puaCaseCount: puaCount,
-                            displayScore: Number(ratio.toFixed(1)), // 取小數點後 1 位 (如 18.5)
-                            displayLabel: cType + ' 佔比'
+                            displayScore: Number(ratio.toFixed(1)),
+                            displayLabel: cType + ' 佔比',
+                            qualified: reasons.length === 0,
+                            reasons
                         };
                     })
-                    // 條件1：該案件數必須 > 0，且協勤時數達門檻才進榜（避免時數少的人比例虛高）
-                    .filter(m => m.specificCaseCount > 0 && m.hours >= RANKING_MIN_HOURS && m.caseCount >= rankingMinCases.value)
-                    // 條件2：依照比例 (佔比) 由高到低排序
-                    .sort((a, b) => b.displayScore - a.displayScore);
-                }
+                    .sort((a, b) => b.displayScore - a.displayScore || b.caseCount - a.caseCount);
             });
+            const unrankedSingleCaseList = computed(() => singleCaseRows.value.filter(m => !m.qualified));
 // ── 「我的紀錄」專用的搜尋與過濾狀態 ──
             const myAssistSearchQuery = ref('');
             const myAssistFilterYear = ref(new Date().getFullYear().toString());
@@ -7047,7 +7087,7 @@ const goToConfirmStep = (onlyShift = false) => {
                 isAdminAddShiftOpen, isAdminAddRegOpen, isAdminDeleteActOpen, isAdminDeleteConfirmOpen,
                 adminOpTarget, adminRegType, adminShiftForm, adminRegForm, adminMeetingRegTask, actToDelete, paymentPushLoading, pushPaymentReminder,
                 selectAdminHour, openAdminAddShift, submitAdminShift, addCaseToEdit, removeCaseFromEdit, isCollectionSummaryModalOpen, collectionSummaryList,
-                openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList, RANKING_MIN_HOURS, rankingMinCases,
+                openAdminAddReg, availableAdminRegTasks, isTargetSignedUp,rankingFilterYear, rankingFilterMonth, rankingType, currentRankingList, RANKING_MIN_HOURS, rankingMinCases, unrankedSingleCaseList,
                 submitAdminReg, openAdminMeetingRegForm, submitAdminMeetingReg, toggleLeaveMonth, isMonthOnLeave,rankingCaseType, paymentPushAllLoading, pushPaymentReminderToAll,
                 openAdminDeleteActivity, adminDeleteableActivities, confirmAdminDeleteAct, executeAdminDeleteAct,isMemberHistoryModalOpen, selectedDutyMember, openMemberDutyHistory, selectedMemberDutyHistory,
                 
