@@ -3136,12 +3136,36 @@ onMessage(messaging, (payload) => {
             const authLoading = ref(true); 
             const googleUser = ref(null);  
             const showLoginPassword = ref(false); // 控制登入密碼是否顯示
+            // 🌟 搬家用：管理員開啟 ?export=1，匯出全部資料成 JSON 檔（給新系統匯入）
+            const exportAllForMigration = async () => {
+                try {
+                    const out = { exported_at: new Date().toISOString() };
+                    for (const c of ['members', 'shifts', 'official_tasks', 'meeting_tasks', 'registrations', 'assistance_records']) {
+                        const snap = await getDocs(collection(db, c));
+                        out[c] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    }
+                    const fin = await getDoc(doc(db, 'finance', 'squad_fund'));
+                    out.finance = fin.exists() ? fin.data() : null;
+                    const json = JSON.stringify(out, (k, v) => (v && typeof v.toDate === 'function') ? v.toDate().toISOString() : v);
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+                    a.download = '海山資料匯出_' + getTodayStr() + '.json';
+                    document.body.appendChild(a); a.click(); a.remove();
+                    showAppAlert('success', '匯出完成', `隊員 ${out.members.length}、排班 ${out.shifts.length}、公差 ${out.official_tasks.length}、會議 ${out.meeting_tasks.length}、報名 ${out.registrations.length}、協勤 ${out.assistance_records.length} 筆`);
+                } catch (e) {
+                    showAppAlert('error', '匯出失敗', e.message);
+                }
+            };
+
             const executeSystemLogin = (name) => {
                 if (loginUserName.value === name && currPage.value !== 'login') return; // 已登入，避免重複執行
                 try { if (googleUser.value?.uid) localStorage.setItem('haishan_login_' + googleUser.value.uid, name); } catch(e) {}
                 loginUserName.value = name;
                 processNews();
                 currPage.value = 'dashboard';
+                if (new URLSearchParams(location.search).get('export') === '1') {
+                    setTimeout(() => { if (isAdmin.value) exportAllForMigration(); else showAppAlert('error', '無法匯出', '只有管理員可以匯出資料'); }, 2500);
+                }
                 subscribeFCM(name);
                 getDocs(collection(db, "assistance_records")).then(snap => {
                     const allRecs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
